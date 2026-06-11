@@ -39,7 +39,15 @@
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" push -u origin main)",
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" log --oneline -3)",
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" diff .claude/settings.json)",
-      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" add .claude/settings.json)"
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" add .claude/settings.json)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" push)",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 4321 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { \"Rodando na porta 4321 \\(PID $\\($c[0].OwningProcess\\)\\)\" } else { \"Nada rodando na porta 4321\" })",
+      "PowerShell(npm install @astrojs/vercel drizzle-orm postgres)",
+      "PowerShell(npm install -D drizzle-kit tsx dotenv)",
+      "PowerShell(npm install \"@astrojs/vercel@^9\" drizzle-orm postgres)",
+      "PowerShell(npm run build 2>&1)",
+      "PowerShell(npm run db:seed)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" log --oneline -2)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

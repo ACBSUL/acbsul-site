@@ -1,3 +1,6 @@
+# Link local do projeto
+http://localhost:5030/
+
 # CLAUDE.md — Projeto ACB Sul Compressores
 
 Contexto de engenharia para a reconstrução do site da **ACB Sul Compressores**.
