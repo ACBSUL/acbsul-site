@@ -1,0 +1,28 @@
+---
+// JSON-LD global LocalBusiness (PRD Anexo 12.3). Vai em todas as páginas.
+import { empresa } from '../data/empresa';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: empresa.nome,
+  description:
+    'Distribuidor autorizado Atlas Copco no Rio Grande do Sul. Compressores industriais, assistência técnica, peças originais e locação.',
+  url: empresa.url,
+  telephone: '+55-51-3377-3626',
+  email: empresa.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: empresa.endereco.rua,
+    addressLocality: empresa.endereco.cidade,
+    addressRegion: empresa.endereco.uf,
+    postalCode: empresa.endereco.cep,
+    addressCountry: 'BR',
+  },
+  areaServed: ['Rio Grande do Sul', 'Santa Catarina'],
+  openingHours: 'Mo-Fr 08:00-12:00,13:00-17:00',
+  brand: { '@type': 'Brand', name: 'Atlas Copco' },
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />

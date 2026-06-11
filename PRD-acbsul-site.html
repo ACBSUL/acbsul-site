@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Reconstrução do Site ACB Sul Compressores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#11181f;
+    --ink-soft:#33414d;
+    --paper:#f6f3ec;
+    --paper-2:#efe9dd;
+    --card:#fffdf8;
+    --blue:#0a4fa0;        /* atlas copco-ish industrial blue */
+    --blue-deep:#072f5f;
+    --orange:#e2560f;      /* safety/industrial accent */
+    --line:#d8d0c0;
+    --line-strong:#b9af9b;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --display:'Archivo',var(--sans);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(var(--paper-2) 1px,transparent 1px);
+    background-size:22px 22px;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px 120px}
+
+  /* ---------- header ---------- */
+  header.cover{
+    background:var(--ink);color:#f3efe6;margin:0 -28px 0;padding:64px 28px 52px;
+    position:relative;overflow:hidden;
+    border-bottom:6px solid var(--orange);
+  }
+  header.cover::before{
+    content:"";position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 14px,transparent 14px 28px);
+    pointer-events:none;
+  }
+  .cover .kicker{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--orange);font-weight:600;margin:0 0 18px;
+  }
+  .cover h1{
+    font-family:var(--display);font-weight:900;font-size:clamp(34px,6vw,58px);
+    line-height:1.02;letter-spacing:-.02em;margin:0 0 22px;max-width:16ch;
+  }
+  .cover h1 em{color:var(--blue);font-style:normal;
+    background:linear-gradient(transparent 62%,rgba(10,79,160,.35) 0);}
+  .cover .lede{font-size:17px;max-width:62ch;color:#cdc6b8;margin:0 0 30px}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{
+    font-family:var(--mono);font-size:12px;letter-spacing:.04em;
+    border:1px solid rgba(255,255,255,.22);border-radius:2px;
+    padding:7px 12px;color:#e7e1d4;background:rgba(255,255,255,.04);
+  }
+  .chip b{color:#fff;font-weight:600}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{display:flex;justify-content:flex-end;gap:10px;margin:18px 0 0}
+  .btn{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+    border:1.5px solid var(--ink);background:var(--ink);color:#f6f3ec;
+    padding:9px 16px;border-radius:2px;cursor:pointer;text-decoration:none;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px);background:var(--blue-deep);border-color:var(--blue-deep)}
+
+  /* ---------- TOC ---------- */
+  nav.toc{
+    background:var(--card);border:1px solid var(--line);border-left:5px solid var(--blue);
+    margin:34px 0 8px;padding:26px 30px;border-radius:3px;
+    box-shadow:0 1px 0 var(--line-strong);
+  }
+  nav.toc h2{font-family:var(--display);font-size:13px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--blue-deep);margin:0 0 16px}
+  nav.toc ol{margin:0;padding:0;list-style:none;counter-reset:toc;
+    columns:2;column-gap:46px}
+  nav.toc li{counter-increment:toc;margin:0 0 9px;break-inside:avoid;font-size:14.5px}
+  nav.toc li a{color:var(--ink-soft);text-decoration:none;display:flex;gap:10px;align-items:baseline}
+  nav.toc li a::before{content:counter(toc,decimal-leading-zero);
+    font-family:var(--mono);font-size:11.5px;color:var(--orange);font-weight:600;min-width:24px}
+  nav.toc li a:hover{color:var(--blue)}
+
+  /* ---------- sections ---------- */
+  section{margin:54px 0 0;scroll-margin-top:20px}
+  h2.sec{
+    font-family:var(--display);font-weight:800;font-size:clamp(22px,3.4vw,30px);
+    line-height:1.12;letter-spacing:-.01em;margin:0 0 6px;color:var(--ink);
+    padding-top:22px;border-top:2px solid var(--ink);
+    display:flex;align-items:baseline;gap:14px;
+  }
+  h2.sec .n{font-family:var(--mono);font-size:14px;color:var(--orange);font-weight:600}
+  h3{font-family:var(--display);font-weight:700;font-size:18.5px;margin:30px 0 8px;color:var(--blue-deep)}
+  h4{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.02em;margin:22px 0 6px;color:var(--ink)}
+  p{margin:0 0 14px}
+  a{color:var(--blue)}
+  strong{font-weight:700}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin:0 0 7px}
+  ul.tight li{margin-bottom:4px}
+
+  /* callouts */
+  .note{
+    background:var(--paper-2);border:1px solid var(--line-strong);border-radius:3px;
+    padding:16px 20px;margin:18px 0;font-size:15px;
+  }
+  .note.usar{border-left:5px solid var(--blue)}
+  .note.tese{border-left:5px solid var(--orange);background:#fff4ec;border-color:#f3c9ac}
+  .note .lab{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--blue-deep);display:block;margin-bottom:6px;font-weight:600}
+  .note.tese .lab{color:var(--orange)}
+
+  blockquote{
+    margin:16px 0;padding:14px 20px;border-left:4px solid var(--blue);
+    background:var(--card);font-style:italic;color:var(--ink-soft);border-radius:0 3px 3px 0;
+  }
+
+  /* confirmar badge */
+  .confirmar{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;font-weight:600;
+    background:var(--orange);color:#fff;padding:2px 7px;border-radius:2px;
+    text-transform:uppercase;white-space:nowrap;vertical-align:middle;
+  }
+
+  /* tables */
+  .table-scroll{overflow-x:auto;margin:18px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px;background:var(--card);
+    border:1px solid var(--line-strong)}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+    background:var(--ink);color:#f1ece1;font-weight:500}
+  tbody tr:nth-child(even){background:var(--paper)}
+  td code,p code,li code{font-family:var(--mono);font-size:12.5px;background:var(--paper-2);
+    padding:1px 5px;border-radius:2px;color:var(--blue-deep)}
+
+  /* code block */
+  pre{
+    background:var(--ink);color:#e8e3d6;border-radius:4px;padding:20px 22px;overflow-x:auto;
+    font-family:var(--mono);font-size:13px;line-height:1.55;margin:16px 0;
+    border-left:5px solid var(--orange);
+  }
+  pre .k{color:#7fb0e6}.pre .s{color:#e0a87a}
+
+  /* checklist */
+  ul.check{list-style:none;padding-left:0}
+  ul.check li{padding-left:30px;position:relative}
+  ul.check li::before{content:"";position:absolute;left:0;top:4px;width:15px;height:15px;
+    border:2px solid var(--blue);border-radius:2px}
+
+  /* phase cards */
+  .steps{display:grid;gap:12px;margin:18px 0}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:16px 20px;
+    border-left:5px solid var(--blue)}
+  .step b{font-family:var(--display);color:var(--blue-deep)}
+
+  footer.end{margin:60px -28px 0;background:var(--ink);color:#cdc6b8;padding:30px 28px;
+    font-size:13.5px;border-top:6px solid var(--orange)}
+  footer.end .lab{font-family:var(--mono);color:var(--orange);letter-spacing:.16em;
+    text-transform:uppercase;font-size:11px;display:block;margin-bottom:8px}
+
+  /* anchors offset + subtle link in headings */
+  h2.sec a.self,h3 a.self{text-decoration:none;color:inherit}
+
+  @media (max-width:680px){
+    nav.toc ol{columns:1}
+    header.cover{padding:46px 22px 38px}
+    .wrap{padding:0 18px 80px}
+    header.cover,footer.end{margin-left:-18px;margin-right:-18px}
+  }
+  @media print{
+    body{background:#fff;font-size:11.5pt}
+    body{background-image:none}
+    .toolbar,nav.toc{display:none}
+    header.cover{background:#fff;color:#000;border-bottom:3px solid #000;padding:0 0 18px}
+    header.cover h1{color:#000}header.cover h1 em{background:none;color:#000}
+    .cover .lede,.chip{color:#333}.chip{border-color:#999}
+    h2.sec{break-after:avoid;border-top:1.5px solid #000}
+    section,.step,table,pre,.note{break-inside:avoid}
+    pre{background:#f2f2f2;color:#111;border-left:3px solid #000}
+    th{background:#222 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    footer.end{background:#fff;color:#333;border-top:2px solid #000}
+    a{color:#000}
+  }
+</style>
+</head>
+<body>
+<header class="cover">
+  <p class="kicker">Product Requirements Document · v1.0</p>
+  <h1>Reconstrução do Site <em>ACB Sul</em> Compressores</h1>
+  <p class="lede">Especificação executável para construção via Claude Code, otimizada para citação por motores generativos (ChatGPT, Gemini, Perplexity) e SEO — alvo: "empresa de compressores RS", "distribuidor Atlas Copco RS", "assistência técnica de compressores Porto Alegre".</p>
+  <div class="meta-row">
+    <span class="chip"><b>Cliente:</b> ACB Sul Compressores</span>
+    <span class="chip"><b>Marca-âncora:</b> Atlas Copco</span>
+    <span class="chip"><b>Região:</b> RS &amp; SC</span>
+    <span class="chip"><b>Stack:</b> Next.js · SSR/SSG</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="toolbar">
+    <a class="btn" href="#" onclick="window.print();return false;">Imprimir / Salvar PDF</a>
+  </div>
+
+  <nav class="toc" aria-label="Índice">
+    <h2>Conteúdo</h2>
+    <ol>
+      <li><a href="#s1">Contexto estratégico</a></li>
+      <li><a href="#s2">Princípios não-negociáveis</a></li>
+      <li><a href="#s3">Identidade e dados da empresa</a></li>
+      <li><a href="#s4">Requisitos técnicos / stack</a></li>
+      <li><a href="#s5">Componentes reutilizáveis</a></li>
+      <li><a href="#s6">Arquitetura de informação</a></li>
+      <li><a href="#s7">Especificação por página</a></li>
+      <li><a href="#s8">Painel administrativo</a></li>
+      <li><a href="#s9">Guardrails de IA</a></li>
+      <li><a href="#s10">Critérios de aceite (QA)</a></li>
+      <li><a href="#s11">Como solicitar no Claude Code</a></li>
+      <li><a href="#s12">Anexos — textos prontos</a></li>
+    </ol>
+  </nav>
+
+  <div class="note usar">
+    <span class="lab">Como usar este PRD</span>
+    Ele é a fonte de verdade. As seções 1–6 são contexto e regras globais (leitura obrigatória antes de qualquer página). As 7–9 são especificações executáveis. A seção 11 explica a ordem e o modo de solicitar a construção no Claude Code. Os anexos (seção 12) trazem textos já redigidos — use-os literalmente.
+  </div>
+
+  <!-- 1 -->
+  <section id="s1">
+    <h2 class="sec"><span class="n">01</span><a class="self" href="#s1">Contexto estratégico</a></h2>
+    <p>Análise dos concorrentes que hoje aparecem nas respostas de IA para "empresa de compressores RS" (Evolusul e Máximo) revelou que <strong>eles não vencem por serem empresas melhores — vencem por serem mais legíveis por máquina.</strong> Eles afirmam, em texto HTML rastreável, fatos auto-contidos: quem são, onde ficam (cidade/RS), qual marca distribuem, há quantos anos atuam e quais serviços prestam.</p>
+    <p>A ACB Sul tem <strong>autoridade real maior</strong> (distribuidora Atlas Copco — marca global e mais premium que a Schulz dos concorrentes; 40+ anos; portfólio mais amplo, incluindo geradores, nitrogênio, torre de iluminação e bombas de vácuo) mas a <strong>pior apresentação legível por máquina</strong>: home virou despejo de catálogo, sem texto institucional; title sem geografia nem marca-âncora; FAQ vazia ("Pergunta 01/Resposta 01"); produtos com nomes crípticos de modelo.</p>
+    <div class="note tese">
+      <span class="lab">Tese da reconstrução</span>
+      Transformar a autoridade real da ACB Sul em <strong>fatos explícitos, estruturados (Schema.org) e ancorados geograficamente em Porto Alegre/RS</strong>, em HTML renderizado no servidor.
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <h2 class="sec"><span class="n">02</span><a class="self" href="#s2">Princípios não-negociáveis</a></h2>
+    <p>Valem para <strong>todas</strong> as páginas e prevalecem sobre preferências estéticas:</p>
+    <ol>
+      <li><strong>Conteúdo no HTML renderizado pelo servidor.</strong> Todo texto relevante precisa estar no HTML inicial — nunca montado apenas por JavaScript no cliente. Isto torna SSR/SSG obrigatório.</li>
+      <li><strong>Densidade de fatos da entidade.</strong> Toda página de destino afirma: empresa = ACB Sul, atividade = compressores/equipamentos industriais, marca = distribuidor autorizado Atlas Copco, local = Porto Alegre/RS, atendimento = RS e SC, longevidade = mais de 40 anos.</li>
+      <li><strong>Ancoragem geográfica explícita</strong> ("Porto Alegre", "Rio Grande do Sul", "RS", "região metropolitana", "interior") em texto, não só em mapa.</li>
+      <li><strong>Coocorrência com a marca-âncora Atlas Copco</strong> em title, H1 e corpo — maior diferencial competitivo.</li>
+      <li><strong>Blocos citáveis:</strong> a primeira frase de cada resposta de FAQ e de cada bloco definicional deve ser uma afirmação direta e completa.</li>
+      <li><strong>Dados estruturados Schema.org</strong> em todas as páginas aplicáveis (Organization/LocalBusiness global; Product; Service; FAQPage; BreadcrumbList).</li>
+      <li><strong>Encoding UTF-8 correto</strong> em todo o site.</li>
+      <li><strong>Performance e mobile-first:</strong> Core Web Vitals saudáveis; tudo responsivo.</li>
+    </ol>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <h2 class="sec"><span class="n">03</span><a class="self" href="#s3">Identidade e dados da empresa</a></h2>
+    <p>Fonte única. Itens com <span class="confirmar">Confirmar</span> devem ser validados com o cliente antes do go-live.</p>
+    <ul class="tight">
+      <li><strong>Nome:</strong> ACB Sul Compressores</li>
+      <li><strong>Posicionamento:</strong> Distribuidor autorizado Atlas Copco no Rio Grande do Sul</li>
+      <li><strong>Longevidade:</strong> mais de 40 anos de mercado <span class="confirmar">Confirmar ano</span></li>
+      <li><strong>Sede:</strong> Rua Santa Catarina, 304 — Santa Maria Goretti, Porto Alegre/RS — CEP 91030-330</li>
+      <li><strong>Telefone:</strong> (51) 3377-3626</li>
+      <li><strong>E-mail:</strong> adm@acbsulcompressores.com.br</li>
+      <li><strong>WhatsApp:</strong> <span class="confirmar">Confirmar — nº atual malformado</span></li>
+      <li><strong>Horário:</strong> Segunda a sexta, 8h–12h e 13h–17h</li>
+      <li><strong>Atuação:</strong> Rio Grande do Sul e Santa Catarina</li>
+      <li><strong>Linhas de produto (preservar portfólio amplo — é vantagem competitiva):</strong> compressores de parafuso, pistão e portáteis; tratamento de ar (secadores, filtros, separadores); geradores de energia; geradores de nitrogênio; torre de iluminação; bombas de vácuo; rompedores; perfuratriz; motobombas; peças e kits originais Atlas Copco.</li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <h2 class="sec"><span class="n">04</span><a class="self" href="#s4">Requisitos técnicos / stack</a></h2>
+    <p>O ponto crítico é <strong>HTML renderizado no servidor</strong> (pré-requisito de GEO) + um <strong>painel admin com autenticação e CRUD de catálogo</strong>.</p>
+    <h4>Stack recomendado</h4>
+    <ul>
+      <li><strong>Next.js (App Router)</strong> com <strong>SSG/ISR</strong> para páginas de conteúdo e <strong>SSR</strong> onde houver dado dinâmico. HTML servido pronto = citável.</li>
+      <li><strong>Banco:</strong> PostgreSQL (ou SQLite no início) para produtos, categorias e config de WhatsApp.</li>
+      <li><strong>Auth do admin:</strong> sessão por usuário e senha (Auth.js/NextAuth ou equivalente). Sem auto-cadastro público.</li>
+      <li><strong>Estilização:</strong> Tailwind CSS, mobile-first.</li>
+      <li><strong>IA no painel:</strong> integração com a API Anthropic (Claude) para gerar descrições, titles/metas e sugestões de FAQ.</li>
+    </ul>
+    <blockquote>Se o cliente exigir manter hospedagem PHP atual, a alternativa é qualquer framework com SSR equivalente; o requisito inegociável é <strong>conteúdo no HTML servido</strong>, não a tecnologia específica.</blockquote>
+    <h4>Requisitos transversais obrigatórios</h4>
+    <ul class="tight">
+      <li><code>sitemap.xml</code> e <code>robots.txt</code> automáticos.</li>
+      <li>Title e meta description únicos por página (Anexo 12.1).</li>
+      <li>Open Graph + Twitter Card em todas as páginas.</li>
+      <li><code>&lt;html lang="pt-BR"&gt;</code>, hierarquia de headings correta (um único H1 por página).</li>
+      <li>URLs limpas e semânticas em português (seção 6).</li>
+      <li>Imagens com <code>alt</code> e <code>loading="lazy"</code> (exceto LCP).</li>
+      <li>HTTPS e redirect 301 das URLs antigas (Anexo 12.5).</li>
+    </ul>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <h2 class="sec"><span class="n">05</span><a class="self" href="#s5">Componentes reutilizáveis</a></h2>
+    <ol>
+      <li><strong><code>&lt;EntityBlock&gt;</code></strong> — bloco institucional curto (2–3 frases) com os fatos da empresa. No topo da home e no rodapé de toda página de destino. É a "frase citável" padrão.</li>
+      <li><strong><code>&lt;WhatsAppCTA categoria&gt;</code></strong> — botão "Falar com especialista". Abre <code>wa.me/&lt;numero&gt;?text=&lt;msg&gt;</code> com número e mensagem vindos da config por categoria no painel.</li>
+      <li><strong><code>&lt;LeadForm&gt;</code></strong> — formulário dinâmico (nome, e-mail, telefone, categoria, mensagem). Validar campos; sem dados pessoais em query string; sem envio a endpoints não confiáveis.</li>
+      <li><strong><code>&lt;FAQAccordion&gt;</code></strong> — pares pergunta/resposta + injeção automática de <code>FAQPage</code>.</li>
+      <li><strong><code>&lt;ProductCard&gt;</code></strong> e <strong><code>&lt;SpecTable&gt;</code></strong> — card de catálogo e tabela de specs.</li>
+      <li><strong><code>&lt;Breadcrumb&gt;</code></strong> — com <code>BreadcrumbList</code>.</li>
+      <li><strong><code>&lt;LocalBusinessSchema&gt;</code></strong> — JSON-LD global (Anexo 12.3) em todas as páginas.</li>
+    </ol>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <h2 class="sec"><span class="n">06</span><a class="self" href="#s6">Arquitetura de informação</a></h2>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Página</th><th>URL</th><th>Render</th><th>Schema</th></tr></thead>
+      <tbody>
+        <tr><td>Home</td><td><code>/</code></td><td>SSG</td><td>Organization, LocalBusiness, WebSite</td></tr>
+        <tr><td>Empresa</td><td><code>/empresa</code></td><td>SSG</td><td>AboutPage, Organization</td></tr>
+        <tr><td>Produtos (catálogo)</td><td><code>/produtos</code></td><td>SSG/ISR</td><td>CollectionPage, BreadcrumbList</td></tr>
+        <tr><td>Categoria</td><td><code>/produtos/[categoria]</code></td><td>SSG/ISR</td><td>CollectionPage, BreadcrumbList</td></tr>
+        <tr><td>Produto</td><td><code>/produtos/[categoria]/[produto]</code></td><td>SSG/ISR</td><td>Product, BreadcrumbList</td></tr>
+        <tr><td>Peças</td><td><code>/pecas</code></td><td>SSG/ISR</td><td>CollectionPage</td></tr>
+        <tr><td>Serviços</td><td><code>/servicos</code></td><td>SSG</td><td>Service, FAQPage</td></tr>
+        <tr><td>Locação</td><td><code>/locacao</code></td><td>SSG</td><td>Service, FAQPage</td></tr>
+        <tr><td>Contato</td><td><code>/contato</code></td><td>SSG</td><td>ContactPage, LocalBusiness</td></tr>
+        <tr><td>FAQ</td><td><code>/faq</code></td><td>SSG</td><td>FAQPage</td></tr>
+        <tr><td>Pilar Atlas Copco</td><td><code>/distribuidor-atlas-copco-rs</code></td><td>SSG</td><td>Service, FAQPage</td></tr>
+        <tr><td>Admin</td><td><code>/admin/*</code></td><td>SSR (protegido)</td><td>noindex</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>URLs antigas em <code>/produto/categoria/...</code> e <code>/pagina/institucional/...</code> devem receber <strong>301</strong> para as novas (Anexo 12.5).</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <h2 class="sec"><span class="n">07</span><a class="self" href="#s7">Especificação por página</a></h2>
+
+    <h3>7.1 Home <code>/</code></h3>
+    <p><strong>H1:</strong> Compressores Industriais e Assistência Técnica Atlas Copco no RS</p>
+    <p><strong>Blocos, nesta ordem:</strong> (1) hero com banners rotativos + CTA de lead; (2) <code>&lt;EntityBlock&gt;</code> logo abaixo do hero — <strong>maior impacto de GEO da home</strong>; (3) grade de linhas de produto com <code>&lt;WhatsAppCTA&gt;</code> por card; (4) bloco de serviços; (5) bloco "Por que ACB Sul"; (6) mini-FAQ (4 perguntas) → linka <code>/faq</code>; (7) EntityBlock + contato no rodapé.</p>
+    <p><strong>Aceite:</strong> o HTML servido contém, em texto, "distribuidor autorizado Atlas Copco", "Porto Alegre", "Rio Grande do Sul" e "mais de 40 anos" antes de qualquer card de produto.</p>
+
+    <h3>7.2 Empresa <code>/empresa</code></h3>
+    <p><strong>H1:</strong> Distribuidor Atlas Copco e Especialista em Compressores Industriais no RS</p>
+    <p>Trajetória (ano de fundação <span class="confirmar">Confirmar</span>), valores, diferenciais técnicos, vínculo Atlas Copco, cobertura (RS e SC), estrutura física <span class="confirmar">Confirmar</span>, números. <strong>Aceite:</strong> ≥ 500 palavras de prose factual; sem H1 genérico "Quem Somos".</p>
+
+    <h3>7.3 Produtos — catálogo <code>/produtos</code></h3>
+    <p>Modo catálogo comandado pelo painel admin (seção 8). <strong>Categorias (preservar portfólio amplo):</strong> Parafuso · Pistão · Portáteis · Tratamento de Ar · Geradores de Energia · Geradores de Nitrogênio · Torre de Iluminação · Bombas de Vácuo · Rompedores · Perfuratriz · Motobombas · Peças e Acessórios.</p>
+    <p><strong>Categoria:</strong> H1 = nome + "no RS"; parágrafo introdutório editável (IA); grade de cards; <code>&lt;WhatsAppCTA&gt;</code> específico da categoria. <strong>Produto:</strong> H1 com termo semântico além do código (ex.: "GA 11-30 VSD — Compressor de Parafuso Atlas Copco"); <code>&lt;SpecTable&gt;</code>; descrição ≥ 150 palavras; CTA + LeadForm; relacionados.</p>
+    <p><strong>Aceite:</strong> todo título de produto contém termo semântico além do código; cada categoria tem texto introdutório no HTML servido.</p>
+
+    <h3>7.4 Peças <code>/pecas</code></h3>
+    <p>Peças e kits originais Atlas Copco (250h/500h/1000h). Ênfase em "peças originais Atlas Copco" + <code>&lt;WhatsAppCTA categoria=pecas&gt;</code>.</p>
+
+    <h3>7.5 Serviços <code>/servicos</code></h3>
+    <p><strong>H1:</strong> Assistência Técnica Especializada em Compressores no RS. Assistência autorizada, manutenção preventiva (troca de óleo/filtros por horas), corretiva, peças originais, controle de manutenções. Bloco definicional citável + FAQ. Schema: Service + FAQPage.</p>
+
+    <h3>7.6 Locação <code>/locacao</code></h3>
+    <p><strong>H1:</strong> Locação de Compressores, Geradores e Torres de Iluminação no RS. O que está disponível, para indústrias e obras, vantagens (pronta-entrega, revisados, sem CAPEX), bloco "locação ou compra: qual escolher?". LeadForm + CTA. Schema: Service + FAQPage.</p>
+
+    <h3>7.7 Contato <code>/contato</code></h3>
+    <p>LeadForm dinâmico, Google Maps embed, WhatsApp direto, telefone, e-mail, horário. Schema: ContactPage + LocalBusiness. Sem dados pessoais em URL; sem envio a destinos não definidos pelo cliente.</p>
+
+    <h3>7.8 FAQ <code>/faq</code> — maior ganho rápido</h3>
+    <p>Substituir a FAQ vazia por 15–25 perguntas reais (Anexo 12.4 traz 12 prontas). Cada resposta: 2–4 frases, primeira frase = afirmação direta. Schema FAQPage obrigatório. <strong>Aceite:</strong> zero placeholders; validável no Rich Results Test.</p>
+
+    <h3>7.9 Pilar Atlas Copco <code>/distribuidor-atlas-copco-rs</code> — Fase 2</h3>
+    <p>Página de autoridade que afirma o vínculo de distribuição e linka para assistência técnica, peças e compressores. Reforça a coocorrência com a marca-âncora. Schema: Service + FAQPage.</p>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <h2 class="sec"><span class="n">08</span><a class="self" href="#s8">Painel administrativo inteligente</a></h2>
+    <ul>
+      <li><strong>Acesso:</strong> login por usuário e senha; rotas <code>noindex</code>; sessão segura; sem cadastro público.</li>
+      <li><strong>CRUD de catálogo:</strong> categorias e produtos (nome, código, categoria, specs, descrição, imagens, destaque).</li>
+      <li><strong>WhatsApp por categoria:</strong> definir número de destino + mensagem pré-preenchida; <code>&lt;WhatsAppCTA&gt;</code> lê essa config (lead cai no especialista certo).</li>
+      <li><strong>IA assistida (API Anthropic):</strong> "Gerar descrição" (≥150 palavras, otimizada), "Gerar title + meta", "Sugerir 3 FAQs". A IA sugere; o admin revisa e aprova (human-in-the-loop).</li>
+      <li><strong>Publicação:</strong> salvar dispara revalidação ISR das páginas afetadas.</li>
+      <li><strong>Aceite:</strong> usuário não-técnico cadastra produto, gera descrição por IA, revisa e publica — e a página pública renderiza o conteúdo no HTML servido.</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section id="s9">
+    <h2 class="sec"><span class="n">09</span><a class="self" href="#s9">Guardrails do conteúdo gerado por IA</a></h2>
+    <p>Toda descrição deve: (a) começar com afirmação direta do que é o produto; (b) citar a aplicação industrial; (c) mencionar marca quando Atlas Copco; (d) evitar texto vago de marketing; (e) manter 150–400 palavras. Title ≤ 60 caracteres, meta ≤ 155.</p>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <h2 class="sec"><span class="n">10</span><a class="self" href="#s10">Critérios de aceite globais (QA)</a></h2>
+    <ul class="check">
+      <li>Todo HTML servido contém o <code>&lt;EntityBlock&gt;</code> nas páginas de destino.</li>
+      <li>Title/meta únicos por página, com Atlas Copco + RS onde aplicável.</li>
+      <li>JSON-LD válido (Organization, LocalBusiness, Product, Service, FAQPage, BreadcrumbList) — testado no Rich Results Test.</li>
+      <li>FAQ sem placeholders, com FAQPage.</li>
+      <li>Encoding UTF-8 correto em todas as páginas.</li>
+      <li>301 das URLs antigas configuradas.</li>
+      <li>sitemap.xml e robots.txt presentes e corretos.</li>
+      <li>Mobile-first; Core Web Vitals no verde.</li>
+      <li>WhatsApp routing por categoria funcionando a partir do painel.</li>
+      <li>Admin protegido por login; <code>noindex</code> no <code>/admin</code>.</li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section id="s11">
+    <h2 class="sec"><span class="n">11</span><a class="self" href="#s11">Como solicitar a construção no Claude Code</a></h2>
+    <p>Execução em ordem, um prompt por etapa (não pedir tudo de uma vez):</p>
+    <div class="steps">
+      <div class="step"><b>Passo 0 — Bootstrap.</b> Projeto Next.js (App Router) + Tailwind + Postgres com a arquitetura da seção 6. Componentes da seção 5 como stubs. UTF-8, lang pt-BR, sitemap, robots e JSON-LD global (Anexo 12.3). Anexar este PRD inteiro.</div>
+      <div class="step"><b>Passo 1 — Páginas estáticas de conteúdo</b> (maior impacto de GEO primeiro): Home → Empresa → Serviços → Locação → FAQ. Para cada uma, colar a spec da seção 7 + textos do Anexo 12. Exigir HTML servido, H1 conforme PRD, EntityBlock e schema.</div>
+      <div class="step"><b>Passo 2 — Catálogo + admin:</b> modelo de dados (categoria, produto, config WhatsApp), CRUD, autenticação, categoria/produto com ISR, WhatsAppCTA lendo config por categoria.</div>
+      <div class="step"><b>Passo 3 — IA no painel:</b> integração API Anthropic com os guardrails da seção 9.</div>
+      <div class="step"><b>Passo 4 — Pilar Atlas Copco + 301 + QA</b> contra o checklist da seção 10.</div>
+    </div>
+    <div class="note tese">
+      <span class="lab">Instrução-chave para colar em todo prompt</span>
+      "Requisito inegociável: o texto de conteúdo deve estar no HTML renderizado pelo servidor, não montado apenas no cliente. Siga os princípios da seção 2 do PRD."
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section id="s12">
+    <h2 class="sec"><span class="n">12</span><a class="self" href="#s12">Anexos — textos prontos</a></h2>
+
+    <h3>12.1 Modelos de title e meta description</h3>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Página</th><th>Title</th><th>Meta description</th></tr></thead>
+      <tbody>
+        <tr><td>Home</td><td>Distribuidor Atlas Copco no RS | Compressores Industriais – ACB Sul</td><td>ACB Sul: distribuidor autorizado Atlas Copco em Porto Alegre/RS há mais de 40 anos. Compressores, assistência técnica, peças originais e locação no RS e SC.</td></tr>
+        <tr><td>Empresa</td><td>Sobre a ACB Sul | Distribuidor Atlas Copco no Rio Grande do Sul</td><td>Conheça a ACB Sul, especialista em compressores industriais e distribuidor autorizado Atlas Copco no RS há mais de 40 anos.</td></tr>
+        <tr><td>Serviços</td><td>Assistência Técnica de Compressores no RS | ACB Sul</td><td>Assistência técnica autorizada, manutenção preventiva e corretiva de compressores Atlas Copco em Porto Alegre e todo o RS. Peças originais e técnicos certificados.</td></tr>
+        <tr><td>Locação</td><td>Locação de Compressores e Geradores no RS | ACB Sul</td><td>Aluguel de compressores, geradores e torres de iluminação para indústrias e obras no RS. Equipamentos revisados e pronta-entrega.</td></tr>
+        <tr><td>FAQ</td><td>Perguntas Frequentes sobre Compressores Industriais | ACB Sul</td><td>Tire suas dúvidas sobre compressores, manutenção, peças e locação com a ACB Sul, distribuidor Atlas Copco no RS.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>12.2 Textos longos</h3>
+    <h4>12.2.1 EntityBlock / parágrafo institucional</h4>
+    <blockquote>A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com mais de 40 anos de atuação no mercado de ar comprimido e equipamentos industriais. Com sede em Porto Alegre, atende empresas e obras em todo o RS e em Santa Catarina, oferecendo venda de compressores industriais, assistência técnica especializada, peças de reposição originais Atlas Copco e locação de equipamentos.</blockquote>
+    <h4>12.2.2 Bloco definicional para Serviços (citável)</h4>
+    <blockquote>A manutenção preventiva de compressores consiste na troca programada de óleo, filtros e componentes conforme o número de horas trabalhadas indicado pelo fabricante. Na ACB Sul, o controle é feito por horímetro, prolongando a vida útil do equipamento e evitando paradas não planejadas na produção.</blockquote>
+
+    <h3>12.3 JSON-LD global (LocalBusiness)</h3>
+<pre>{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "ACB Sul Compressores",
+  "description": "Distribuidor autorizado Atlas Copco no Rio Grande do Sul. Compressores industriais, assistência técnica, peças originais e locação.",
+  "url": "https://acbsulcompressores.com.br",
+  "telephone": "+55-51-3377-3626",
+  "email": "adm@acbsulcompressores.com.br",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Rua Santa Catarina, 304",
+    "addressLocality": "Porto Alegre",
+    "addressRegion": "RS",
+    "postalCode": "91030-330",
+    "addressCountry": "BR"
+  },
+  "areaServed": ["Rio Grande do Sul", "Santa Catarina"],
+  "openingHours": "Mo-Fr 08:00-12:00,13:00-17:00",
+  "brand": { "@type": "Brand", "name": "Atlas Copco" }
+}</pre>
+
+    <h3>12.4 FAQ inicial (12 pares prontos)</h3>
+    <ol>
+      <li><strong>A ACB Sul é distribuidora autorizada Atlas Copco?</strong> Sim. A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com fornecimento de equipamentos novos, peças originais e assistência técnica.</li>
+      <li><strong>Em quais regiões a ACB Sul atende?</strong> A ACB Sul atende todo o Rio Grande do Sul e Santa Catarina, com sede em Porto Alegre.</li>
+      <li><strong>Qual a diferença entre compressor de parafuso e de pistão?</strong> O compressor de parafuso é indicado para uso contínuo e alta demanda industrial; o de pistão atende demandas intermitentes e menores. A escolha depende do volume de ar e do regime de trabalho.</li>
+      <li><strong>Com que frequência devo fazer a manutenção do compressor?</strong> A manutenção segue as horas trabalhadas indicadas pelo fabricante — geralmente a cada 250, 500 e 1000 horas para troca de óleo, filtros e componentes.</li>
+      <li><strong>A ACB Sul usa peças originais Atlas Copco?</strong> Sim, todos os serviços utilizam peças de reposição originais Atlas Copco, garantindo desempenho e validade da garantia.</li>
+      <li><strong>A ACB Sul faz locação de compressores?</strong> Sim. A ACB Sul oferece locação de compressores, geradores e torres de iluminação para indústrias e obras no RS.</li>
+      <li><strong>Vale mais a pena alugar ou comprar um compressor?</strong> A locação faz sentido para necessidades temporárias ou picos de demanda; a compra é vantajosa para uso contínuo de longo prazo.</li>
+      <li><strong>A ACB Sul oferece geradores de nitrogênio?</strong> Sim, a ACB Sul fornece geradores de nitrogênio industriais para aplicações que exigem produção própria de gás.</li>
+      <li><strong>Como solicitar um orçamento?</strong> Pelo WhatsApp da categoria desejada, pelo formulário de contato ou pelo telefone (51) 3377-3626.</li>
+      <li><strong>A assistência técnica atende em campo?</strong> Sim, a ACB Sul realiza manutenção preventiva e corretiva em campo e em oficina própria.</li>
+      <li><strong>Quanto tempo de mercado tem a ACB Sul?</strong> Mais de 40 anos de atuação no segmento de ar comprimido e equipamentos industriais.</li>
+      <li><strong>Quais equipamentos a ACB Sul comercializa?</strong> Compressores de parafuso e pistão, portáteis, tratamento de ar, geradores de energia e de nitrogênio, torres de iluminação, bombas de vácuo, rompedores, perfuratrizes e peças originais.</li>
+    </ol>
+
+    <h3>12.5 Redirecionamentos 301</h3>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>URL antiga</th><th>URL nova</th></tr></thead>
+      <tbody>
+        <tr><td><code>/pagina/institucional/quem-somos</code></td><td><code>/empresa</code></td></tr>
+        <tr><td><code>/pagina/institucional/servicos</code></td><td><code>/servicos</code></td></tr>
+        <tr><td><code>/produto/categoria/compressores-eletricos</code></td><td><code>/produtos/compressores-de-parafuso</code></td></tr>
+        <tr><td><code>/produto/categoria/torre-de-iluminacao</code></td><td><code>/produtos/torre-de-iluminacao</code></td></tr>
+        <tr><td><code>/faq</code></td><td><code>/faq</code></td></tr>
+        <tr><td><code>/contato</code></td><td><code>/contato</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Levantar a lista completa de URLs antigas (Search Console / sitemap atual) antes do go-live e mapear todas.</p>
+  </section>
+
+</div>
+
+<footer class="end">
+  <span class="lab">Fim do PRD v1.0</span>
+  Itens <span class="confirmar">Confirmar</span> pendentes de validação com o cliente: ano de fundação, número de WhatsApp, estrutura física (oficina/frota) e a lista completa de URLs antigas para 301.
+</footer>
+
+</body>
+</html>

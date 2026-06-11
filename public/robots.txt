@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+
+# GEO — liberar crawlers de motores generativos (CLAUDE.md §4)
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://acbsulcompressores.com.br/sitemap-index.xml

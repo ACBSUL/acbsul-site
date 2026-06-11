@@ -1,0 +1,108 @@
+---
+// Navbar pill flutuante + megamenu de categorias + drawer mobile.
+// Hrefs com "/" na frente para funcionar em qualquer rota (na home, /#sobre rola normalmente).
+// Categorias apontam para o filtro do catálogo (/produtos#slug) até as páginas
+// de categoria do Passo 2 existirem. "Peças" e "Serviços" apontam para destinos
+// reais já publicados (/produtos#pecas e /#servicos) até as páginas próprias existirem.
+import { categorias } from '../data/categorias';
+import { catIcons } from '../data/cat-icons';
+
+const path = Astro.url.pathname;
+const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
+---
+
+<!-- ============ NAVBAR ============ -->
+<div class="nav-wrap" id="navWrap">
+  <nav class="navbar">
+    <a class="nav-brand" href="/" aria-label="ACB Sul"
+      ><img
+        src="/assets/logo-acbsul-light.svg"
+        alt="ACB Sul Compressores — Distribuidor Atlas Copco"
+      /></a
+    >
+    <div class="nav-links">
+      <a href="/#sobre">A ACBSUL</a>
+      <div class="nav-item">
+        <a class:list={['has-mega', { active: emProdutos }]} href="/produtos"
+          >Produtos
+          <svg class="nchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+            ><path d="m6 9 6 6 6-6"></path></svg
+          ></a
+        >
+        <div class="nav-mega">
+          <div class="mega-panel">
+            <span class="mega-head">Linha completa de produtos</span>
+            <div class="mega-grid">
+              {
+                categorias.map((c) => (
+                  <a href={`/produtos#${c.slug}`}>
+                    <span class="mi">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        set:html={catIcons[c.icone]}
+                      />
+                    </span>
+                    {c.nome}
+                  </a>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="/produtos#pecas">Peças</a>
+      <a href="/#servicos">Serviços</a>
+    </div>
+    <div class="nav-cta">
+      <a class="nav-pill" href="/#contato">Orçamento</a>
+    </div>
+    <button class="nav-burger" id="burger" aria-label="Abrir menu"
+      ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        ><path d="M3 12h18M3 6h18M3 18h18"></path></svg
+      ></button
+    >
+  </nav>
+</div>
+
+<!-- mobile drawer -->
+<div class="drawer" id="drawer">
+  <div class="panel">
+    <div class="dtop">
+      <img src="/assets/logo-acbsul-light.svg" alt="ACB Sul" /><button
+        class="dclose"
+        aria-label="Fechar">&times;</button
+      >
+    </div>
+    <a class="dl" href="/">Início</a>
+    <a class="dl" href="/#sobre">A ACBSUL</a>
+    <details class:list={['dgroup', { active: emProdutos }]} open={emProdutos}>
+      <summary
+        >Produtos
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+          ><path d="m6 9 6 6 6-6"></path></svg
+        ></summary
+      >
+      <div class="dsub">
+        {categorias.map((c) => <a href={`/produtos#${c.slug}`}>{c.nome}</a>)}
+        <a class="dall" href="/produtos">Ver catálogo completo →</a>
+      </div>
+    </details>
+    <a class="dl" href="/produtos#pecas">Peças</a>
+    <a class="dl" href="/#servicos">Serviços</a>
+    <div class="dcta">
+      <a class="btn btn-wa btn-block" data-wa-msg="Olá! Gostaria de falar com a ACB Sul.">WhatsApp</a>
+      <a class="btn btn-accent btn-block" href="/#contato"
+        ><span class="ai"
+          ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+            ><path d="M5 12h14M13 6l6 6-6 6"></path></svg
+          ></span
+        >Orçamento</a
+      >
+    </div>
+  </div>
+</div>

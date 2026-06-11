@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(npm install)",
+      "PowerShell(npm run build)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\\\\_novomodelo\\\\assets\\\\styles-v2.css\" \"C:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\\\\src\\\\styles\\\\site-v2.css\" -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\\\\_novomodelo\\\\assets\\\\site-v2.js\" \"C:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\\\\public\\\\assets\\\\site-v2.js\" -Force)",
+      "PowerShell(\"copiados\")",
+      "PowerShell(Get-ChildItem \"_fotos-produtos\" -Recurse -File | Select-Object @{n='KB';e={[math]::Round\\($_.Length/1KB\\)}}, FullName | Sort-Object KB -Descending | Select-Object -First 15; Get-Item \"_fotos-produtos\\\\Compressores Elétricos\\\\GA_11+-30_GA_15-30_VSD_Compressores_de_parafuso.png\",\"_fotos-produtos\\\\Compressores Portáteis\\\\XAS_300_PD_-_300_pcm_7_bar_-_Compressor_Portátil_Atlas_Copco.png\",\"_fotos-produtos\\\\Geradores de Energia\\\\QAS_210_-_Geradores_de_energia_Atlas_Copco_-_210_KVA.jpg\",\"_fotos-produtos\\\\Quality Air\\\\Separador_de_Óleo_Água_OSC_12-2500.jpg\",\"_fotos-produtos\\\\Compressores Portáteis\\\\E-AIR_T900_Compressor_Elétrico_Portátil_-_Atlas_Copco.jpeg\" | Select-Object Name, @{n='KB';e={[math]::Round\\($_.Length/1KB\\)}})",
+      "Bash(mkdir -p __TRACKED_VAR__/compressores-eletricos __TRACKED_VAR__/compressores-portateis __TRACKED_VAR__/geradores-de-energia __TRACKED_VAR__/geradores-de-gas-nitrogenio __TRACKED_VAR__/torre-de-iluminacao __TRACKED_VAR__/rompedores __TRACKED_VAR__/pecas __TRACKED_VAR__/bombas-de-vacuo __TRACKED_VAR__/quality-air __TRACKED_VAR__/motobombas)",
+      "Bash(cp '__TRACKED_VAR__/Compressores Elétricos/GA_-_GX_*.png' __TRACKED_VAR__/compressores-eletricos/ga-gx.png)",
+      "Bash(cp '__TRACKED_VAR__/Compressores Elétricos/GA_11*VSD*.png' __TRACKED_VAR__/compressores-eletricos/ga-11-30-vsd.png)",
+      "Bash(cp '__TRACKED_VAR__/Compressores Portáteis/E-AIR_T500*.jpeg' __TRACKED_VAR__/compressores-portateis/e-air-t500.jpeg)",
+      "Bash(cp '__TRACKED_VAR__/Compressores Portáteis/E-AIR_T900*.jpeg' __TRACKED_VAR__/compressores-portateis/e-air-t900.jpeg)",
+      "Bash(cd /c/Users/agenc/meusprojetos/acbsul/dist && grep -o 'class=\"nav-wrap\"\\\\|class=\"drawer\"\\\\|class=\"footer\"\\\\|class=\"wa-float\"\\\\|id=\"yr\"' index.html | sort | uniq -c && grep -o 'href=\"/produtos#[a-z-]*\"' index.html | sort -u | head -15 && grep -o \"mega-grid\" index.html | wc -l)",
+      "Read(//c/c/Users/agenc/meusprojetos/acbsul/dist/**)",
+      "WebSearch",
+      "Bash(python -c ' *)",
+      "Bash(sed -i '/<span class=\"atlas-flag\">◇ <b>Atlas Copco<\\\\/b><\\\\/span>/d' src/pages/produtos/index.astro \"src/pages/produtos/[categoria]/[produto].astro\" && grep -c \"atlas-flag\" src/pages/produtos/index.astro \"src/pages/produtos/[categoria]/[produto].astro\"; echo ok)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "PowerShell(gh auth status)",
+      "PowerShell(gh repo view ACBSUL/acbsul-site --json name,isEmpty,isPrivate,defaultBranchRef)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://api.github.com/repos/ACBSUL/acbsul-site)",
+      "Bash(curl -s https://api.github.com/repos/ACBSUL/acbsul-site)",
+      "PowerShell(try { $r = Invoke-RestMethod -Uri \"https://api.github.com/repos/ACBSUL/acbsul-site\" -ErrorAction Stop; \"EXISTE: $\\($r.full_name\\) | private: $\\($r.private\\) | branch: $\\($r.default_branch\\) | size: $\\($r.size\\)\" } catch { \"ERRO: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-RestMethod -Uri \"https://api.github.com/repos/ACBSUL/acbsul-site\" -ErrorAction Stop; \"EXISTE: $\\($r.full_name\\) | private: $\\($r.private\\) | branch padrao: $\\($r.default_branch\\) | size KB: $\\($r.size\\)\" } catch { \"ERRO: $\\($_.Exception.Response.StatusCode\\) - $\\($_.Exception.Message\\)\" })",
+      "PowerShell([Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { $r = Invoke-RestMethod -Uri \"https://api.github.com/repos/ACBSUL/acbsul-site\" -ErrorAction Stop; \"EXISTE: $\\($r.full_name\\) | private: $\\($r.private\\) | branch padrao: $\\($r.default_branch\\) | size KB: $\\($r.size\\)\" } catch { $code = $null; if \\($_.Exception.Response\\) { $code = [int]$_.Exception.Response.StatusCode }; \"ERRO: HTTP $code - $\\($_.Exception.Message\\)\" })",
+      "PowerShell(Test-NetConnection github.com -Port 443 -InformationLevel Quiet)",
+      "PowerShell(git ls-remote https://github.com/ACBSUL/acbsul-site.git 2>&1)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" init -b main)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" config user.name)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" config user.email)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" add -A)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" status --short)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"
+    ]
+  }
+}

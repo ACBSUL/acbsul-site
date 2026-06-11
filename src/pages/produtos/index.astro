@@ -1,0 +1,505 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import { empresa, entityBlockTexto } from '../../data/empresa';
+import { categorias } from '../../data/categorias';
+import { catIcons, iconTodas } from '../../data/cat-icons';
+import {
+  produtos,
+  contagemPorCategoria,
+  nomeProduto,
+  codigoEtiqueta,
+  imagemPrincipal,
+  altImagem,
+  temPaginaPropria,
+  urlProduto,
+  waMsgProduto,
+} from '../../data/produtos';
+
+export const prerender = true;
+
+const title = 'Catálogo de Produtos Atlas Copco no RS | ACB Sul';
+const description =
+  'Compressores, geradores, bombas de vácuo, rompedores e peças originais Atlas Copco. Venda e locação no RS e SC — ACB Sul, Porto Alegre.';
+
+const contagem = contagemPorCategoria();
+const total = produtos.length;
+
+// ordena os produtos pela ordem das categorias (a grade segue o portfólio do cliente)
+const ordem = new Map(categorias.map((c, i) => [c.slug, i]));
+const itens = [...produtos].sort(
+  (a, b) => (ordem.get(a.categoria) ?? 99) - (ordem.get(b.categoria) ?? 99),
+);
+const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nome]));
+
+// Schema GEO — CollectionPage + BreadcrumbList + ItemList das linhas de produto.
+const urlProdutos = `${empresa.url}/produtos`;
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: urlProdutos,
+  inLanguage: 'pt-BR',
+  isPartOf: { '@type': 'WebSite', name: empresa.nome, url: empresa.url },
+  about: {
+    '@type': 'Organization',
+    name: empresa.nome,
+    description: empresa.posicionamento,
+    brand: { '@type': 'Brand', name: 'Atlas Copco' },
+    areaServed: ['Rio Grande do Sul', 'Santa Catarina'],
+  },
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: empresa.url },
+    { '@type': 'ListItem', position: 2, name: 'Produtos', item: urlProdutos },
+  ],
+};
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Linhas de produto Atlas Copco na ACB Sul',
+  numberOfItems: categorias.length,
+  itemListElement: categorias.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.nome,
+    url: `${urlProdutos}#${c.slug}`,
+  })),
+};
+---
+
+<SiteLayout title={title} description={description} page="produtos">
+  <script
+    type="application/ld+json"
+    is:inline
+    slot="head"
+    set:html={JSON.stringify(collectionSchema)}
+  />
+  <script
+    type="application/ld+json"
+    is:inline
+    slot="head"
+    set:html={JSON.stringify(breadcrumbSchema)}
+  />
+  <script
+    type="application/ld+json"
+    is:inline
+    slot="head"
+    set:html={JSON.stringify(itemListSchema)}
+  />
+
+  <SiteNav />
+
+  <main>
+    <!-- ============ PAGE HERO ============ -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Trilha">
+          <a href="/">Início</a><span class="sep">/</span><span class="current">Produtos</span>
+        </nav>
+        <span class="eyebrow">Catálogo · {categorias.length} linhas Atlas Copco</span>
+        <h1>Compressores, geradores e ar comprimido <span class="hl">Atlas Copco no RS</span></h1>
+        <p class="lead">
+          Catálogo completo de equipamentos industriais Atlas Copco para venda e locação, com
+          pronta-entrega no RS e SC. Escolha a linha e fale direto com um especialista da ACB Sul.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ CATÁLOGO (sidebar de filtros + grade) ============ -->
+    <section class="section" style="padding-top:clamp(32px,4vw,52px)">
+      <div class="container">
+        <div class="catalog-layout" id="catalogo">
+          <!-- sidebar (desktop) / botão Filtrar + bottom-sheet (mobile) -->
+          <aside class="catalog-side" id="fside">
+            <button
+              class="fbtn"
+              id="fbtn"
+              type="button"
+              aria-expanded="false"
+              aria-controls="fsheet"
+            >
+              <span class="fi"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M3 5h18l-7 8.46V19l-4 2v-7.54L3 5z"></path></svg
+                ></span
+              >
+              <span class="ftxt">
+                <b>Filtrar produtos</b>
+                <small id="fbtnSel">Todas as linhas · {total} itens</small>
+              </span>
+              <span class="ch"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="m6 9 6 6 6-6"></path></svg
+                ></span
+              >
+            </button>
+
+            <button
+              class="fpill"
+              id="fbarBtn"
+              type="button"
+              aria-expanded="false"
+              aria-controls="fsheet"
+            >
+              <span class="fi"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M3 5h18l-7 8.46V19l-4 2v-7.54L3 5z"></path></svg
+                ></span
+              >
+              <b id="fpillLabel">Todas as linhas</b>
+              <span class="n" id="fpillCount">{total}</span>
+              <span class="ch"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="m6 9 6 6 6-6"></path></svg
+                ></span
+              >
+            </button>
+
+            <div class="fsheet" id="fsheet" role="dialog" aria-label="Filtrar por linha de produto">
+              <div class="fsheet-head">
+                <b>Filtrar por linha</b>
+                <button class="fsheet-close" type="button" aria-label="Fechar filtros">&times;</button>
+              </div>
+              <div class="fsheet-body">
+                <div class="side-box">
+                  <span class="side-head">Linhas de produto</span>
+                  <nav class="cat-list" aria-label="Filtrar por linha de produto">
+                    <a
+                      class="cat-link active"
+                      href="/produtos"
+                      data-filter=""
+                      data-nome="Todas as linhas"
+                      aria-pressed="true"
+                    >
+                      <span class="mi">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={iconTodas} />
+                      </span>
+                      <span class="t">Todas as linhas</span>
+                      <span class="n">{total}</span>
+                    </a>
+                    {
+                      categorias.map((c) => (
+                        <a
+                          class="cat-link"
+                          href={`/produtos#${c.slug}`}
+                          data-filter={c.slug}
+                          data-nome={c.nome}
+                          aria-pressed="false"
+                        >
+                          <span class="mi">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={catIcons[c.icone]} />
+                          </span>
+                          <span class="t">{c.nome}</span>
+                          <span class="n">{contagem[c.slug] ?? 0}</span>
+                        </a>
+                      ))
+                    }
+                  </nav>
+                </div>
+                <div class="side-help">
+                  <h3>Não sabe qual linha atende sua operação?</h3>
+                  <p>
+                    Informe pressão, vazão ou carga e um especialista da ACB Sul dimensiona o
+                    equipamento Atlas Copco certo.
+                  </p>
+                  <a
+                    class="btn btn-wa btn-block"
+                    data-wa-msg="Olá! Preciso de ajuda para escolher o equipamento Atlas Copco ideal."
+                    >Falar com especialista</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="fsheet-overlay" id="fsheetOverlay"></div>
+          </aside>
+
+          <!-- grade -->
+          <div class="catalog-main">
+            <div class="catalog-toolbar">
+              <h2 id="ftitle">Todas as linhas</h2>
+              <span class="count"><b id="fcount">{total}</b> itens</span>
+            </div>
+
+            <div class="grid cols-3" id="pgrid">
+              {
+                itens.map((p, i) => {
+                  const urlPagina = temPaginaPropria(p) ? urlProduto(p) : null;
+                  const img = imagemPrincipal(p);
+                  return (
+                    <article class="prod-card" data-cat={p.categoria}>
+                      {img ? (
+                        urlPagina ? (
+                          <a class="pmedia" href={urlPagina}>
+                            <img
+                              src={img.src}
+                              alt={altImagem(p, img)}
+                              loading={i < 3 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                          </a>
+                        ) : (
+                          <div class="pmedia">
+                            <img
+                              src={img.src}
+                              alt={altImagem(p, img)}
+                              loading={i < 3 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                          </div>
+                        )
+                      ) : (
+                        <div class="pmedia ph">
+                          <span class="ph-label">{nomeCategoria.get(p.categoria)}</span>
+                        </div>
+                      )}
+                      <div class="pbody">
+                        <span class="code">{codigoEtiqueta(p)}</span>
+                        <h3>{nomeProduto(p)}</h3>
+                        <div class="spec-chips">
+                          {p.specsChips.map((s) => (
+                            <span>{s}</span>
+                          ))}
+                        </div>
+                        <div class="pfoot">
+                          {urlPagina ? (
+                            <a class="link-arrow" href={urlPagina}>
+                              Ver detalhes{' '}
+                              <span class="dot">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                              </span>
+                            </a>
+                          ) : (
+                            <a
+                              class="link-arrow"
+                              data-wa-msg={waMsgProduto(p, nomeCategoria.get(p.categoria) ?? '')}
+                            >
+                              Solicitar orçamento{' '}
+                              <span class="dot">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })
+              }
+            </div>
+
+            <!-- parágrafos de SEO por linha (fim da listagem) — todos no HTML servido; o filtro alterna -->
+            <div class="fintros">
+              <p class="fintro" data-intro="">
+                Catálogo completo Atlas Copco para o RS e SC: compressores, geradores, bombas de
+                vácuo, rompedores, torres de iluminação, motobombas e peças originais — venda e
+                locação com a ACB Sul, em Porto Alegre.
+              </p>
+              {
+                categorias.map((c) => (
+                  <p class="fintro" data-intro={c.slug} hidden>
+                    {c.introducao}
+                  </p>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BLOCO GEO (citável) ============ -->
+    <section class="section tight" style="background:var(--bg-2)">
+      <div class="container">
+        <div class="lead-block">
+          <p>
+            <b
+              >A ACB Sul mantém em Porto Alegre o catálogo completo de equipamentos Atlas Copco
+              para o Rio Grande do Sul e Santa Catarina.</b
+            > São compressores elétricos e portáteis, geradores de energia e de nitrogênio, torres
+            de iluminação, bombas de vácuo, rompedores, perfuratrizes, motobombas, tratamento de ar
+            e peças originais — disponíveis para <b>venda ou locação</b>, com assistência técnica
+            autorizada e mais de 40 anos de experiência.
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+            <span class="tag-chip">Venda &amp; Locação</span><span class="tag-chip"
+              >Peças Originais</span
+            ><span class="tag-chip">Pronta-entrega</span><span class="tag-chip"
+              >Distribuidor Autorizado</span
+            ><span class="tag-chip">RS &amp; SC</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA BAND ============ -->
+    <section class="section tight">
+      <div class="container">
+        <div class="cta-band">
+          <div>
+            <h2>Não encontrou o equipamento <span class="hl">ideal</span>?</h2>
+            <p>
+              Fale com um especialista da ACB Sul. Ajudamos a dimensionar a solução Atlas Copco
+              certa para sua pressão, vazão e aplicação — para compra ou locação.
+            </p>
+          </div>
+          <div class="acts">
+            <a
+              class="btn btn-accent btn-lg"
+              data-wa-msg="Olá! Preciso de ajuda para escolher o equipamento Atlas Copco ideal."
+              ><span class="ai"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M5 12h14M13 6l6 6-6 6"></path></svg
+                ></span
+              >Falar com Especialista</a
+            >
+            <a class="btn btn-ghost-dark btn-lg" href="/#contato">Solicitar Orçamento</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ENTITYBLOCK (rodapé da página de destino) ============ -->
+    <section class="entity-strip" aria-label="Sobre a ACB Sul">
+      <div class="container">
+        <div class="inner">
+          <span class="eyebrow">A ACB Sul</span>
+          <p>{entityBlockTexto}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+
+  <!-- filtro de categorias (progressive enhancement — todo o catálogo já está no HTML) -->
+  <script is:inline>
+    (function () {
+      var links = document.querySelectorAll('.cat-link');
+      var cards = document.querySelectorAll('#pgrid [data-cat]');
+      var count = document.getElementById('fcount');
+      var titulo = document.getElementById('ftitle');
+      var fpillLabel = document.getElementById('fpillLabel');
+      var fpillCount = document.getElementById('fpillCount');
+      var fbtnSel = document.getElementById('fbtnSel');
+      var intros = document.querySelectorAll('.fintro');
+
+      /* ---- menu sobreposto de filtros (mobile) ---- */
+      var aside = document.getElementById('fside');
+      var sheet = document.getElementById('fsheet');
+      var gatilhos = [document.getElementById('fbtn'), document.getElementById('fbarBtn')].filter(
+        Boolean,
+      );
+      function setExpanded(v) {
+        gatilhos.forEach(function (b) {
+          b.setAttribute('aria-expanded', v ? 'true' : 'false');
+        });
+      }
+      function openSheet() {
+        aside.classList.add('sheet-open');
+        sheet.classList.add('open');
+        setExpanded(true);
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSheet() {
+        aside.classList.remove('sheet-open');
+        sheet.classList.remove('open');
+        setExpanded(false);
+        document.body.style.overflow = '';
+      }
+      gatilhos.forEach(function (b) {
+        b.addEventListener('click', function () {
+          sheet.classList.contains('open') ? closeSheet() : openSheet();
+        });
+      });
+      document.getElementById('fsheetOverlay').addEventListener('click', closeSheet);
+      document.querySelector('.fsheet-close').addEventListener('click', closeSheet);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSheet();
+      });
+      // voltou ao desktop com o painel aberto: fecha e destrava o scroll
+      window.matchMedia('(min-width:981px)').addEventListener('change', function (e) {
+        if (e.matches) closeSheet();
+      });
+
+      /* ---- filtro ---- */
+      function apply(slug) {
+        var visiveis = 0;
+        cards.forEach(function (c) {
+          var mostra = !slug || c.getAttribute('data-cat') === slug;
+          c.style.display = mostra ? '' : 'none';
+          if (mostra) visiveis++;
+        });
+        var nomeAtivo = 'Todas as linhas';
+        links.forEach(function (l) {
+          var ativo = (l.getAttribute('data-filter') || '') === (slug || '');
+          l.classList.toggle('active', ativo);
+          l.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+          if (ativo) nomeAtivo = l.getAttribute('data-nome') || nomeAtivo;
+        });
+        intros.forEach(function (el) {
+          el.hidden = (el.getAttribute('data-intro') || '') !== (slug || '');
+        });
+        if (titulo) titulo.textContent = nomeAtivo;
+        if (fpillLabel) fpillLabel.textContent = nomeAtivo;
+        if (count) count.textContent = visiveis;
+        if (fpillCount) fpillCount.textContent = visiveis;
+        if (fbtnSel)
+          fbtnSel.textContent = nomeAtivo + ' · ' + visiveis + (visiveis === 1 ? ' item' : ' itens');
+      }
+      // rola até o topo do catálogo (compensa o navbar fixo / botão sticky mobile)
+      function scrollCatalogo(suave) {
+        var alvo = document.getElementById('catalogo');
+        if (!alvo) return;
+        var y = alvo.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: y, behavior: suave ? 'smooth' : 'auto' });
+      }
+      function fromHash() {
+        var h = decodeURIComponent((location.hash || '').replace('#', ''));
+        var valido = Array.prototype.some.call(links, function (l) {
+          return l.getAttribute('data-filter') === h;
+        });
+        apply(valido ? h : '');
+        return valido;
+      }
+      links.forEach(function (l) {
+        l.addEventListener('click', function (e) {
+          e.preventDefault();
+          var slug = l.getAttribute('data-filter') || '';
+          history.replaceState(null, '', slug ? '#' + slug : location.pathname);
+          apply(slug);
+          closeSheet();
+          scrollCatalogo(true);
+        });
+      });
+      // megamenu/rodapé desta própria página mudam só o hash
+      window.addEventListener('hashchange', function () {
+        if (fromHash()) scrollCatalogo(true);
+      });
+      // chegada com #categoria na URL (vindo de outra página): filtra e posiciona no catálogo
+      if (fromHash()) scrollCatalogo(false);
+
+      // pill contextual: aparece quando o botão "Filtrar produtos" sai da viewport pelo topo
+      var fbtn = document.getElementById('fbtn');
+      var fpill = document.getElementById('fbarBtn');
+      if (fbtn && fpill && 'IntersectionObserver' in window) {
+        new IntersectionObserver(
+          function (es) {
+            var e = es[0];
+            fpill.classList.toggle('show', !e.isIntersecting && e.boundingClientRect.top < 0);
+          },
+          { rootMargin: '-80px 0px 0px 0px' },
+        ).observe(fbtn);
+      }
+    })();
+  </script>
+</SiteLayout>

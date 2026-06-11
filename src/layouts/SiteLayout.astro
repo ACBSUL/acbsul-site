@@ -1,0 +1,70 @@
+---
+import '../styles/site-v2.css';
+import LocalBusinessSchema from '../components/LocalBusinessSchema.astro';
+import { empresa } from '../data/empresa';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  noindex?: boolean;
+  /** atributo data-page do <body> (usado pelo site-v2.js em páginas de catálogo) */
+  page?: string;
+}
+
+const {
+  title,
+  description,
+  ogImage = '/assets/hero-obra-qas.jpg',
+  noindex = false,
+  page,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogUrl = new URL(ogImage, Astro.site).href;
+
+// Dados de negócio expostos ao site-v2.js (fonte única: empresa.ts).
+const biz = {
+  phone: empresa.telefone,
+  waNumber: empresa.whatsapp,
+  email: empresa.email,
+};
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/logo-acbsul-atlas-copco.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ACB Sul Compressores" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+
+    <LocalBusinessSchema />
+    <slot name="head" />
+  </head>
+  <body data-page={page}>
+    <slot />
+
+    <!-- expõe dados de negócio ao script de interações -->
+    <script is:inline set:html={`window.ACB_BIZ=${JSON.stringify(biz)};`} />
+    <script src="/assets/site-v2.js" is:inline></script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+# build output
+dist/
+# generated types
+.astro/
+# dependencies
+node_modules/
+# logs
+npm-debug.log*
+# environment
+.env
+.env.production
+# macOS / editors
+.DS_Store
+# arquivos de trabalho do PRD (não versionar o zip de origem)
+ACBSul - Site.zip
