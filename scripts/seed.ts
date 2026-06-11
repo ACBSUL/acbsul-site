@@ -19,6 +19,21 @@ const client = postgres(url, { prepare: false, max: 1 });
 const db = drizzle(client, { schema });
 
 async function main() {
+  // O banco é a fonte da verdade do conteúdo (editado pelo admin e pelos
+  // scripts preencher-*.ts). Reseedar apaga tudo — exigir --force.
+  const [{ n }] = await db
+    .select({ n: schema.produtos.id })
+    .from(schema.produtos)
+    .limit(1)
+    .then((r) => (r.length ? [{ n: 1 }] : [{ n: 0 }]));
+  if (n > 0 && !process.argv.includes('--force')) {
+    console.error(
+      '✖ O banco já tem produtos (conteúdo editado seria PERDIDO).\n' +
+        '  Para reseedar mesmo assim: npm run db:seed -- --force',
+    );
+    process.exit(1);
+  }
+
   console.log('→ Limpando tabelas do catálogo…');
   await db.delete(schema.produtoSpecs);
   await db.delete(schema.produtoImagens);

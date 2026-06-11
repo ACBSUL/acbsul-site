@@ -83,7 +83,15 @@
       "PowerShell(npx tsx scripts/shot-um.ts /admin/produtos .qa-screens/04b-produtos-mobile-vp.png 375)",
       "WebFetch(domain:www.atlascopco.com)",
       "PowerShell(npx tsx scripts/preencher-eletricos.ts)",
-      "PowerShell(npx tsx scripts/shot-um.ts /produtos/compressores-eletricos/ga-11-30-vsd .qa-screens/pdp-ga-vsd.png 1280)"
+      "PowerShell(npx tsx scripts/shot-um.ts /produtos/compressores-eletricos/ga-11-30-vsd .qa-screens/pdp-ga-vsd.png 1280)",
+      "PowerShell(npx tsx scripts/inventario.ts)",
+      "PowerShell(npx tsx scripts/preencher-portateis.ts)",
+      "PowerShell(npx tsx scripts/preencher-geradores.ts)",
+      "PowerShell(npx tsx scripts/preencher-equipamentos.ts)",
+      "PowerShell(npx tsx scripts/preencher-pecas.ts)",
+      "PowerShell(npx tsx scripts/verificar-pdps.ts)",
+      "PowerShell(npx tsx scripts/test-admin-e2e.ts 2>&1)",
+      "PowerShell(npx tsx scripts/shot-um.ts /admin .qa-screens/dashboard-zerado.png 1280)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

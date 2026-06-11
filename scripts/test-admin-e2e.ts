@@ -72,12 +72,14 @@ const catForm = {
 const r3 = await req('/admin/categorias/1', form({ ...catForm, whatsappNumero: '5551888887777' }));
 ok('POST categoria (whatsapp)', r3.status === 302);
 
-const pub = await (await req('/produtos')).text();
-ok('site público com data-wa-num da categoria', pub.includes('data-wa-num="5551888887777"'));
+// o data-wa-num aparece na PDP (WhatsAppCTA por categoria) — os cards do
+// catálogo só o usam quando o produto não tem página própria
+const pub = await (await req('/produtos/compressores-eletricos/ga-gx')).text();
+ok('PDP com data-wa-num da categoria', pub.includes('data-wa-num="5551888887777"'));
 
 // restaurar (sem número específico)
 await req('/admin/categorias/1', form({ ...catForm, whatsappNumero: '' }));
-const pub2 = await (await req('/produtos')).text();
+const pub2 = await (await req('/produtos/compressores-eletricos/ga-gx')).text();
 ok('whatsapp da categoria restaurado', !pub2.includes('data-wa-num'));
 
 /* 4. criar produto de teste */

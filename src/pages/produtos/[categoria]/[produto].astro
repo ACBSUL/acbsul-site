@@ -131,6 +131,13 @@ const breadcrumbSchema = {
                   ></span
                 >Solicitar mais informações</button
               >
+              <!-- WhatsAppCTA por categoria (PRD §8): número/mensagem vêm da config do admin -->
+              <a
+                class="btn btn-wa btn-lg"
+                data-wa-msg={categoria.whatsappMensagem || waMsgProduto(p, categoria.nome)}
+                data-wa-num={categoria.whatsappNumero || undefined}
+                >Falar com especialista</a
+              >
             </div>
           </div>
         </div>
