@@ -597,8 +597,12 @@ p{margin:0;text-wrap:pretty;}
 .entity-facts{list-style:none;padding:0;margin:24px 0 0;display:flex;flex-direction:column;gap:12px;}
 .entity-facts li{display:flex;align-items:center;gap:11px;font-family:var(--hd);font-weight:600;font-size:15px;color:var(--ink);}
 .entity-facts li svg{width:19px;height:19px;color:var(--accent);flex:none;}
+/* variações p/ páginas internas (/quem-somos): foto na direita e proporção 16/10 */
+.entity-grid.flip .entity-photo{order:2;}
+.entity-photo.wide{aspect-ratio:16/10;}
 @media(max-width:860px){
   .entity-grid{grid-template-columns:1fr;gap:26px;}
+  .entity-grid.flip .entity-photo{order:0;}
   .entity-photo{aspect-ratio:16/10;}
 }
 

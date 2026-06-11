@@ -47,7 +47,14 @@
       "PowerShell(npm install \"@astrojs/vercel@^9\" drizzle-orm postgres)",
       "PowerShell(npm run build 2>&1)",
       "PowerShell(npm run db:seed)",
-      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" log --oneline -2)"
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" log --oneline -2)",
+      "Bash(node -e \"console.log\\(require\\('sharp'\\) ? 'sharp OK' : 'no'\\)\")",
+      "Bash(node -e ' *)",
+      "PowerShell(npm run db:push)",
+      "PowerShell(try { \\(Resolve-DnsName aws-0-sa-east-1.pooler.supabase.com -ErrorAction Stop | Select-Object -First 1\\).Name } catch { \"DNS FALHOU: aws-0-sa-east-1\" }; try { \\(Resolve-DnsName db.cyxhijeunyifmapnjwtu.supabase.co -ErrorAction Stop | Select-Object -First 2 | ForEach-Object { \"$\\($_.Type\\) $\\($_.Name\\)\" }\\) } catch { \"DNS FALHOU: db direto\" })",
+      "PowerShell(npx tsx scripts/test-db.ts)",
+      "PowerShell(npm run db:push 2>&1)",
+      "PowerShell(npx tsx scripts/verify-seed.ts)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"
