@@ -1,6 +1,6 @@
 ---
-// Admin → Editar categoria: introdução (citável), SEO e WhatsApp por
-// categoria (PRD §8 — o WhatsAppCTA do site lê esta config).
+// Admin → Editar categoria: WhatsApp por categoria (PRD §8 — o WhatsAppCTA
+// do site lê esta config), introdução citável e SEO.
 import { eq } from 'drizzle-orm';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { db, tabelas } from '../../../db';
@@ -46,96 +46,119 @@ const icones = Object.keys(catIcons);
 
 <AdminLayout titulo={`Categoria · ${cat.nome}`}>
   <div class="acoes">
-    <h1>Editar categoria — {cat.nome}</h1>
-    <a class="botao cinza" href="/admin/categorias">← Voltar</a>
+    <h1>{cat.nome}</h1>
+    <a class="voltar" href="/admin/categorias">← Todas as categorias</a>
   </div>
 
-  {salvo && <p class="flash">Categoria salva. O site público já reflete a mudança.</p>}
+  {salvo && <p class="flash" role="status">Categoria salva. O site público já reflete a mudança.</p>}
 
   <form method="POST">
-    <div class="cartao-form">
-      <h2>Identificação</h2>
-      <div class="campos">
-        <label class="campo">
-          Nome completo
-          <input type="text" name="nome" value={cat.nome} required />
-        </label>
-        <label class="campo">
-          Nome curto (chips/menus)
-          <input type="text" name="nomeCurto" value={cat.nomeCurto} required />
-        </label>
-        <label class="campo">
-          Ícone
-          <select name="icone">
-            {icones.map((i) => (
-              <option value={i} selected={i === cat.icone}>
-                {i}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label class="campo">
-          Ordem de exibição
-          <input type="number" name="ordem" value={cat.ordem} min="0" />
-        </label>
+    <div class="editor-grid">
+      <div>
+        <div class="cartao-form">
+          <h2>WhatsApp da categoria</h2>
+          <p class="nota">
+            Para onde vão os leads desta linha. Vazio = número geral da empresa.
+          </p>
+          <div class="campos">
+            <label class="campo">
+              Número (DDI+DDD+número, só dígitos)
+              <input
+                type="text"
+                name="whatsappNumero"
+                value={cat.whatsappNumero ?? ''}
+                placeholder="5551999998888"
+                inputmode="numeric"
+              />
+            </label>
+            <label class="campo largo">
+              Mensagem pré-preenchida (opcional)
+              <input
+                type="text"
+                name="whatsappMensagem"
+                value={cat.whatsappMensagem ?? ''}
+                placeholder={`Olá! Quero um orçamento de ${cat.nome}.`}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>Identificação</h2>
+          <div class="campos">
+            <label class="campo">
+              Nome completo <span class="req" aria-hidden="true">*</span>
+              <input type="text" name="nome" value={cat.nome} required />
+            </label>
+            <label class="campo">
+              Nome curto (chips/menus) <span class="req" aria-hidden="true">*</span>
+              <input type="text" name="nomeCurto" value={cat.nomeCurto} required />
+            </label>
+            <label class="campo">
+              Ícone
+              <select name="icone">
+                {icones.map((i) => (
+                  <option value={i} selected={i === cat.icone}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label class="campo">
+              Ordem de exibição
+              <input type="number" name="ordem" value={cat.ordem} min="0" />
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>Conteúdo e SEO</h2>
+          <div class="campos">
+            <label class="campo largo">
+              Introdução da categoria (parágrafo citável — aparece no catálogo)
+              <textarea name="introducao">{cat.introducao ?? ''}</textarea>
+            </label>
+            <label class="campo largo">
+              SEO Title
+              <input
+                type="text"
+                name="seoTitle"
+                value={cat.seoTitle ?? ''}
+                maxlength="60"
+                data-contador
+              />
+            </label>
+            <label class="campo largo">
+              Meta description
+              <input
+                type="text"
+                name="seoDescription"
+                value={cat.seoDescription ?? ''}
+                maxlength="155"
+                data-contador
+              />
+            </label>
+          </div>
+        </div>
       </div>
-      <p style="margin-top:1rem">
-        <label class="check">
-          <input type="checkbox" name="ativa" checked={cat.ativa} />
-          Categoria visível no site
-        </label>
-      </p>
+
+      <aside class="editor-lateral">
+        <div class="cartao-form" style="margin-bottom:0">
+          <h2>Visibilidade</h2>
+          <label class="check">
+            <input type="checkbox" name="ativa" checked={cat.ativa} />
+            Categoria visível no site
+          </label>
+          <p class="nota" style="margin:0.75rem 0 0">
+            Ocultar não apaga nada — os produtos continuam no banco.
+          </p>
+        </div>
+      </aside>
     </div>
 
-    <div class="cartao-form">
-      <h2>WhatsApp da categoria (roteamento de leads)</h2>
-      <div class="campos">
-        <label class="campo">
-          Número (DDI+DDD+número, só dígitos)
-          <input
-            type="text"
-            name="whatsappNumero"
-            value={cat.whatsappNumero ?? ''}
-            placeholder="5551999998888"
-            inputmode="numeric"
-          />
-          <span class="dica">Vazio = usa o número geral da empresa.</span>
-        </label>
-        <label class="campo largo">
-          Mensagem pré-preenchida (opcional)
-          <input
-            type="text"
-            name="whatsappMensagem"
-            value={cat.whatsappMensagem ?? ''}
-            placeholder={`Olá! Quero um orçamento de ${cat.nome}.`}
-          />
-        </label>
-      </div>
+    <div class="barra-salvar">
+      <button class="botao" type="submit">Salvar categoria</button>
+      <span class="lembrete">As mudanças entram no ar imediatamente.</span>
     </div>
-
-    <div class="cartao-form">
-      <h2>Conteúdo e SEO</h2>
-      <div class="campos">
-        <label class="campo largo">
-          Introdução da categoria (parágrafo citável — aparece no catálogo)
-          <textarea name="introducao">{cat.introducao ?? ''}</textarea>
-        </label>
-        <label class="campo">
-          SEO Title (≤ 60 caracteres)
-          <input type="text" name="seoTitle" value={cat.seoTitle ?? ''} maxlength="60" />
-        </label>
-        <label class="campo">
-          Meta description (≤ 155 caracteres)
-          <input
-            type="text"
-            name="seoDescription"
-            value={cat.seoDescription ?? ''}
-            maxlength="155"
-          />
-        </label>
-      </div>
-    </div>
-
-    <button class="botao" type="submit">Salvar categoria</button>
   </form>
 </AdminLayout>

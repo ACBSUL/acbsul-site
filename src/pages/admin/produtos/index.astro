@@ -21,25 +21,29 @@ if (q) {
 }
 const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nomeCurto]));
 const excluido = Astro.url.searchParams.get('ok') === 'excluido';
+const filtrando = Boolean(q || cat);
 ---
 
 <AdminLayout titulo="Produtos">
   <div class="acoes">
-    <h1>Produtos <small style="color:var(--cinza);font-weight:400">({itens.length} de {todos.length})</small></h1>
+    <h1>
+      Produtos
+      <span class="contagem">{filtrando ? `${itens.length} de ${todos.length}` : todos.length}</span>
+    </h1>
     <a class="botao" href="/admin/produtos/novo">+ Novo produto</a>
   </div>
 
-  {excluido && <p class="flash">Produto excluído.</p>}
+  {excluido && <p class="flash" role="status">Produto excluído.</p>}
 
-  <form method="GET" class="acoes" style="gap:.5rem">
+  <form method="GET" class="toolbar" role="search">
     <input
       type="search"
       name="q"
       value={q}
       placeholder="Buscar por código, tipo ou nome…"
-      style="flex:1;min-width:220px;padding:.55rem .7rem;border:1px solid var(--borda);border-radius:8px"
+      aria-label="Buscar produtos"
     />
-    <select name="cat" style="padding:.55rem .7rem;border:1px solid var(--borda);border-radius:8px">
+    <select name="cat" aria-label="Filtrar por categoria">
       <option value="">Todas as categorias</option>
       {categorias.map((c) => (
         <option value={c.slug} selected={c.slug === cat}>
@@ -48,52 +52,114 @@ const excluido = Astro.url.searchParams.get('ok') === 'excluido';
       ))}
     </select>
     <button class="botao cinza" type="submit">Filtrar</button>
+    {filtrando && <a class="limpar" href="/admin/produtos">Limpar</a>}
   </form>
 
-  <table class="lista">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Produto</th>
-        <th>Categoria</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {
-        itens.map((p) => {
-          const img = imagemPrincipal(p);
-          return (
+  <div class="tabela-rolagem">
+    <table class="lista">
+      <thead>
+        <tr>
+          <th scope="col"><span class="sr-only">Foto</span></th>
+          <th scope="col">Produto</th>
+          <th scope="col">Categoria</th>
+          <th scope="col">Status</th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          itens.length === 0 && (
             <tr>
-              <td>{img && <img class="mini" src={img.src} alt="" loading="lazy" />}</td>
-              <td>
-                <b>{nomeProduto(p)}</b>
+              <td colspan="5" class="vazio">
+                <b>Nenhum produto encontrado.</b>
                 <br />
-                <small style="color:var(--cinza)">
-                  {p.codigo}
-                  {p.etiqueta ? ` · ${p.etiqueta}` : ''} — /{p.slug}
-                </small>
-              </td>
-              <td>{nomeCategoria.get(p.categoria) ?? p.categoria}</td>
-              <td>
-                {p.publicado !== false ? (
-                  <span class="badge ok">Publicado</span>
-                ) : (
-                  <span class="badge off">Rascunho</span>
-                )}
-                {p.destaque && <span class="badge dest">Destaque</span>}
-                {temPaginaPropria(p) && <span class="badge info">Página própria</span>}
-              </td>
-              <td>
-                <a class="botao mini cinza" href={`/admin/produtos/${p.id}`}>
-                  Editar
-                </a>
+                Tente outra busca ou <a href="/admin/produtos">limpe os filtros</a>.
               </td>
             </tr>
-          );
-        })
-      }
-    </tbody>
-  </table>
+          )
+        }
+        {
+          itens.map((p) => {
+            const img = imagemPrincipal(p);
+            return (
+              <tr>
+                <td style="width:62px">
+                  {img && <img class="mini-foto" src={img.src} alt="" loading="lazy" />}
+                </td>
+                <td>
+                  <a class="nome-produto" href={`/admin/produtos/${p.id}`}>
+                    {nomeProduto(p)}
+                  </a>
+                  <br />
+                  <span class="secundario">
+                    {p.codigo}
+                    {p.etiqueta ? ` · ${p.etiqueta}` : ''} — /{p.slug}
+                  </span>
+                </td>
+                <td>{nomeCategoria.get(p.categoria) ?? p.categoria}</td>
+                <td>
+                  {p.publicado !== false ? (
+                    <span class="badge ok">Publicado</span>
+                  ) : (
+                    <span class="badge off">Rascunho</span>
+                  )}
+                  {p.destaque && <span class="badge dest">Destaque</span>}
+                  {temPaginaPropria(p) && <span class="badge info">Página própria</span>}
+                </td>
+                <td>
+                  <a class="botao mini cinza" href={`/admin/produtos/${p.id}`}>
+                    Editar
+                  </a>
+                </td>
+              </tr>
+            );
+          })
+        }
+      </tbody>
+    </table>
+  </div>
 </AdminLayout>
+
+<style>
+  .contagem {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    vertical-align: 3px;
+    margin-left: 0.4rem;
+  }
+  .toolbar { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  .toolbar input[type='search'] {
+    flex: 1;
+    min-width: 220px;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  .toolbar select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--surface);
+  }
+  .limpar { color: var(--ink-2); font-size: 0.9rem; }
+  .nome-produto { color: var(--ink); font-weight: 700; text-decoration: none; }
+  .nome-produto:hover { color: var(--accent-strong); }
+  .vazio a { color: var(--accent-strong); }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>

@@ -1,6 +1,10 @@
 # Link local do projeto
 http://localhost:5030/
 
+# Acesso ao /admin
+E-mail: adm@acbsulcompressores.com.br
+Senha: AcbSul#Admin2026
+
 # CLAUDE.md — Projeto ACB Sul Compressores
 
 Contexto de engenharia para a reconstrução do site da **ACB Sul Compressores**.

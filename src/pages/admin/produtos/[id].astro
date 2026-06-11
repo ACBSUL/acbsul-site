@@ -171,154 +171,207 @@ const ok = Astro.url.searchParams.get('ok');
 
 const especificacoesTexto = specs.map((s) => `${s.rotulo} | ${s.valor}`).join('\n');
 const descricaoTexto = (linha.descricao ?? []).join('\n\n');
-const temConteudoCompleto = Boolean(linha.pitch && linha.descricao?.length && specs.length);
+
+const temPitch = Boolean(linha.pitch);
+const temDescricao = Boolean(linha.descricao?.length);
+const temSpecs = specs.length > 0;
+const temImagem = imagens.length > 0;
+const completa = temPitch && temDescricao && temSpecs;
+const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
 ---
 
 <AdminLayout titulo={`Produto · ${linha.codigo}`}>
   <div class="acoes">
     <h1>{nomeProduto(pseudo)}</h1>
-    <a class="botao cinza" href="/admin/produtos">← Voltar</a>
-    {
-      linha.publicado && (
-        <a
-          class="botao cinza"
-          href={`/produtos/${categoria?.slug}/${linha.slug}`}
-          target="_blank"
-        >
-          Ver no site ↗
-        </a>
-      )
-    }
+    <a class="voltar" href="/admin/produtos">← Todos os produtos</a>
   </div>
 
-  {ok === '1' && <p class="flash">Produto salvo. O site público já reflete a mudança.</p>}
-  {ok === 'img' && <p class="flash">Imagens atualizadas.</p>}
-  {ok === 'criado' && <p class="flash">Produto criado como rascunho — complete e publique.</p>}
-  {erro && <p class="flash erro">{erro}</p>}
+  {ok === '1' && <p class="flash" role="status">Produto salvo. O site público já reflete a mudança.</p>}
+  {ok === 'img' && <p class="flash" role="status">Imagens atualizadas.</p>}
+  {ok === 'criado' && <p class="flash" role="status">Rascunho criado — complete o conteúdo e publique aqui.</p>}
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
 
   <form method="POST">
     <input type="hidden" name="_acao" value="salvar" />
 
-    <div class="cartao-form">
-      <h2>Dados básicos</h2>
-      <div class="campos">
-        <label class="campo">
-          Código/modelo
-          <input type="text" name="codigo" value={linha.codigo} required />
-        </label>
-        <label class="campo">
-          Etiqueta
-          <input type="text" name="etiqueta" value={linha.etiqueta ?? ''} placeholder="Diesel, VSD…" />
-        </label>
-        <label class="campo">
-          Tipo (termo semântico)
-          <input type="text" name="tipo" value={linha.tipo} required />
-        </label>
-        <label class="campo">
-          Categoria
-          <select name="categoriaId" required>
-            {categorias.map((c) => (
-              <option value={c.id} selected={c.id === linha.categoriaId}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label class="campo">
-          Marca
-          <input type="text" name="marca" value={linha.marca ?? ''} placeholder="Atlas Copco (padrão)" />
-        </label>
-        <label class="campo">
-          Nome de exibição (override)
-          <input type="text" name="nome" value={linha.nome ?? ''} placeholder={`${linha.tipo} ${linha.codigo}`} />
-        </label>
-        <label class="campo">
-          Slug (URL)
-          <input type="text" name="slug" value={linha.slug} required />
-        </label>
-        <label class="campo">
-          Chips do card (vírgula)
-          <input type="text" name="specsChips" value={(linha.specsChips ?? []).join(', ')} />
-        </label>
+    <div class="editor-grid">
+      <div>
+        <div class="cartao-form">
+          <h2>Dados básicos</h2>
+          <div class="campos">
+            <label class="campo">
+              Código/modelo <span class="req" aria-hidden="true">*</span>
+              <input type="text" name="codigo" value={linha.codigo} required />
+            </label>
+            <label class="campo">
+              Etiqueta
+              <input type="text" name="etiqueta" value={linha.etiqueta ?? ''} placeholder="Diesel, VSD…" />
+            </label>
+            <label class="campo">
+              Tipo (termo semântico) <span class="req" aria-hidden="true">*</span>
+              <input type="text" name="tipo" value={linha.tipo} required />
+            </label>
+            <label class="campo">
+              Categoria <span class="req" aria-hidden="true">*</span>
+              <select name="categoriaId" required>
+                {categorias.map((c) => (
+                  <option value={c.id} selected={c.id === linha.categoriaId}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label class="campo">
+              Marca
+              <input type="text" name="marca" value={linha.marca ?? ''} placeholder="Atlas Copco (padrão)" />
+            </label>
+            <label class="campo">
+              Nome de exibição (override)
+              <input type="text" name="nome" value={linha.nome ?? ''} placeholder={`${linha.tipo} ${linha.codigo}`} />
+            </label>
+            <label class="campo">
+              Slug (URL) <span class="req" aria-hidden="true">*</span>
+              <input type="text" name="slug" value={linha.slug} required />
+            </label>
+            <label class="campo">
+              Chips do card (vírgula)
+              <input type="text" name="specsChips" value={(linha.specsChips ?? []).join(', ')} />
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>Conteúdo da página própria</h2>
+          <p class="nota">
+            A página própria só vai ao ar com os três blocos preenchidos — acompanhe no painel
+            "Publicação" ao lado.
+          </p>
+          <div class="campos">
+            <label class="campo largo">
+              Pitch (1–2 frases de abertura; HTML simples permitido)
+              <textarea name="pitch" style="min-height:72px">{linha.pitch ?? ''}</textarea>
+            </label>
+            <label class="campo largo">
+              Descrição (150–400 palavras; parágrafos separados por linha em branco; o 1º começa com
+              afirmação direta em &lt;b&gt;)
+              <textarea name="descricao" style="min-height:190px">{descricaoTexto}</textarea>
+            </label>
+            <label class="campo largo">
+              Especificações técnicas (uma por linha: <code>Rótulo | Valor</code>)
+              <textarea name="especificacoes" style="min-height:140px" placeholder={'Potência | 144 kVA\nCombustível | Diesel'}>{especificacoesTexto}</textarea>
+              <span class="dica">Specs de fonte oficial Atlas Copco — nunca inventar números.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>SEO</h2>
+          <p class="nota">Vazio = o sistema deriva (preview no painel ao lado).</p>
+          <div class="campos">
+            <label class="campo largo">
+              SEO Title
+              <input type="text" name="seoTitle" value={linha.seoTitle ?? ''} maxlength="60" data-contador />
+            </label>
+            <label class="campo largo">
+              Meta description
+              <input
+                type="text"
+                name="seoDescription"
+                value={linha.seoDescription ?? ''}
+                maxlength="155"
+                data-contador
+              />
+            </label>
+          </div>
+        </div>
       </div>
-      <p style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
-        <label class="check">
-          <input type="checkbox" name="publicado" checked={linha.publicado} />
-          Publicado no site
-        </label>
-        <label class="check">
-          <input type="checkbox" name="destaque" checked={linha.destaque} />
-          Destaque
-        </label>
-      </p>
+
+      <aside class="editor-lateral">
+        <div class="cartao-form" style="margin-bottom:0">
+          <h2>Publicação</h2>
+          <p style="display:grid;gap:.6rem;margin-bottom:1rem">
+            <label class="check">
+              <input type="checkbox" name="publicado" checked={linha.publicado} />
+              Publicado no site
+            </label>
+            <label class="check">
+              <input type="checkbox" name="destaque" checked={linha.destaque} />
+              Destaque no catálogo
+            </label>
+          </p>
+          <h3 class="sub-painel">Página própria {completa ? '— completa' : '— incompleta'}</h3>
+          <ul class="completude">
+            <li class={temPitch ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Pitch</li>
+            <li class={temDescricao ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Descrição</li>
+            <li class={temSpecs ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Especificações</li>
+            <li class={temImagem ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Imagem (recomendado)</li>
+          </ul>
+          <p class="nota" style="margin:0.75rem 0 0">
+            {
+              completa
+                ? 'Este produto tem página no Google.'
+                : 'Sem os 3 primeiros itens, o card aponta direto para o WhatsApp.'
+            }
+          </p>
+          {
+            linha.publicado && completa && (
+              <a class="botao mini cinza" style="margin-top:0.75rem" href={urlPublica} target="_blank" rel="noopener">
+                Ver no site ↗
+              </a>
+            )
+          }
+        </div>
+
+        <div class="cartao-form" style="margin-bottom:0">
+          <h2>Como o site vai exibir</h2>
+          <dl class="derivados">
+            <div>
+              <dt>Nome</dt>
+              <dd>{nomeProduto(pseudo)}</dd>
+            </div>
+            <div>
+              <dt>H1 da página</dt>
+              <dd>{h1Produto(pseudo)}</dd>
+            </div>
+            <div>
+              <dt>Title <span class={tituloDerivado.length > 60 ? 'alem' : ''}>({tituloDerivado.length}/60)</span></dt>
+              <dd>{tituloDerivado}</dd>
+            </div>
+            <div>
+              <dt>Meta <span class={metaDerivada.length > 155 ? 'alem' : ''}>({metaDerivada.length}/155)</span></dt>
+              <dd>{metaDerivada}</dd>
+            </div>
+            <div>
+              <dt>Mensagem de WhatsApp</dt>
+              <dd>{waMsgProduto(pseudo, categoria?.nome ?? '')}</dd>
+            </div>
+          </dl>
+        </div>
+      </aside>
     </div>
 
-    <div class="cartao-form">
-      <h2>Conteúdo da página própria</h2>
-      <p class="dica" style="color:var(--cinza);font-size:.82rem;margin-bottom:1rem">
-        A página própria (/produtos/{categoria?.slug}/{linha.slug}) só existe com os 3 blocos
-        preenchidos: pitch, descrição e especificações.
-        {temConteudoCompleto
-          ? ' Status: completa ✓'
-          : ' Status: incompleta — o card aponta para o WhatsApp.'}
-      </p>
-      <div class="campos">
-        <label class="campo largo">
-          Pitch (1–2 frases de abertura; HTML simples permitido)
-          <textarea name="pitch" style="min-height:70px">{linha.pitch ?? ''}</textarea>
-        </label>
-        <label class="campo largo">
-          Descrição (150–400 palavras; parágrafos separados por linha em branco; o 1º começa com
-          afirmação direta em &lt;b&gt;)
-          <textarea name="descricao" style="min-height:180px">{descricaoTexto}</textarea>
-        </label>
-        <label class="campo largo">
-          Especificações técnicas (uma por linha: <code>Rótulo | Valor</code>)
-          <textarea name="especificacoes" style="min-height:140px" placeholder={'Potência | 144 kVA\nCombustível | Diesel'}>{especificacoesTexto}</textarea>
-          <span class="dica">Specs de fonte oficial Atlas Copco — nunca inventar números.</span>
-        </label>
-      </div>
+    <div class="barra-salvar">
+      <button class="botao" type="submit">Salvar produto</button>
+      <span class="lembrete">Salvar publica as mudanças imediatamente no site.</span>
     </div>
-
-    <div class="cartao-form">
-      <h2>SEO</h2>
-      <div class="campos">
-        <label class="campo">
-          SEO Title (vazio = derivado · ≤ 60)
-          <input type="text" name="seoTitle" value={linha.seoTitle ?? ''} maxlength="60" />
-        </label>
-        <label class="campo">
-          Meta description (vazia = derivada · ≤ 155)
-          <input type="text" name="seoDescription" value={linha.seoDescription ?? ''} maxlength="155" />
-        </label>
-      </div>
-      <dl class="derivados" style="margin-top:1rem">
-        <dt>Como o site vai exibir (derivado das regras)</dt>
-        <dd><b>Nome:</b> {nomeProduto(pseudo)}</dd>
-        <dd><b>H1 da página:</b> {h1Produto(pseudo)}</dd>
-        <dd>
-          <b>Title:</b> {tituloDerivado}
-          <span class={tituloDerivado.length > 60 ? 'alem' : ''}> ({tituloDerivado.length}/60)</span>
-        </dd>
-        <dd>
-          <b>Meta:</b> {metaDerivada}
-          <span class={metaDerivada.length > 155 ? 'alem' : ''}> ({metaDerivada.length}/155)</span>
-        </dd>
-        <dd><b>Msg WhatsApp:</b> {waMsgProduto(pseudo, categoria?.nome ?? '')}</dd>
-      </dl>
-    </div>
-
-    <button class="botao" type="submit">Salvar produto</button>
   </form>
 
   <div class="cartao-form" style="margin-top:1.5rem">
     <h2>Imagens</h2>
+    {
+      imagens.length === 0 && (
+        <p class="nota">
+          Nenhuma imagem ainda — o card aparece sem foto no catálogo. Envie a primeira abaixo
+          (ela vira a principal).
+        </p>
+      )
+    }
     <div class="galeria">
       {
         imagens.map((img) => (
           <div class="item">
             <img src={img.src} alt={img.alt ?? ''} loading="lazy" />
-            <p style="margin:.4rem 0 0">
+            <p style="margin:.45rem 0 0;min-height:1.3rem">
               {img.principal && <span class="badge dest">Principal</span>}
             </p>
             <form method="POST">
@@ -328,6 +381,7 @@ const temConteudoCompleto = Boolean(linha.pitch && linha.descricao?.length && sp
                 type="text"
                 name="alt"
                 value={img.alt ?? ''}
+                aria-label="Texto alternativo da imagem"
                 placeholder={`vazio = "${altImagem(pseudo, { src: img.src })}"`}
               />
               <button class="botao mini cinza" type="submit">Salvar alt</button>
@@ -354,13 +408,13 @@ const temConteudoCompleto = Boolean(linha.pitch && linha.descricao?.length && sp
       }
     </div>
 
-    <form method="POST" enctype="multipart/form-data" style="margin-top:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:end">
+    <form method="POST" enctype="multipart/form-data" class="form-upload">
       <input type="hidden" name="_acao" value="img-add" />
-      <label class="campo" style="flex:1;min-width:220px">
+      <label class="campo">
         Nova imagem (JPG/PNG/WebP/AVIF · até 5 MB)
         <input type="file" name="arquivo" accept="image/jpeg,image/png,image/webp,image/avif" required />
       </label>
-      <label class="campo" style="flex:1;min-width:220px">
+      <label class="campo">
         Alt (vazio = derivado)
         <input type="text" name="alt" />
       </label>
@@ -368,11 +422,38 @@ const temConteudoCompleto = Boolean(linha.pitch && linha.descricao?.length && sp
     </form>
   </div>
 
-  <div class="cartao-form" style="border-color:#f2c4c4">
-    <h2 style="color:#b03030">Zona de perigo</h2>
-    <form method="POST" onsubmit="return confirm('Excluir este produto e todas as suas imagens/specs? Esta ação não tem volta.')">
+  <div class="cartao-form zona-perigo">
+    <h2>Excluir produto</h2>
+    <p class="nota">Remove o produto, suas imagens e especificações. Sem volta.</p>
+    <form
+      method="POST"
+      onsubmit="return confirm('Excluir este produto e todas as suas imagens/specs? Esta ação não tem volta.')"
+    >
       <input type="hidden" name="_acao" value="excluir" />
       <button class="botao perigo" type="submit">Excluir produto</button>
     </form>
   </div>
 </AdminLayout>
+
+<style>
+  .sub-painel {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-2);
+    margin-bottom: 0.6rem;
+  }
+  .form-upload {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--line-strong);
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+  .form-upload .campo { flex: 1; min-width: 220px; }
+  .zona-perigo { border-color: color-mix(in srgb, var(--erro-ink) 35%, transparent); }
+  .zona-perigo h2 { color: var(--erro-ink); }
+</style>

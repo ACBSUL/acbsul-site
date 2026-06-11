@@ -49,18 +49,22 @@ if (Astro.request.method === 'POST') {
 <AdminLayout titulo="Novo produto">
   <div class="acoes">
     <h1>Novo produto</h1>
-    <a class="botao cinza" href="/admin/produtos">← Voltar</a>
+    <a class="voltar" href="/admin/produtos">← Todos os produtos</a>
   </div>
 
-  {erro && <p class="flash erro">{erro}</p>}
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
 
   <form method="POST">
-    <div class="cartao-form">
-      <h2>Dados mínimos</h2>
+    <div class="cartao-form" style="max-width:760px">
+      <h2>Só o essencial — o resto o sistema deriva</h2>
+      <p class="nota">
+        Nome de exibição, H1, title, meta e mensagem de WhatsApp são compostos
+        automaticamente a partir destes campos. O produto nasce como rascunho.
+      </p>
       <div class="campos">
         <label class="campo">
-          Código/modelo Atlas Copco
-          <input type="text" name="codigo" placeholder="QAS 140" required />
+          Código/modelo Atlas Copco <span class="req" aria-hidden="true">*</span>
+          <input type="text" name="codigo" placeholder="QAS 140" required autofocus />
           <span class="dica">Só o modelo — sem o tipo.</span>
         </label>
         <label class="campo">
@@ -68,12 +72,12 @@ if (Astro.request.method === 'POST') {
           <input type="text" name="etiqueta" placeholder="Diesel, VSD, Stage V…" />
         </label>
         <label class="campo">
-          Tipo (termo semântico)
+          Tipo (termo semântico) <span class="req" aria-hidden="true">*</span>
           <input type="text" name="tipo" placeholder="Gerador de Energia" required />
-          <span class="dica">PRD §7: nenhum produto é só código.</span>
+          <span class="dica">Nenhum produto é só código (PRD §7).</span>
         </label>
         <label class="campo">
-          Categoria
+          Categoria <span class="req" aria-hidden="true">*</span>
           <select name="categoriaId" required>
             <option value="">Selecione…</option>
             {categorias.map((c) => (
@@ -90,7 +94,9 @@ if (Astro.request.method === 'POST') {
           <input type="text" name="slug" placeholder="qas-140" />
         </label>
       </div>
+      <p style="margin-top:1.25rem">
+        <button class="botao" type="submit">Criar rascunho</button>
+      </p>
     </div>
-    <button class="botao" type="submit">Criar produto (rascunho)</button>
   </form>
 </AdminLayout>

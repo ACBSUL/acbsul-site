@@ -1,51 +1,121 @@
 ---
-// Dashboard do admin (Etapa B: esqueleto protegido + contagens do banco).
-// O CRUD de categorias/produtos entra na Etapa C.
-import { sql } from 'drizzle-orm';
+// Dashboard do admin — visão de trabalho, não de vaidade: o que está
+// publicado e o que precisa de ação (princípio 2 do PRODUCT.md:
+// "publicar sem medo" = estado público sempre visível).
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { db, tabelas } from '../../db';
+import { temPaginaPropria } from '../../data/produtos';
+import { carregarCategorias, carregarProdutos } from '../../lib/catalogo';
 
 export const prerender = false;
 
-const [{ n: nCategorias }] = await db
-  .select({ n: sql<number>`count(*)::int` })
-  .from(tabelas.categorias);
-const [{ n: nProdutos }] = await db
-  .select({ n: sql<number>`count(*)::int` })
-  .from(tabelas.produtos);
+const categorias = await carregarCategorias();
+const produtos = await carregarProdutos();
+
+const publicados = produtos.filter((p) => p.publicado !== false);
+const rascunhos = produtos.filter((p) => p.publicado === false);
+const semImagem = publicados.filter((p) => p.imagens.length === 0);
+const semPagina = publicados.filter((p) => !temPaginaPropria(p));
+const semWhatsapp = categorias.filter((c) => c.ativa && !c.whatsappNumero);
+const usuario = Astro.locals.user;
+const primeiroNome = usuario?.name?.split(' ')[0] ?? 'admin';
 ---
 
 <AdminLayout titulo="Início">
-  <h1>Visão geral</h1>
-  <div class="cartoes">
-    <a class="cartao" href="/admin/categorias">
-      <span class="numero">{nCategorias}</span>
-      <span class="rotulo">Categorias →</span>
+  <div class="acoes">
+    <h1>Olá, {primeiroNome}</h1>
+    <a class="botao" href="/admin/produtos/novo">+ Novo produto</a>
+  </div>
+
+  <div class="resumo">
+    <a href="/admin/produtos">
+      <b>{publicados.length}</b> produtos publicados
     </a>
-    <a class="cartao" href="/admin/produtos">
-      <span class="numero">{nProdutos}</span>
-      <span class="rotulo">Produtos →</span>
+    <a href="/admin/categorias">
+      <b>{categorias.filter((c) => c.ativa).length}</b> categorias ativas
     </a>
   </div>
-  <p class="aviso">
-    Gerencie categorias (incluindo o WhatsApp de cada uma), produtos e imagens.
-    Tudo que for salvo aparece no site público imediatamente.
-  </p>
+
+  <h2 class="titulo-bloco">Para fazer</h2>
+  <ul class="pendencias">
+    <li>
+      <a href="/admin/produtos">
+        <span class={`num ${rascunhos.length === 0 ? 'zero' : ''}`}>{rascunhos.length}</span>
+        <span class="texto">
+          <b>Rascunhos não publicados</b>
+          <span>
+            {
+              rascunhos.length === 0
+                ? 'Tudo publicado — nada esperando.'
+                : `${rascunhos
+                    .slice(0, 3)
+                    .map((p) => p.codigo)
+                    .join(', ')}${rascunhos.length > 3 ? ` e mais ${rascunhos.length - 3}` : ''}`
+            }
+          </span>
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="/admin/produtos">
+        <span class={`num ${semImagem.length === 0 ? 'zero' : ''}`}>{semImagem.length}</span>
+        <span class="texto">
+          <b>Publicados sem imagem</b>
+          <span>
+            {
+              semImagem.length === 0
+                ? 'Todos os produtos publicados têm foto.'
+                : 'O card aparece sem foto no catálogo.'
+            }
+          </span>
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="/admin/produtos">
+        <span class={`num ${semPagina.length === 0 ? 'zero' : ''}`}>{semPagina.length}</span>
+        <span class="texto">
+          <b>Sem página própria</b>
+          <span>
+            {
+              semPagina.length === 0
+                ? 'Todos têm pitch, descrição e especificações.'
+                : 'Complete pitch + descrição + specs para ganhar página no Google.'
+            }
+          </span>
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="/admin/categorias">
+        <span class={`num ${semWhatsapp.length === 0 ? 'zero' : ''}`}>{semWhatsapp.length}</span>
+        <span class="texto">
+          <b>Categorias sem WhatsApp próprio</b>
+          <span>
+            {
+              semWhatsapp.length === 0
+                ? 'Todas roteiam para um especialista.'
+                : 'Leads dessas categorias caem no número geral da empresa.'
+            }
+          </span>
+        </span>
+      </a>
+    </li>
+  </ul>
 </AdminLayout>
 
 <style>
-  .cartoes { display: flex; gap: 1rem; flex-wrap: wrap; }
-  .cartao {
-    background: #fff;
-    border: 1px solid var(--borda);
-    border-radius: 12px;
-    padding: 1.25rem 1.75rem;
-    min-width: 160px;
+  .resumo { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .resumo a {
     text-decoration: none;
-    color: inherit;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 0.6rem 1rem;
+    font-size: 0.92rem;
+    transition: border-color var(--t);
   }
-  .cartao:hover { border-color: var(--laranja); }
-  .numero { display: block; font-size: 2rem; font-weight: 800; color: var(--laranja); }
-  .rotulo { color: var(--cinza); font-size: 0.9rem; }
-  .aviso { margin-top: 2rem; color: var(--cinza); font-size: 0.9rem; }
+  .resumo a:hover { border-color: var(--accent); }
+  .resumo b { color: var(--ink); font-size: 1.05rem; margin-right: 0.25rem; }
+  .titulo-bloco { font-size: 1.02rem; font-weight: 700; margin-bottom: 0.85rem; }
 </style>

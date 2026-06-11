@@ -11,6 +11,8 @@ npm-debug.log*
 .env.production
 # saída do adapter Vercel
 .vercel/
+# screenshots de QA (gerados por scripts/screenshot-admin.ts)
+.qa-screens/
 # macOS / editors
 .DS_Store
 # arquivos de trabalho do PRD (não versionar o zip de origem)

@@ -16,47 +16,64 @@ for (const p of produtos) {
 <AdminLayout titulo="Categorias">
   <div class="acoes">
     <h1>Categorias</h1>
+    <p class="sub">
+      Cada categoria define o WhatsApp que recebe os leads da sua linha de produtos.
+    </p>
   </div>
-  <table class="lista">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Nome</th>
-        <th>Produtos</th>
-        <th>WhatsApp da categoria</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {
-        categorias.map((c) => (
-          <tr>
-            <td>{c.ordem}</td>
-            <td>
-              <b>{c.nome}</b>
-              <br />
-              <small style="color:var(--cinza)">/{c.slug}</small>
-            </td>
-            <td>{nProdutos.get(c.slug) ?? 0}</td>
-            <td>
-              {c.whatsappNumero ? (
-                <span class="badge info">{c.whatsappNumero}</span>
-              ) : (
-                <small style="color:var(--cinza)">número geral</small>
-              )}
-            </td>
-            <td>
-              {c.ativa ? <span class="badge ok">Ativa</span> : <span class="badge off">Oculta</span>}
-            </td>
-            <td>
-              <a class="botao mini cinza" href={`/admin/categorias/${c.id}`}>
-                Editar
-              </a>
-            </td>
-          </tr>
-        ))
-      }
-    </tbody>
-  </table>
+
+  <div class="tabela-rolagem">
+    <table class="lista">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Nome</th>
+          <th scope="col">Produtos</th>
+          <th scope="col">WhatsApp da categoria</th>
+          <th scope="col">Status</th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          categorias.map((c) => (
+            <tr>
+              <td>{c.ordem}</td>
+              <td>
+                <b>{c.nome}</b>
+                <br />
+                <span class="secundario">/{c.slug}</span>
+              </td>
+              <td>{nProdutos.get(c.slug) ?? 0}</td>
+              <td>
+                {c.whatsappNumero ? (
+                  <span class="badge info">{c.whatsappNumero}</span>
+                ) : (
+                  <span class="secundario">número geral</span>
+                )}
+              </td>
+              <td>
+                {c.ativa ? <span class="badge ok">Ativa</span> : <span class="badge off">Oculta</span>}
+              </td>
+              <td>
+                <a class="botao mini cinza" href={`/admin/categorias/${c.id}`}>
+                  Editar
+                </a>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
 </AdminLayout>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>
