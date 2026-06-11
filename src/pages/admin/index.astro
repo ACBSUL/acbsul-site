@@ -1,0 +1,48 @@
+---
+// Dashboard do admin (Etapa B: esqueleto protegido + contagens do banco).
+// O CRUD de categorias/produtos entra na Etapa C.
+import { sql } from 'drizzle-orm';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../db';
+
+export const prerender = false;
+
+const [{ n: nCategorias }] = await db
+  .select({ n: sql<number>`count(*)::int` })
+  .from(tabelas.categorias);
+const [{ n: nProdutos }] = await db
+  .select({ n: sql<number>`count(*)::int` })
+  .from(tabelas.produtos);
+---
+
+<AdminLayout titulo="Início">
+  <h1>Visão geral</h1>
+  <div class="cartoes">
+    <div class="cartao">
+      <span class="numero">{nCategorias}</span>
+      <span class="rotulo">Categorias</span>
+    </div>
+    <div class="cartao">
+      <span class="numero">{nProdutos}</span>
+      <span class="rotulo">Produtos</span>
+    </div>
+  </div>
+  <p class="aviso">
+    O gerenciamento de categorias, produtos e WhatsApp por categoria entra na
+    próxima etapa (CRUD).
+  </p>
+</AdminLayout>
+
+<style>
+  .cartoes { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .cartao {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 1.25rem 1.75rem;
+    min-width: 160px;
+  }
+  .numero { display: block; font-size: 2rem; font-weight: 800; color: var(--laranja); }
+  .rotulo { color: var(--cinza); font-size: 0.9rem; }
+  .aviso { margin-top: 2rem; color: var(--cinza); font-size: 0.9rem; }
+</style>

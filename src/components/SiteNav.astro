@@ -9,6 +9,7 @@ import { catIcons } from '../data/cat-icons';
 
 const path = Astro.url.pathname;
 const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
+const emQuemSomos = path === '/quem-somos';
 ---
 
 <!-- ============ NAVBAR ============ -->
@@ -21,7 +22,7 @@ const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
       /></a
     >
     <div class="nav-links">
-      <a href="/#sobre">A ACBSUL</a>
+      <a class:list={[{ active: emQuemSomos }]} href="/quem-somos">A ACBSUL</a>
       <div class="nav-item">
         <a class:list={['has-mega', { active: emProdutos }]} href="/produtos"
           >Produtos
@@ -79,7 +80,7 @@ const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
       >
     </div>
     <a class="dl" href="/">Início</a>
-    <a class="dl" href="/#sobre">A ACBSUL</a>
+    <a class:list={['dl', { active: emQuemSomos }]} href="/quem-somos">A ACBSUL</a>
     <details class:list={['dgroup', { active: emProdutos }]} open={emProdutos}>
       <summary
         >Produtos

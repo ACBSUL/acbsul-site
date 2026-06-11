@@ -54,7 +54,17 @@
       "PowerShell(try { \\(Resolve-DnsName aws-0-sa-east-1.pooler.supabase.com -ErrorAction Stop | Select-Object -First 1\\).Name } catch { \"DNS FALHOU: aws-0-sa-east-1\" }; try { \\(Resolve-DnsName db.cyxhijeunyifmapnjwtu.supabase.co -ErrorAction Stop | Select-Object -First 2 | ForEach-Object { \"$\\($_.Type\\) $\\($_.Name\\)\" }\\) } catch { \"DNS FALHOU: db direto\" })",
       "PowerShell(npx tsx scripts/test-db.ts)",
       "PowerShell(npm run db:push 2>&1)",
-      "PowerShell(npx tsx scripts/verify-seed.ts)"
+      "PowerShell(npx tsx scripts/verify-seed.ts)",
+      "PowerShell(npm install better-auth)",
+      "PowerShell(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "PowerShell(npm view drizzle-kit version)",
+      "PowerShell(npm view drizzle-kit@beta version)",
+      "PowerShell(npx tsx scripts/create-auth-tables.ts)",
+      "PowerShell(npm run admin:create -- adm@acbsulcompressores.com.br \"AcbSul#Admin2026\" \"Administrador ACB Sul\")",
+      "PowerShell(npm run dev)",
+      "Bash(git -C /c/Users/agenc/meusprojetos/acbsul status -sb)",
+      "Bash(git -C /c/Users/agenc/meusprojetos/acbsul remote -v)",
+      "Bash(git -C /c/Users/agenc/meusprojetos/acbsul log --oneline -3)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

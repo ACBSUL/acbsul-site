@@ -1,0 +1,87 @@
+---
+// Layout do painel administrativo — independente do CSS do site público.
+// noindex obrigatório (PRD §8); reforçado pelo X-Robots-Tag do middleware.
+interface Props {
+  titulo: string;
+}
+const { titulo } = Astro.props;
+const usuario = Astro.locals.user;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{titulo} · Admin ACB Sul</title>
+    <style>
+      :root {
+        --navy: #0d1b2e;
+        --navy-2: #13243d;
+        --laranja: #f07818;
+        --cinza: #5b6b7f;
+        --borda: #dde4ec;
+        --fundo: #f4f6f9;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+        background: var(--fundo);
+        color: var(--navy);
+        min-height: 100vh;
+      }
+      .topo {
+        background: var(--navy);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0.75rem 1.25rem;
+      }
+      .topo strong { color: var(--laranja); }
+      .topo nav { display: flex; gap: 1rem; flex: 1; }
+      .topo a { color: #cfd9e6; text-decoration: none; font-size: 0.9rem; }
+      .topo a:hover { color: #fff; }
+      .topo .sair {
+        background: none;
+        border: 1px solid #3a4d68;
+        color: #cfd9e6;
+        border-radius: 6px;
+        padding: 0.3rem 0.8rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .topo .sair:hover { border-color: var(--laranja); color: #fff; }
+      main { max-width: 1100px; margin: 2rem auto; padding: 0 1.25rem; }
+      h1 { font-size: 1.4rem; margin-bottom: 1.25rem; }
+    </style>
+  </head>
+  <body>
+    {
+      usuario && (
+        <header class="topo">
+          <strong>ACB Sul · Admin</strong>
+          <nav>
+            <a href="/admin">Início</a>
+          </nav>
+          <span style="font-size:.85rem;color:#8fa1b8">{usuario.email}</span>
+          <button class="sair" id="btn-sair" type="button">Sair</button>
+        </header>
+      )
+    }
+    <main>
+      <slot />
+    </main>
+    <script>
+      document.getElementById('btn-sair')?.addEventListener('click', async () => {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        location.href = '/admin/login';
+      });
+    </script>
+  </body>
+</html>

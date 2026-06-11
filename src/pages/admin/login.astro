@@ -1,0 +1,91 @@
+---
+// Tela de login do admin. Se já houver sessão, o middleware redireciona p/ /admin.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+---
+
+<AdminLayout titulo="Entrar">
+  <div class="caixa">
+    <h1>Painel ACB Sul</h1>
+    <p class="sub">Acesso restrito — somente administradores.</p>
+    <form id="form-login">
+      <label>
+        E-mail
+        <input type="email" name="email" required autocomplete="username" />
+      </label>
+      <label>
+        Senha
+        <input type="password" name="senha" required autocomplete="current-password" />
+      </label>
+      <p id="erro" hidden>E-mail ou senha incorretos.</p>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</AdminLayout>
+
+<style>
+  .caixa {
+    max-width: 380px;
+    margin: 8vh auto 0;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 2rem;
+  }
+  .sub { color: var(--cinza); font-size: 0.9rem; margin: 0.25rem 0 1.5rem; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
+  input {
+    display: block;
+    width: 100%;
+    margin-top: 0.3rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  input:focus { outline: 2px solid var(--laranja); border-color: transparent; }
+  #erro { color: #c0392b; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  button {
+    width: 100%;
+    background: var(--laranja);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.7rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { opacity: 0.6; cursor: wait; }
+</style>
+
+<script>
+  const form = document.getElementById('form-login') as HTMLFormElement;
+  const erro = document.getElementById('erro') as HTMLParagraphElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    erro.hidden = true;
+    const botao = form.querySelector('button')!;
+    botao.disabled = true;
+
+    const dados = new FormData(form);
+    const res = await fetch('/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: dados.get('email'),
+        password: dados.get('senha'),
+      }),
+    });
+
+    if (res.ok) {
+      location.href = '/admin';
+    } else {
+      erro.hidden = false;
+      botao.disabled = false;
+    }
+  });
+</script>

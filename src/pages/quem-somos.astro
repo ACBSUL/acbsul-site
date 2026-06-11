@@ -1,0 +1,309 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { empresa, entityBlockTexto } from '../data/empresa';
+
+export const prerender = true;
+
+// Conteúdo reescrito a partir do texto do site atual do cliente (História / Quem
+// somos / Diferenciais / Missão) — prosa factual ≥500 palavras, sem H1 genérico
+// (PRD §7). Fato novo incorporado do site atual: única distribuidora autorizada
+// Atlas Copco da divisão Power Technique no RS e parte de SC.
+
+const title = 'A ACB Sul — Distribuidora Atlas Copco há mais de 40 anos no RS';
+const description =
+  'Única distribuidora autorizada Atlas Copco Power Technique no RS e parte de SC: mais de 40 anos em compressores, geradores, peças e assistência técnica.';
+
+const urlPagina = `${empresa.url}/quem-somos`;
+
+const aboutSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: title,
+  description,
+  url: urlPagina,
+  inLanguage: 'pt-BR',
+  mainEntity: {
+    '@type': 'Organization',
+    name: empresa.nome,
+    url: empresa.url,
+    description: `${empresa.posicionamento} — divisão Power Technique, com ${empresa.longevidade} de atuação em compressores, geradores e assistência técnica.`,
+    brand: { '@type': 'Brand', name: 'Atlas Copco' },
+    areaServed: ['Rio Grande do Sul', 'Santa Catarina'],
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: empresa.endereco.rua,
+      addressLocality: empresa.endereco.cidade,
+      addressRegion: empresa.endereco.uf,
+      postalCode: empresa.endereco.cep,
+      addressCountry: 'BR',
+    },
+  },
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: empresa.url },
+    { '@type': 'ListItem', position: 2, name: 'A ACBSUL', item: urlPagina },
+  ],
+};
+---
+
+<SiteLayout
+  title={title}
+  description={description}
+  ogImage="/assets/empresa/compressores-acbsul-porto-alegre-sede-frota.webp"
+  page="quem-somos"
+>
+  <script
+    type="application/ld+json"
+    is:inline
+    slot="head"
+    set:html={JSON.stringify(aboutSchema)}
+  />
+  <script
+    type="application/ld+json"
+    is:inline
+    slot="head"
+    set:html={JSON.stringify(breadcrumbSchema)}
+  />
+
+  <SiteNav />
+
+  <main>
+    <!-- ============ PAGE HERO ============ -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Trilha">
+          <a href="/">Início</a><span class="sep">/</span><span class="current">A ACBSUL</span>
+        </nav>
+        <span class="eyebrow">A ACBSUL</span>
+        <h1>Mais de 40 anos de ar comprimido e energia <span class="hl">Atlas Copco no RS</span></h1>
+        <p class="lead">
+          A ACB Sul Compressores é a única distribuidora autorizada Atlas Copco — divisão Power
+          Technique — no Rio Grande do Sul e em parte de Santa Catarina. De Porto Alegre, atende a
+          indústria e a construção com venda, locação, peças originais e assistência técnica.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ QUEM SOMOS (foto da sede) ============ -->
+    <section class="section tight entity-band" aria-label="Quem somos">
+      <div class="container">
+        <div class="entity-grid">
+          <div class="entity-photo wide fade-up">
+            <img
+              src="/assets/empresa/compressores-acbsul-porto-alegre-sede-frota.webp"
+              alt="Sede da ACB Sul Compressores em Porto Alegre com frota de atendimento e totem Atlas Copco"
+              width="820"
+              height="512"
+            />
+            <div class="entity-badge">
+              <b>40+</b>
+              <span>anos de mercado</span>
+            </div>
+          </div>
+          <div class="entity-block">
+            <span class="eyebrow">Quem somos</span>
+            <h2>Distribuidora autorizada Atlas Copco <span class="hl">Power Technique</span></h2>
+            <p>
+              A ACB Sul Compressores é a representante autorizada da Atlas Copco — divisão Power
+              Technique — no Rio Grande do Sul e em parte de Santa Catarina. Da sede em Porto
+              Alegre, no bairro Santa Maria Goretti, comercializa compressores de ar, geradores de
+              energia, bombas, rompedores e torres de iluminação, com estrutura preparada para
+              oferecer manutenção, peças de reposição originais e atendimento em campo.
+            </p>
+            <ul class="entity-facts">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4z"></path><path d="m9 12 2 2 4-4"></path></svg
+                > Única distribuidora Power Technique no RS e parte de SC
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg
+                > Sede própria em Porto Alegre, com frota de atendimento
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg
+                > Equipe capacitada e treinada pelo fabricante
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HISTÓRIA (foto da fachada histórica) ============ -->
+    <section class="section" aria-label="Nossa história">
+      <div class="container">
+        <div class="entity-grid flip">
+          <div class="entity-photo wide fade-up">
+            <img
+              src="/assets/empresa/compressores-acbsul-porto-alegre-fachada-historica.webp"
+              alt="Fachada da ACB Sul, distribuidora autorizada de compressores Atlas Copco no Rio Grande do Sul"
+              width="820"
+              height="512"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="entity-block">
+            <span class="eyebrow">Nossa história</span>
+            <h2>Quatro décadas ao lado da <span class="hl">indústria gaúcha</span></h2>
+            <p>
+              Com mais de 40 anos de experiência no mercado de compressores, a ACB Sul construiu
+              sua trajetória sobre três fundamentos: a excelência no relacionamento humano, a
+              transparência em cada transação e o uso absoluto da ética — o caminho que faz a
+              satisfação do cliente convergir, de forma justa, com o sucesso da empresa.
+            </p>
+            <p style="margin-top:14px">
+              Ao longo dessa trajetória, a empresa se consolidou como o elo entre a tecnologia da
+              maior fabricante mundial de compressores e as operações que não podem parar no Rio
+              Grande do Sul e em Santa Catarina — atuando em máquinas pneumáticas, soluções de
+              energia portátil e equipamentos para construção civil e indústria.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ESTRUTURA (foto da oficina) ============ -->
+    <section class="section tight entity-band" aria-label="Estrutura e assistência técnica">
+      <div class="container">
+        <div class="entity-grid">
+          <div class="entity-photo wider fade-up">
+            <img
+              src="/assets/empresa/oficina-assistencia-tecnica-atlas-copco-acbsul-porto-alegre.webp"
+              alt="Oficina de assistência técnica da ACB Sul com compressores Atlas Copco em manutenção em Porto Alegre"
+              width="820"
+              height="458"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="entity-block">
+            <span class="eyebrow">Estrutura</span>
+            <h2>Oficina própria e assistência <span class="hl">em todo o RS e SC</span></h2>
+            <p>
+              A estrutura da ACB Sul em Porto Alegre conta com oficina equipada para manutenção
+              preventiva e corretiva de compressores de ar comprimido e estoque com toda a linha de
+              peças de reposição Atlas Copco — com condições especiais de entrega e pagamento.
+            </p>
+            <p style="margin-top:14px">
+              Técnicos altamente especializados e treinados pelo fabricante atendem em campo em
+              todo o estado do Rio Grande do Sul e em parte de Santa Catarina, com a agilidade de
+              uma gestão moderna e flexível, que se adapta às exigências do mercado e assegura a
+              competitividade dos nossos clientes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIFERENCIAIS / VALORES / MISSÃO ============ -->
+    <section class="section" aria-label="Nossos diferenciais">
+      <div class="container">
+        <div class="sec-head">
+          <span class="eyebrow">Nossos diferenciais</span>
+          <h2>O que sustenta <span class="hl">40 anos de confiança</span></h2>
+          <p>
+            Princípios simples, praticados todos os dias — da primeira conversa ao pós-venda.
+          </p>
+        </div>
+        <div class="grid cols-4">
+          <div class="feat fade-up">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                ><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"></path></svg
+              ></span
+            >
+            <h3>Agilidade</h3>
+            <p>
+              Gestão moderna e flexível, técnicos treinados pelo fabricante e peças em
+              pronta-entrega para reduzir o tempo de parada do seu equipamento.
+            </p>
+          </div>
+          <div class="feat fade-up">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                ><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4z"></path><path d="m9 12 2 2 4-4"></path></svg
+              ></span
+            >
+            <h3>Responsabilidade</h3>
+            <p>
+              Trabalho conduzido com responsabilidade e honestidade — nossas melhores referências
+              vêm dos próprios clientes.
+            </p>
+          </div>
+          <div class="feat fade-up">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                ><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg
+              ></span
+            >
+            <h3>Valores</h3>
+            <p>
+              Ética, transparência e compromisso refletem a nossa cultura: somos empreendedores,
+              inovadores e temos a excelência como meta.
+            </p>
+          </div>
+          <div class="feat fade-up">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                ><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.5"></circle></svg
+              ></span
+            >
+            <h3>Missão</h3>
+            <p>
+              Ser o primeiro na mente e na escolha dos nossos clientes, contribuindo para o seu
+              crescimento com qualidade, economia e produtividade sustentável.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA BAND ============ -->
+    <section class="section tight">
+      <div class="container">
+        <div class="cta-band">
+          <div>
+            <h2>Fale com quem entende de <span class="hl">Atlas Copco</span></h2>
+            <p>
+              Conte sua demanda de ar comprimido ou energia e receba o dimensionamento certo — para
+              compra, locação ou manutenção.
+            </p>
+          </div>
+          <div class="acts">
+            <a
+              class="btn btn-accent btn-lg"
+              data-wa-msg="Olá! Quero falar com a equipe da ACB Sul sobre equipamentos Atlas Copco."
+              ><span class="ai"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M5 12h14M13 6l6 6-6 6"></path></svg
+                ></span
+              >Falar com Especialista</a
+            >
+            <a class="btn btn-ghost-dark btn-lg" href="/#contato">Solicitar Orçamento</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ENTITYBLOCK (rodapé da página de destino) ============ -->
+    <section class="entity-strip" aria-label="Sobre a ACB Sul">
+      <div class="container">
+        <div class="inner">
+          <span class="eyebrow">A ACB Sul</span>
+          <p>{entityBlockTexto}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</SiteLayout>
