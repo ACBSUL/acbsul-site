@@ -34,7 +34,12 @@
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" config user.name)",
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" config user.email)",
       "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" add -A)",
-      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" status --short)"
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" status --short)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" remote add origin https://github.com/ACBSUL/acbsul-site.git)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" push -u origin main)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" log --oneline -3)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" diff .claude/settings.json)",
+      "PowerShell(git -C \"c:\\\\Users\\\\agenc\\\\meusprojetos\\\\acbsul\" add .claude/settings.json)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"
