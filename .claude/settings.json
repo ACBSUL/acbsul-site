@@ -64,7 +64,15 @@
       "PowerShell(npm run dev)",
       "Bash(git -C /c/Users/agenc/meusprojetos/acbsul status -sb)",
       "Bash(git -C /c/Users/agenc/meusprojetos/acbsul remote -v)",
-      "Bash(git -C /c/Users/agenc/meusprojetos/acbsul log --oneline -3)"
+      "Bash(git -C /c/Users/agenc/meusprojetos/acbsul log --oneline -3)",
+      "PowerShell(npx tsx scripts/create-storage-bucket.ts)",
+      "Bash(perl -i -pe \"s/\\\\.replace\\\\\\(\\\\/\\\\[\\\\X*?\\\\]\\\\/g, ''\\\\\\)/.replace\\(\\\\/[\\\\\\\\\\\\\\\\u0300-\\\\\\\\\\\\\\\\u036f]\\\\/g, ''\\)/ if /normalize|replace\\\\\\(\\\\/\\\\[/ && \\\\$. < 110 && /replace\\\\\\(\\\\/\\\\[/ && !/u0300/\" src/lib/catalogo.ts)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:5030/servicos\" -UseBasicParsing -TimeoutSec 10; $r.StatusCode } catch { \"FALHOU: $\\($_.Exception.Message\\)\" })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:5030/servicos\" -UseBasicParsing; $html = $r.Content; $checks = @\\('Assistência Técnica Especializada em Compressores', 'manutenção preventiva de compressores consiste', 'Porto Alegre', 'Rio Grande do Sul', 'FAQPage', '\"@type\":\"Service\"', 'BreadcrumbList', 'distribuidora autorizada Atlas Copco', 'FleetLink'\\); foreach \\($c in $checks\\) { $found = $html.Contains\\($c\\); \"{0} -> {1}\" -f $c, $found }; \"h1 count: \" + \\([regex]::Matches\\($html, '<h1'\\)\\).Count)",
+      "PowerShell($wc = New-Object System.Net.WebClient; $bytes = $wc.DownloadData\\(\"http://localhost:5030/servicos\"\\); $html = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); @\\('Assistência Técnica Especializada em Compressores no RS', 'A manutenção preventiva de compressores consiste na troca programada', 'horímetro'\\) | ForEach-Object { \"{0} -> {1}\" -f $_, $html.Contains\\($_\\) })",
+      "PowerShell($wc = New-Object System.Net.WebClient; $bytes = $wc.DownloadData\\(\"http://localhost:5030/servicos\"\\); $html = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); $html.Contains\\('Assistência Técnica Especializada em Compressores'\\))",
+      "PowerShell(npx tsx scripts/test-admin-e2e.ts)",
+      "Bash(curl -s -i -X POST http://localhost:5030/api/auth/sign-in/email -H \"Content-Type: application/json\" -d '{\"email\":\"adm@acbsulcompressores.com.br\",\"password\":\"AcbSul#Admin2026\"}')"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

@@ -1,0 +1,62 @@
+---
+// Admin → Categorias: lista com link de edição (inclui config de WhatsApp).
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { carregarCategorias, carregarProdutos } from '../../../lib/catalogo';
+
+export const prerender = false;
+
+const categorias = await carregarCategorias();
+const produtos = await carregarProdutos();
+const nProdutos = new Map<string, number>();
+for (const p of produtos) {
+  nProdutos.set(p.categoria, (nProdutos.get(p.categoria) ?? 0) + 1);
+}
+---
+
+<AdminLayout titulo="Categorias">
+  <div class="acoes">
+    <h1>Categorias</h1>
+  </div>
+  <table class="lista">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nome</th>
+        <th>Produtos</th>
+        <th>WhatsApp da categoria</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        categorias.map((c) => (
+          <tr>
+            <td>{c.ordem}</td>
+            <td>
+              <b>{c.nome}</b>
+              <br />
+              <small style="color:var(--cinza)">/{c.slug}</small>
+            </td>
+            <td>{nProdutos.get(c.slug) ?? 0}</td>
+            <td>
+              {c.whatsappNumero ? (
+                <span class="badge info">{c.whatsappNumero}</span>
+              ) : (
+                <small style="color:var(--cinza)">número geral</small>
+              )}
+            </td>
+            <td>
+              {c.ativa ? <span class="badge ok">Ativa</span> : <span class="badge off">Oculta</span>}
+            </td>
+            <td>
+              <a class="botao mini cinza" href={`/admin/categorias/${c.id}`}>
+                Editar
+              </a>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</AdminLayout>

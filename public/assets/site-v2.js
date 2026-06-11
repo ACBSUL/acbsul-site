@@ -10,7 +10,9 @@
     waNumber:"5551991234567",
     email:"comercial@acbsulcompressores.com.br"
   }, (window.ACB_BIZ || {}));
-  function wa(msg){return "https://wa.me/"+BIZ.waNumber+"?text="+encodeURIComponent(msg||"Olá! Gostaria de falar com a ACB Sul.");}
+  // num opcional: roteamento de WhatsApp por categoria (PRD §8) — vem do
+  // atributo data-wa-num (config no admin); sem ele, usa o número geral.
+  function wa(msg,num){return "https://wa.me/"+(num||BIZ.waNumber)+"?text="+encodeURIComponent(msg||"Olá! Gostaria de falar com a ACB Sul.");}
   window.acbWa = wa;
 
   /* ---- icons ---- */
@@ -108,7 +110,7 @@
 
     /* whatsapp links */
     document.querySelectorAll("[data-wa-msg]").forEach(a=>{
-      a.href=wa(a.getAttribute("data-wa-msg"));a.target="_blank";a.rel="noopener";
+      a.href=wa(a.getAttribute("data-wa-msg"),a.getAttribute("data-wa-num"));a.target="_blank";a.rel="noopener";
     });
 
     /* accordion */

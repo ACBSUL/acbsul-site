@@ -1,0 +1,141 @@
+---
+// Admin → Editar categoria: introdução (citável), SEO e WhatsApp por
+// categoria (PRD §8 — o WhatsAppCTA do site lê esta config).
+import { eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import { catIcons } from '../../../data/cat-icons';
+
+export const prerender = false;
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id)) return Astro.redirect('/admin/categorias');
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+  await db
+    .update(tabelas.categorias)
+    .set({
+      nome: texto('nome'),
+      nomeCurto: texto('nomeCurto'),
+      icone: texto('icone'),
+      ordem: Number(texto('ordem')) || 0,
+      introducao: texto('introducao') || null,
+      seoTitle: texto('seoTitle') || null,
+      seoDescription: texto('seoDescription') || null,
+      // só dígitos, formato wa.me: DDI+DDD+número (ex.: 5551999998888)
+      whatsappNumero: texto('whatsappNumero').replace(/\D/g, '') || null,
+      whatsappMensagem: texto('whatsappMensagem') || null,
+      ativa: f.get('ativa') === 'on',
+      atualizadoEm: new Date(),
+    })
+    .where(eq(tabelas.categorias.id, id));
+  return Astro.redirect(`/admin/categorias/${id}?ok=1`);
+}
+
+const [cat] = await db
+  .select()
+  .from(tabelas.categorias)
+  .where(eq(tabelas.categorias.id, id));
+if (!cat) return Astro.redirect('/admin/categorias');
+
+const salvo = Astro.url.searchParams.get('ok') === '1';
+const icones = Object.keys(catIcons);
+---
+
+<AdminLayout titulo={`Categoria · ${cat.nome}`}>
+  <div class="acoes">
+    <h1>Editar categoria — {cat.nome}</h1>
+    <a class="botao cinza" href="/admin/categorias">← Voltar</a>
+  </div>
+
+  {salvo && <p class="flash">Categoria salva. O site público já reflete a mudança.</p>}
+
+  <form method="POST">
+    <div class="cartao-form">
+      <h2>Identificação</h2>
+      <div class="campos">
+        <label class="campo">
+          Nome completo
+          <input type="text" name="nome" value={cat.nome} required />
+        </label>
+        <label class="campo">
+          Nome curto (chips/menus)
+          <input type="text" name="nomeCurto" value={cat.nomeCurto} required />
+        </label>
+        <label class="campo">
+          Ícone
+          <select name="icone">
+            {icones.map((i) => (
+              <option value={i} selected={i === cat.icone}>
+                {i}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label class="campo">
+          Ordem de exibição
+          <input type="number" name="ordem" value={cat.ordem} min="0" />
+        </label>
+      </div>
+      <p style="margin-top:1rem">
+        <label class="check">
+          <input type="checkbox" name="ativa" checked={cat.ativa} />
+          Categoria visível no site
+        </label>
+      </p>
+    </div>
+
+    <div class="cartao-form">
+      <h2>WhatsApp da categoria (roteamento de leads)</h2>
+      <div class="campos">
+        <label class="campo">
+          Número (DDI+DDD+número, só dígitos)
+          <input
+            type="text"
+            name="whatsappNumero"
+            value={cat.whatsappNumero ?? ''}
+            placeholder="5551999998888"
+            inputmode="numeric"
+          />
+          <span class="dica">Vazio = usa o número geral da empresa.</span>
+        </label>
+        <label class="campo largo">
+          Mensagem pré-preenchida (opcional)
+          <input
+            type="text"
+            name="whatsappMensagem"
+            value={cat.whatsappMensagem ?? ''}
+            placeholder={`Olá! Quero um orçamento de ${cat.nome}.`}
+          />
+        </label>
+      </div>
+    </div>
+
+    <div class="cartao-form">
+      <h2>Conteúdo e SEO</h2>
+      <div class="campos">
+        <label class="campo largo">
+          Introdução da categoria (parágrafo citável — aparece no catálogo)
+          <textarea name="introducao">{cat.introducao ?? ''}</textarea>
+        </label>
+        <label class="campo">
+          SEO Title (≤ 60 caracteres)
+          <input type="text" name="seoTitle" value={cat.seoTitle ?? ''} maxlength="60" />
+        </label>
+        <label class="campo">
+          Meta description (≤ 155 caracteres)
+          <input
+            type="text"
+            name="seoDescription"
+            value={cat.seoDescription ?? ''}
+            maxlength="155"
+          />
+        </label>
+      </div>
+    </div>
+
+    <button class="botao" type="submit">Salvar categoria</button>
+  </form>
+</AdminLayout>

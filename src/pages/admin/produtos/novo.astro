@@ -1,0 +1,96 @@
+---
+// Admin → Novo produto: o mínimo para nascer (princípio do modelo aprovado:
+// preencha pouco, o sistema deriva o resto). Detalhes na tela de edição.
+import { eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import { carregarCategorias, parseChips, slugify } from '../../../lib/catalogo';
+
+export const prerender = false;
+
+const categorias = await carregarCategorias();
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+
+  const codigo = texto('codigo');
+  const tipo = texto('tipo');
+  const categoriaId = Number(texto('categoriaId'));
+
+  if (!codigo || !tipo || !categoriaId) {
+    erro = 'Preencha código, tipo e categoria.';
+  } else {
+    let slug = slugify(texto('slug') || codigo);
+    const [jaExiste] = await db
+      .select({ id: tabelas.produtos.id })
+      .from(tabelas.produtos)
+      .where(eq(tabelas.produtos.slug, slug));
+    if (jaExiste) slug = `${slug}-${Date.now().toString(36)}`;
+
+    const [novo] = await db
+      .insert(tabelas.produtos)
+      .values({
+        slug,
+        codigo,
+        etiqueta: texto('etiqueta') || null,
+        tipo,
+        categoriaId,
+        specsChips: parseChips(texto('specsChips')),
+        publicado: false, // nasce como rascunho — publicar na edição
+      })
+      .returning({ id: tabelas.produtos.id });
+    return Astro.redirect(`/admin/produtos/${novo.id}?ok=criado`);
+  }
+}
+---
+
+<AdminLayout titulo="Novo produto">
+  <div class="acoes">
+    <h1>Novo produto</h1>
+    <a class="botao cinza" href="/admin/produtos">← Voltar</a>
+  </div>
+
+  {erro && <p class="flash erro">{erro}</p>}
+
+  <form method="POST">
+    <div class="cartao-form">
+      <h2>Dados mínimos</h2>
+      <div class="campos">
+        <label class="campo">
+          Código/modelo Atlas Copco
+          <input type="text" name="codigo" placeholder="QAS 140" required />
+          <span class="dica">Só o modelo — sem o tipo.</span>
+        </label>
+        <label class="campo">
+          Etiqueta (opcional)
+          <input type="text" name="etiqueta" placeholder="Diesel, VSD, Stage V…" />
+        </label>
+        <label class="campo">
+          Tipo (termo semântico)
+          <input type="text" name="tipo" placeholder="Gerador de Energia" required />
+          <span class="dica">PRD §7: nenhum produto é só código.</span>
+        </label>
+        <label class="campo">
+          Categoria
+          <select name="categoriaId" required>
+            <option value="">Selecione…</option>
+            {categorias.map((c) => (
+              <option value={c.id}>{c.nome}</option>
+            ))}
+          </select>
+        </label>
+        <label class="campo">
+          Chips do card (separados por vírgula)
+          <input type="text" name="specsChips" placeholder="144 kVA, Diesel, Carenado" />
+        </label>
+        <label class="campo">
+          Slug (opcional — derivado do código)
+          <input type="text" name="slug" placeholder="qas-140" />
+        </label>
+      </div>
+    </div>
+    <button class="botao" type="submit">Criar produto (rascunho)</button>
+  </form>
+</AdminLayout>

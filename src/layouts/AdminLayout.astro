@@ -1,11 +1,15 @@
 ---
 // Layout do painel administrativo — independente do CSS do site público.
 // noindex obrigatório (PRD §8); reforçado pelo X-Robots-Tag do middleware.
+// Estilos is:global: as classes (.lista, .campo, .botao…) valem nas páginas.
 interface Props {
   titulo: string;
 }
 const { titulo } = Astro.props;
 const usuario = Astro.locals.user;
+const caminho = Astro.url.pathname;
+const ativo = (p: string) =>
+  caminho === p || (p !== '/admin' && caminho.startsWith(p + '/')) ? 'ativo' : '';
 ---
 
 <!doctype html>
@@ -15,47 +19,6 @@ const usuario = Astro.locals.user;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{titulo} · Admin ACB Sul</title>
-    <style>
-      :root {
-        --navy: #0d1b2e;
-        --navy-2: #13243d;
-        --laranja: #f07818;
-        --cinza: #5b6b7f;
-        --borda: #dde4ec;
-        --fundo: #f4f6f9;
-      }
-      * { box-sizing: border-box; margin: 0; }
-      body {
-        font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
-        background: var(--fundo);
-        color: var(--navy);
-        min-height: 100vh;
-      }
-      .topo {
-        background: var(--navy);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        padding: 0.75rem 1.25rem;
-      }
-      .topo strong { color: var(--laranja); }
-      .topo nav { display: flex; gap: 1rem; flex: 1; }
-      .topo a { color: #cfd9e6; text-decoration: none; font-size: 0.9rem; }
-      .topo a:hover { color: #fff; }
-      .topo .sair {
-        background: none;
-        border: 1px solid #3a4d68;
-        color: #cfd9e6;
-        border-radius: 6px;
-        padding: 0.3rem 0.8rem;
-        cursor: pointer;
-        font-size: 0.85rem;
-      }
-      .topo .sair:hover { border-color: var(--laranja); color: #fff; }
-      main { max-width: 1100px; margin: 2rem auto; padding: 0 1.25rem; }
-      h1 { font-size: 1.4rem; margin-bottom: 1.25rem; }
-    </style>
   </head>
   <body>
     {
@@ -63,9 +26,11 @@ const usuario = Astro.locals.user;
         <header class="topo">
           <strong>ACB Sul · Admin</strong>
           <nav>
-            <a href="/admin">Início</a>
+            <a href="/admin" class={ativo('/admin')}>Início</a>
+            <a href="/admin/categorias" class={ativo('/admin/categorias')}>Categorias</a>
+            <a href="/admin/produtos" class={ativo('/admin/produtos')}>Produtos</a>
           </nav>
-          <span style="font-size:.85rem;color:#8fa1b8">{usuario.email}</span>
+          <span class="quem">{usuario.email}</span>
           <button class="sair" id="btn-sair" type="button">Sair</button>
         </header>
       )
@@ -85,3 +50,192 @@ const usuario = Astro.locals.user;
     </script>
   </body>
 </html>
+
+<style is:global>
+  :root {
+    --navy: #0d1b2e;
+    --navy-2: #13243d;
+    --laranja: #f07818;
+    --cinza: #5b6b7f;
+    --borda: #dde4ec;
+    --fundo: #f4f6f9;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--fundo);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+  .topo {
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1.25rem;
+  }
+  .topo strong { color: var(--laranja); }
+  .topo nav { display: flex; gap: 1rem; flex: 1; }
+  .topo a {
+    color: #cfd9e6;
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
+  .topo a:hover { color: #fff; }
+  .topo a.ativo { background: var(--navy-2); color: #fff; }
+  .topo .quem { font-size: 0.85rem; color: #8fa1b8; }
+  .topo .sair {
+    background: none;
+    border: 1px solid #3a4d68;
+    color: #cfd9e6;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .topo .sair:hover { border-color: var(--laranja); color: #fff; }
+  main { max-width: 1100px; margin: 2rem auto; padding: 0 1.25rem 4rem; }
+  h1 { font-size: 1.4rem; margin-bottom: 1.25rem; }
+
+  /* ---- barra de ações no topo da página ---- */
+  .acoes { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .acoes h1 { margin: 0; flex: 1; }
+
+  /* ---- tabelas ---- */
+  .lista {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .lista th, .lista td {
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--borda);
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  .lista th {
+    background: #eef2f7;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cinza);
+  }
+  .lista tr:last-child td { border-bottom: 0; }
+  .lista tr:hover td { background: #f8fafc; }
+  .lista .mini { width: 44px; height: 44px; object-fit: contain; background: #f1f4f8; border-radius: 8px; }
+
+  /* ---- badges ---- */
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    margin-right: 0.25rem;
+    white-space: nowrap;
+  }
+  .badge.ok { background: #e3f5e9; color: #1c7c3c; }
+  .badge.off { background: #fdeaea; color: #b03030; }
+  .badge.info { background: #e8f0fb; color: #2456a6; }
+  .badge.dest { background: #fdf0e3; color: #b35c0e; }
+
+  /* ---- formulários ---- */
+  .cartao-form {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .cartao-form h2 { font-size: 1.05rem; margin-bottom: 1rem; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+  .campo { font-size: 0.85rem; font-weight: 600; }
+  .campo.largo { grid-column: 1 / -1; }
+  .campo input, .campo select, .campo textarea {
+    display: block;
+    width: 100%;
+    margin-top: 0.3rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    background: #fff;
+  }
+  .campo textarea { min-height: 110px; resize: vertical; }
+  .campo input:focus, .campo select:focus, .campo textarea:focus {
+    outline: 2px solid var(--laranja);
+    border-color: transparent;
+  }
+  .campo .dica { font-weight: 400; color: var(--cinza); font-size: 0.78rem; margin-top: 0.25rem; }
+  .check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; }
+  .check input { width: 18px; height: 18px; accent-color: var(--laranja); }
+
+  /* ---- botões ---- */
+  .botao {
+    display: inline-block;
+    background: var(--laranja);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .botao:hover { filter: brightness(1.08); }
+  .botao.cinza { background: #e7ecf2; color: var(--navy); }
+  .botao.perigo { background: #c0392b; }
+  .botao.mini { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+
+  /* ---- avisos ---- */
+  .flash {
+    background: #e3f5e9;
+    color: #1c7c3c;
+    border: 1px solid #bce5c8;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .flash.erro { background: #fdeaea; color: #b03030; border-color: #f2c4c4; }
+
+  /* ---- bloco de derivados ---- */
+  .derivados {
+    background: #f8fafc;
+    border: 1px dashed var(--borda);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.85rem;
+  }
+  .derivados dt { font-weight: 700; color: var(--cinza); margin-top: 0.5rem; font-size: 0.75rem; text-transform: uppercase; }
+  .derivados dd { margin: 0.1rem 0 0; }
+  .derivados .alem { color: #b03030; font-weight: 700; }
+
+  /* ---- galeria de imagens do produto ---- */
+  .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+  .galeria .item {
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 0.6rem;
+    background: #fff;
+    font-size: 0.8rem;
+  }
+  .galeria .item img { width: 100%; height: 110px; object-fit: contain; background: #f1f4f8; border-radius: 8px; }
+  .galeria .item form { margin-top: 0.4rem; display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+  .galeria .item input[type='text'] {
+    flex: 1 1 100%;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+</style>

@@ -1,0 +1,378 @@
+---
+// Admin → Editar produto. Princípio do modelo aprovado: campos atômicos +
+// composição por regra — os derivados (nome, H1, SEO, alt, WhatsApp) são
+// mostrados em preview; overrides são opcionais. Upload → Supabase Storage.
+import { asc, eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import {
+  type Produto,
+  nomeProduto,
+  h1Produto,
+  altImagem,
+  seoTitleProduto,
+  seoDescriptionProduto,
+  waMsgProduto,
+} from '../../../data/produtos';
+import {
+  carregarCategorias,
+  parseChips,
+  parseSpecs,
+  parseParagrafos,
+  slugify,
+} from '../../../lib/catalogo';
+import { enviarImagemProduto, validarImagem } from '../../../lib/storage';
+
+export const prerender = false;
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id)) return Astro.redirect('/admin/produtos');
+
+const t = tabelas.produtos;
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+  const acao = texto('_acao');
+
+  if (acao === 'excluir') {
+    await db.delete(t).where(eq(t.id, id)); // imagens/specs caem em cascata
+    return Astro.redirect('/admin/produtos?ok=excluido');
+  }
+
+  if (acao === 'salvar') {
+    const slug = slugify(texto('slug'));
+    await db
+      .update(t)
+      .set({
+        codigo: texto('codigo'),
+        etiqueta: texto('etiqueta') || null,
+        tipo: texto('tipo'),
+        categoriaId: Number(texto('categoriaId')),
+        marca: texto('marca') || null,
+        nome: texto('nome') || null,
+        slug: slug || undefined,
+        specsChips: parseChips(texto('specsChips')),
+        destaque: f.get('destaque') === 'on',
+        publicado: f.get('publicado') === 'on',
+        pitch: texto('pitch') || null,
+        descricao: parseParagrafos(texto('descricao')).length
+          ? parseParagrafos(texto('descricao'))
+          : null,
+        seoTitle: texto('seoTitle') || null,
+        seoDescription: texto('seoDescription') || null,
+        atualizadoEm: new Date(),
+      })
+      .where(eq(t.id, id));
+
+    // especificações: substituição completa (textarea "Rótulo | Valor")
+    await db.delete(tabelas.produtoSpecs).where(eq(tabelas.produtoSpecs.produtoId, id));
+    const specs = parseSpecs(texto('especificacoes'));
+    if (specs.length) {
+      await db.insert(tabelas.produtoSpecs).values(
+        specs.map((s, i) => ({ produtoId: id, rotulo: s.rotulo, valor: s.valor, ordem: i })),
+      );
+    }
+    return Astro.redirect(`/admin/produtos/${id}?ok=1`);
+  }
+
+  if (acao === 'img-add') {
+    const arquivo = f.get('arquivo');
+    if (arquivo instanceof File && arquivo.size > 0) {
+      const problema = validarImagem(arquivo);
+      if (problema) {
+        erro = problema;
+      } else {
+        const ext = arquivo.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+        const base = `${slugify(arquivo.name.replace(/\.[^.]+$/, '')) || 'imagem'}.${ext}`;
+        const url = await enviarImagemProduto(base, await arquivo.arrayBuffer(), arquivo.type);
+        const existentes = await db
+          .select({ id: tabelas.produtoImagens.id })
+          .from(tabelas.produtoImagens)
+          .where(eq(tabelas.produtoImagens.produtoId, id));
+        await db.insert(tabelas.produtoImagens).values({
+          produtoId: id,
+          src: url,
+          alt: texto('alt') || null,
+          principal: existentes.length === 0,
+          ordem: existentes.length,
+        });
+        return Astro.redirect(`/admin/produtos/${id}?ok=img`);
+      }
+    } else {
+      erro = 'Selecione um arquivo de imagem.';
+    }
+  }
+
+  if (acao === 'img-remover') {
+    await db
+      .delete(tabelas.produtoImagens)
+      .where(eq(tabelas.produtoImagens.id, Number(texto('imgId'))));
+    return Astro.redirect(`/admin/produtos/${id}?ok=img`);
+  }
+
+  if (acao === 'img-principal') {
+    await db
+      .update(tabelas.produtoImagens)
+      .set({ principal: false })
+      .where(eq(tabelas.produtoImagens.produtoId, id));
+    await db
+      .update(tabelas.produtoImagens)
+      .set({ principal: true })
+      .where(eq(tabelas.produtoImagens.id, Number(texto('imgId'))));
+    return Astro.redirect(`/admin/produtos/${id}?ok=img`);
+  }
+
+  if (acao === 'img-alt') {
+    await db
+      .update(tabelas.produtoImagens)
+      .set({ alt: texto('alt') || null })
+      .where(eq(tabelas.produtoImagens.id, Number(texto('imgId'))));
+    return Astro.redirect(`/admin/produtos/${id}?ok=img`);
+  }
+}
+
+const [linha] = await db.select().from(t).where(eq(t.id, id));
+if (!linha) return Astro.redirect('/admin/produtos');
+
+const categorias = await carregarCategorias();
+const imagens = await db
+  .select()
+  .from(tabelas.produtoImagens)
+  .where(eq(tabelas.produtoImagens.produtoId, id))
+  .orderBy(asc(tabelas.produtoImagens.ordem));
+const specs = await db
+  .select()
+  .from(tabelas.produtoSpecs)
+  .where(eq(tabelas.produtoSpecs.produtoId, id))
+  .orderBy(asc(tabelas.produtoSpecs.ordem));
+
+const categoria = categorias.find((c) => c.id === linha.categoriaId);
+
+// pseudo-Produto para o preview dos derivados (mesmas regras do site)
+const pseudo: Produto = {
+  slug: linha.slug,
+  codigo: linha.codigo,
+  etiqueta: linha.etiqueta ?? undefined,
+  tipo: linha.tipo,
+  categoria: (categoria?.slug ?? '') as Produto['categoria'],
+  marca: linha.marca ?? undefined,
+  nome: linha.nome ?? undefined,
+  specsChips: linha.specsChips ?? [],
+  imagens: [],
+  seoTitle: linha.seoTitle ?? undefined,
+  seoDescription: linha.seoDescription ?? undefined,
+};
+
+const tituloDerivado = seoTitleProduto(pseudo);
+const metaDerivada = seoDescriptionProduto(pseudo);
+const ok = Astro.url.searchParams.get('ok');
+
+const especificacoesTexto = specs.map((s) => `${s.rotulo} | ${s.valor}`).join('\n');
+const descricaoTexto = (linha.descricao ?? []).join('\n\n');
+const temConteudoCompleto = Boolean(linha.pitch && linha.descricao?.length && specs.length);
+---
+
+<AdminLayout titulo={`Produto · ${linha.codigo}`}>
+  <div class="acoes">
+    <h1>{nomeProduto(pseudo)}</h1>
+    <a class="botao cinza" href="/admin/produtos">← Voltar</a>
+    {
+      linha.publicado && (
+        <a
+          class="botao cinza"
+          href={`/produtos/${categoria?.slug}/${linha.slug}`}
+          target="_blank"
+        >
+          Ver no site ↗
+        </a>
+      )
+    }
+  </div>
+
+  {ok === '1' && <p class="flash">Produto salvo. O site público já reflete a mudança.</p>}
+  {ok === 'img' && <p class="flash">Imagens atualizadas.</p>}
+  {ok === 'criado' && <p class="flash">Produto criado como rascunho — complete e publique.</p>}
+  {erro && <p class="flash erro">{erro}</p>}
+
+  <form method="POST">
+    <input type="hidden" name="_acao" value="salvar" />
+
+    <div class="cartao-form">
+      <h2>Dados básicos</h2>
+      <div class="campos">
+        <label class="campo">
+          Código/modelo
+          <input type="text" name="codigo" value={linha.codigo} required />
+        </label>
+        <label class="campo">
+          Etiqueta
+          <input type="text" name="etiqueta" value={linha.etiqueta ?? ''} placeholder="Diesel, VSD…" />
+        </label>
+        <label class="campo">
+          Tipo (termo semântico)
+          <input type="text" name="tipo" value={linha.tipo} required />
+        </label>
+        <label class="campo">
+          Categoria
+          <select name="categoriaId" required>
+            {categorias.map((c) => (
+              <option value={c.id} selected={c.id === linha.categoriaId}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label class="campo">
+          Marca
+          <input type="text" name="marca" value={linha.marca ?? ''} placeholder="Atlas Copco (padrão)" />
+        </label>
+        <label class="campo">
+          Nome de exibição (override)
+          <input type="text" name="nome" value={linha.nome ?? ''} placeholder={`${linha.tipo} ${linha.codigo}`} />
+        </label>
+        <label class="campo">
+          Slug (URL)
+          <input type="text" name="slug" value={linha.slug} required />
+        </label>
+        <label class="campo">
+          Chips do card (vírgula)
+          <input type="text" name="specsChips" value={(linha.specsChips ?? []).join(', ')} />
+        </label>
+      </div>
+      <p style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
+        <label class="check">
+          <input type="checkbox" name="publicado" checked={linha.publicado} />
+          Publicado no site
+        </label>
+        <label class="check">
+          <input type="checkbox" name="destaque" checked={linha.destaque} />
+          Destaque
+        </label>
+      </p>
+    </div>
+
+    <div class="cartao-form">
+      <h2>Conteúdo da página própria</h2>
+      <p class="dica" style="color:var(--cinza);font-size:.82rem;margin-bottom:1rem">
+        A página própria (/produtos/{categoria?.slug}/{linha.slug}) só existe com os 3 blocos
+        preenchidos: pitch, descrição e especificações.
+        {temConteudoCompleto
+          ? ' Status: completa ✓'
+          : ' Status: incompleta — o card aponta para o WhatsApp.'}
+      </p>
+      <div class="campos">
+        <label class="campo largo">
+          Pitch (1–2 frases de abertura; HTML simples permitido)
+          <textarea name="pitch" style="min-height:70px">{linha.pitch ?? ''}</textarea>
+        </label>
+        <label class="campo largo">
+          Descrição (150–400 palavras; parágrafos separados por linha em branco; o 1º começa com
+          afirmação direta em &lt;b&gt;)
+          <textarea name="descricao" style="min-height:180px">{descricaoTexto}</textarea>
+        </label>
+        <label class="campo largo">
+          Especificações técnicas (uma por linha: <code>Rótulo | Valor</code>)
+          <textarea name="especificacoes" style="min-height:140px" placeholder={'Potência | 144 kVA\nCombustível | Diesel'}>{especificacoesTexto}</textarea>
+          <span class="dica">Specs de fonte oficial Atlas Copco — nunca inventar números.</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="cartao-form">
+      <h2>SEO</h2>
+      <div class="campos">
+        <label class="campo">
+          SEO Title (vazio = derivado · ≤ 60)
+          <input type="text" name="seoTitle" value={linha.seoTitle ?? ''} maxlength="60" />
+        </label>
+        <label class="campo">
+          Meta description (vazia = derivada · ≤ 155)
+          <input type="text" name="seoDescription" value={linha.seoDescription ?? ''} maxlength="155" />
+        </label>
+      </div>
+      <dl class="derivados" style="margin-top:1rem">
+        <dt>Como o site vai exibir (derivado das regras)</dt>
+        <dd><b>Nome:</b> {nomeProduto(pseudo)}</dd>
+        <dd><b>H1 da página:</b> {h1Produto(pseudo)}</dd>
+        <dd>
+          <b>Title:</b> {tituloDerivado}
+          <span class={tituloDerivado.length > 60 ? 'alem' : ''}> ({tituloDerivado.length}/60)</span>
+        </dd>
+        <dd>
+          <b>Meta:</b> {metaDerivada}
+          <span class={metaDerivada.length > 155 ? 'alem' : ''}> ({metaDerivada.length}/155)</span>
+        </dd>
+        <dd><b>Msg WhatsApp:</b> {waMsgProduto(pseudo, categoria?.nome ?? '')}</dd>
+      </dl>
+    </div>
+
+    <button class="botao" type="submit">Salvar produto</button>
+  </form>
+
+  <div class="cartao-form" style="margin-top:1.5rem">
+    <h2>Imagens</h2>
+    <div class="galeria">
+      {
+        imagens.map((img) => (
+          <div class="item">
+            <img src={img.src} alt={img.alt ?? ''} loading="lazy" />
+            <p style="margin:.4rem 0 0">
+              {img.principal && <span class="badge dest">Principal</span>}
+            </p>
+            <form method="POST">
+              <input type="hidden" name="_acao" value="img-alt" />
+              <input type="hidden" name="imgId" value={img.id} />
+              <input
+                type="text"
+                name="alt"
+                value={img.alt ?? ''}
+                placeholder={`vazio = "${altImagem(pseudo, { src: img.src })}"`}
+              />
+              <button class="botao mini cinza" type="submit">Salvar alt</button>
+            </form>
+            <form method="POST" style="margin-top:.35rem">
+              <input type="hidden" name="imgId" value={img.id} />
+              {!img.principal && (
+                <button class="botao mini cinza" name="_acao" value="img-principal" type="submit">
+                  Tornar principal
+                </button>
+              )}
+              <button
+                class="botao mini perigo"
+                name="_acao"
+                value="img-remover"
+                type="submit"
+                onclick="return confirm('Remover esta imagem?')"
+              >
+                Remover
+              </button>
+            </form>
+          </div>
+        ))
+      }
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" style="margin-top:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:end">
+      <input type="hidden" name="_acao" value="img-add" />
+      <label class="campo" style="flex:1;min-width:220px">
+        Nova imagem (JPG/PNG/WebP/AVIF · até 5 MB)
+        <input type="file" name="arquivo" accept="image/jpeg,image/png,image/webp,image/avif" required />
+      </label>
+      <label class="campo" style="flex:1;min-width:220px">
+        Alt (vazio = derivado)
+        <input type="text" name="alt" />
+      </label>
+      <button class="botao" type="submit">Enviar imagem</button>
+    </form>
+  </div>
+
+  <div class="cartao-form" style="border-color:#f2c4c4">
+    <h2 style="color:#b03030">Zona de perigo</h2>
+    <form method="POST" onsubmit="return confirm('Excluir este produto e todas as suas imagens/specs? Esta ação não tem volta.')">
+      <input type="hidden" name="_acao" value="excluir" />
+      <button class="botao perigo" type="submit">Excluir produto</button>
+    </form>
+  </div>
+</AdminLayout>

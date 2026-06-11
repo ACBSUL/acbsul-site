@@ -3,10 +3,7 @@ import SiteLayout from '../../../layouts/SiteLayout.astro';
 import SiteNav from '../../../components/SiteNav.astro';
 import SiteFooter from '../../../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../../../data/empresa';
-import { categorias } from '../../../data/categorias';
 import {
-  produtos,
-  type Produto,
   marcaDe,
   nomeProduto,
   h1Produto,
@@ -19,28 +16,32 @@ import {
   seoTitleProduto,
   seoDescriptionProduto,
 } from '../../../data/produtos';
+import { carregarCategorias, carregarProdutos } from '../../../lib/catalogo';
 
-export const prerender = true;
+// Etapa C: PDP lê do banco (SSR — HTML completo servido). Existe página
+// quando o conteúdo está completo (pitch + descrição + especificações).
+export const prerender = false;
 
-// Gera uma página para cada produto com conteúdo de PDP completo (pitch +
-// descrição + especificações) — ver temPaginaPropria em produtos.ts.
-export function getStaticPaths() {
-  return produtos
-    .filter((p) => temPaginaPropria(p) && p.publicado !== false)
-    .map((p) => ({ params: { categoria: p.categoria, produto: p.slug }, props: { p } }));
+const categorias = (await carregarCategorias()).filter((c) => c.ativa);
+const todos = (await carregarProdutos()).filter((x) => x.publicado !== false);
+
+const p = todos.find(
+  (x) => x.slug === Astro.params.produto && x.categoria === Astro.params.categoria,
+);
+const categoria = categorias.find((c) => c.slug === Astro.params.categoria);
+
+if (!p || !categoria || !temPaginaPropria(p)) {
+  return new Response('Página não encontrada', {
+    status: 404,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }
 
-interface Props {
-  p: Produto;
-}
-const { p } = Astro.props;
-
-const categoria = categorias.find((c) => c.slug === p.categoria)!;
 const urlAbs = `${empresa.url}${urlProduto(p)}`;
 const img = imagemPrincipal(p);
 
 // relacionados: mesma categoria, até 3
-const relacionados = produtos.filter((x) => x.categoria === p.categoria && x.slug !== p.slug).slice(0, 3);
+const relacionados = todos.filter((x) => x.categoria === p.categoria && x.slug !== p.slug).slice(0, 3);
 
 // Schema — Product + BreadcrumbList (catálogo lead-gen, sem preço/checkout)
 const productSchema = {
@@ -211,7 +212,11 @@ const breadcrumbSchema = {
                             </span>
                           </a>
                         ) : (
-                          <a class="link-arrow" data-wa-msg={waMsgProduto(r, categoria.nome)}>
+                          <a
+                            class="link-arrow"
+                            data-wa-msg={waMsgProduto(r, categoria.nome)}
+                            data-wa-num={categoria.whatsappNumero || undefined}
+                          >
                             Solicitar orçamento{' '}
                             <span class="dot">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

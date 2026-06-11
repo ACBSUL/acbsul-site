@@ -3,11 +3,8 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import SiteNav from '../../components/SiteNav.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../../data/empresa';
-import { categorias } from '../../data/categorias';
 import { catIcons, iconTodas } from '../../data/cat-icons';
 import {
-  produtos,
-  contagemPorCategoria,
   nomeProduto,
   codigoEtiqueta,
   imagemPrincipal,
@@ -16,22 +13,31 @@ import {
   urlProduto,
   waMsgProduto,
 } from '../../data/produtos';
+import { carregarCategorias, carregarProdutos } from '../../lib/catalogo';
 
-export const prerender = true;
+// Etapa C: catálogo lê do banco (admin publica → página reflete).
+// SSR = HTML completo servido pelo servidor (princípio nº 1 do PRD).
+export const prerender = false;
 
 const title = 'Catálogo de Produtos Atlas Copco no RS | ACB Sul';
 const description =
   'Compressores, geradores, bombas de vácuo, rompedores e peças originais Atlas Copco. Venda e locação no RS e SC — ACB Sul, Porto Alegre.';
 
-const contagem = contagemPorCategoria();
-const total = produtos.length;
+const categorias = (await carregarCategorias()).filter((c) => c.ativa);
+const publicados = (await carregarProdutos()).filter((p) => p.publicado !== false);
+
+const contagem: Record<string, number> = {};
+for (const p of publicados) contagem[p.categoria] = (contagem[p.categoria] ?? 0) + 1;
+const total = publicados.length;
 
 // ordena os produtos pela ordem das categorias (a grade segue o portfólio do cliente)
 const ordem = new Map(categorias.map((c, i) => [c.slug, i]));
-const itens = [...produtos].sort(
+const itens = [...publicados].sort(
   (a, b) => (ordem.get(a.categoria) ?? 99) - (ordem.get(b.categoria) ?? 99),
 );
 const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nome]));
+// roteamento de WhatsApp por categoria (config do admin; vazio = número geral)
+const waNumCategoria = new Map(categorias.map((c) => [c.slug, c.whatsappNumero]));
 
 // Schema GEO — CollectionPage + BreadcrumbList + ItemList das linhas de produto.
 const urlProdutos = `${empresa.url}/produtos`;
@@ -280,6 +286,7 @@ const itemListSchema = {
                             <a
                               class="link-arrow"
                               data-wa-msg={waMsgProduto(p, nomeCategoria.get(p.categoria) ?? '')}
+                              data-wa-num={waNumCategoria.get(p.categoria) || undefined}
                             >
                               Solicitar orçamento{' '}
                               <span class="dot">

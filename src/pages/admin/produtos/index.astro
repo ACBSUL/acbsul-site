@@ -1,0 +1,99 @@
+---
+// Admin → Produtos: lista com busca e filtro por categoria.
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { nomeProduto, imagemPrincipal, temPaginaPropria } from '../../../data/produtos';
+import { carregarCategorias, carregarProdutos } from '../../../lib/catalogo';
+
+export const prerender = false;
+
+const categorias = await carregarCategorias();
+const todos = await carregarProdutos();
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().toLowerCase();
+const cat = Astro.url.searchParams.get('cat') ?? '';
+
+let itens = todos;
+if (cat) itens = itens.filter((p) => p.categoria === cat);
+if (q) {
+  itens = itens.filter((p) =>
+    `${p.codigo} ${p.tipo} ${p.nome ?? ''} ${p.slug}`.toLowerCase().includes(q),
+  );
+}
+const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nomeCurto]));
+const excluido = Astro.url.searchParams.get('ok') === 'excluido';
+---
+
+<AdminLayout titulo="Produtos">
+  <div class="acoes">
+    <h1>Produtos <small style="color:var(--cinza);font-weight:400">({itens.length} de {todos.length})</small></h1>
+    <a class="botao" href="/admin/produtos/novo">+ Novo produto</a>
+  </div>
+
+  {excluido && <p class="flash">Produto excluído.</p>}
+
+  <form method="GET" class="acoes" style="gap:.5rem">
+    <input
+      type="search"
+      name="q"
+      value={q}
+      placeholder="Buscar por código, tipo ou nome…"
+      style="flex:1;min-width:220px;padding:.55rem .7rem;border:1px solid var(--borda);border-radius:8px"
+    />
+    <select name="cat" style="padding:.55rem .7rem;border:1px solid var(--borda);border-radius:8px">
+      <option value="">Todas as categorias</option>
+      {categorias.map((c) => (
+        <option value={c.slug} selected={c.slug === cat}>
+          {c.nome}
+        </option>
+      ))}
+    </select>
+    <button class="botao cinza" type="submit">Filtrar</button>
+  </form>
+
+  <table class="lista">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Produto</th>
+        <th>Categoria</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        itens.map((p) => {
+          const img = imagemPrincipal(p);
+          return (
+            <tr>
+              <td>{img && <img class="mini" src={img.src} alt="" loading="lazy" />}</td>
+              <td>
+                <b>{nomeProduto(p)}</b>
+                <br />
+                <small style="color:var(--cinza)">
+                  {p.codigo}
+                  {p.etiqueta ? ` · ${p.etiqueta}` : ''} — /{p.slug}
+                </small>
+              </td>
+              <td>{nomeCategoria.get(p.categoria) ?? p.categoria}</td>
+              <td>
+                {p.publicado !== false ? (
+                  <span class="badge ok">Publicado</span>
+                ) : (
+                  <span class="badge off">Rascunho</span>
+                )}
+                {p.destaque && <span class="badge dest">Destaque</span>}
+                {temPaginaPropria(p) && <span class="badge info">Página própria</span>}
+              </td>
+              <td>
+                <a class="botao mini cinza" href={`/admin/produtos/${p.id}`}>
+                  Editar
+                </a>
+              </td>
+            </tr>
+          );
+        })
+      }
+    </tbody>
+  </table>
+</AdminLayout>

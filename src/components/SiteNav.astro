@@ -2,14 +2,15 @@
 // Navbar pill flutuante + megamenu de categorias + drawer mobile.
 // Hrefs com "/" na frente para funcionar em qualquer rota (na home, /#sobre rola normalmente).
 // Categorias apontam para o filtro do catálogo (/produtos#slug) até as páginas
-// de categoria do Passo 2 existirem. "Peças" e "Serviços" apontam para destinos
-// reais já publicados (/produtos#pecas e /#servicos) até as páginas próprias existirem.
+// de categoria do Passo 2 existirem. "Peças" aponta para destino real já
+// publicado (/produtos#pecas) até a página própria existir.
 import { categorias } from '../data/categorias';
 import { catIcons } from '../data/cat-icons';
 
 const path = Astro.url.pathname;
 const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
 const emQuemSomos = path === '/quem-somos';
+const emServicos = path === '/servicos';
 ---
 
 <!-- ============ NAVBAR ============ -->
@@ -57,7 +58,7 @@ const emQuemSomos = path === '/quem-somos';
         </div>
       </div>
       <a href="/produtos#pecas">Peças</a>
-      <a href="/#servicos">Serviços</a>
+      <a class:list={[{ active: emServicos }]} href="/servicos">Serviços</a>
     </div>
     <div class="nav-cta">
       <a class="nav-pill" href="/#contato">Orçamento</a>
@@ -94,7 +95,7 @@ const emQuemSomos = path === '/quem-somos';
       </div>
     </details>
     <a class="dl" href="/produtos#pecas">Peças</a>
-    <a class="dl" href="/#servicos">Serviços</a>
+    <a class:list={['dl', { active: emServicos }]} href="/servicos">Serviços</a>
     <div class="dcta">
       <a class="btn btn-wa btn-block" data-wa-msg="Olá! Gostaria de falar com a ACB Sul.">WhatsApp</a>
       <a class="btn btn-accent btn-block" href="/#contato"
