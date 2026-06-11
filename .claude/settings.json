@@ -80,7 +80,10 @@
       "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
       "PowerShell(npx tsx scripts/screenshot-admin.ts)",
       "PowerShell(npx tsx -e \"import {existsSync} from 'node:fs'; import puppeteer from 'puppeteer-core'; const EXEC=['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe'].find\\(existsSync\\); const b=await puppeteer.launch\\({executablePath:EXEC,headless:true}\\); const p=await b.newPage\\(\\); await p.setViewport\\({width:375,height:760}\\); await p.goto\\('http://localhost:5030/admin/login',{waitUntil:'networkidle0'}\\); await p.type\\('input[name=email]','adm@acbsulcompressores.com.br'\\); await p.type\\('input[name=senha]','AcbSul#Admin2026'\\); await Promise.all\\([p.waitForNavigation\\({waitUntil:'networkidle0'}\\),p.click\\('button[type=submit]'\\)]\\); await p.goto\\('http://localhost:5030/admin/produtos',{waitUntil:'networkidle0'}\\); await p.screenshot\\({path:'.qa-screens/04b-produtos-mobile-viewport.png'}\\); await b.close\\(\\); console.log\\('ok'\\);\")",
-      "PowerShell(npx tsx scripts/shot-um.ts /admin/produtos .qa-screens/04b-produtos-mobile-vp.png 375)"
+      "PowerShell(npx tsx scripts/shot-um.ts /admin/produtos .qa-screens/04b-produtos-mobile-vp.png 375)",
+      "WebFetch(domain:www.atlascopco.com)",
+      "PowerShell(npx tsx scripts/preencher-eletricos.ts)",
+      "PowerShell(npx tsx scripts/shot-um.ts /produtos/compressores-eletricos/ga-11-30-vsd .qa-screens/pdp-ga-vsd.png 1280)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

@@ -138,6 +138,25 @@ export const produtos: Produto[] = [
         alt: 'Compressor de parafuso elétrico Atlas Copco das linhas GA e GX',
       },
     ],
+    // ---- PDP (fontes: leaflet GX 2-11 9096 3240 92; atlascopco.com/pt-br série GA) ----
+    pitch:
+      'Linha completa de compressores de parafuso lubrificados Atlas Copco — do GX compacto de <b>2,2 kW</b> ao GA industrial de grande porte — com pressões de 7,5 a 13 bar, regime 100% contínuo e versões Full Feature com secador de ar integrado.',
+    descricao: [
+      '<b>As linhas GA e GX são os compressores de parafuso com injeção de óleo da Atlas Copco para fornecimento contínuo de ar comprimido na indústria.</b> A série GX (2,2 a 11 kW) leva a tecnologia de parafuso industrial para pequenas e médias operações, com vazão de 4,0 a 26,6 l/s e pressões de 7,5 a 13 bar; a série GA cobre da entrada ao grande porte — de 5,5 até 500 kW, com vazão de até 5.082 m³/h — sempre em regime de trabalho 100% contínuo.',
+      'Na prática, isso atende desde a oficina e a manufatura leve até linhas de produção que não podem parar: metalmecânica, plásticos, alimentos e bebidas, ar de instrumentação. O GX tem baixo nível de ruído (61 a 67 dB(A)) e montagem compacta — no piso ou sobre reservatório —, podendo ser instalado junto ao ponto de uso; as versões Full Feature de ambas as linhas trazem secador refrigerado integrado, entregando ar seco direto na rede e protegendo tubulação e ferramentas contra condensado. Nos modelos GA, o controlador Elektronikon® com monitoramento SMARTLINK acompanha a máquina à distância, e as versões VSD de velocidade variável ajustam a rotação à demanda real de ar, com economia de energia de até 35% (até 50% no VSD⁺) em relação à velocidade fixa.',
+      'Como distribuidora autorizada Atlas Copco no Rio Grande do Sul, a ACB Sul dimensiona o compressor de parafuso adequado à vazão e à pressão da sua operação, com <b>venda ou locação</b>, peças originais e assistência técnica em todo o RS e Santa Catarina. Solicite um orçamento e receba a indicação do modelo GA ou GX certo para a sua demanda.',
+    ],
+    especificacoes: [
+      { rotulo: 'Tecnologia', valor: 'Parafuso rotativo com injeção de óleo' },
+      { rotulo: 'Linha GX', valor: '2,2–11 kW (GX 2 a GX 11)' },
+      { rotulo: 'Linha GA', valor: '5,5–500 kW' },
+      { rotulo: 'Pressão de trabalho', valor: '7,5–13 bar' },
+      { rotulo: 'Vazão (FAD) — GX', valor: '4,0–26,6 l/s' },
+      { rotulo: 'Vazão (FAD) — série GA', valor: 'até 5.082 m³/h' },
+      { rotulo: 'Nível de ruído — GX', valor: '61–67 dB(A)' },
+      { rotulo: 'Regime de trabalho', valor: '100% contínuo' },
+      { rotulo: 'Variantes', valor: 'Piso ou tanque · Full Feature (secador integrado) · VSD/VSD⁺' },
+    ],
   },
   {
     slug: 'ga-11-30-vsd',
@@ -152,6 +171,26 @@ export const produtos: Produto[] = [
         src: `${P}/compressores-eletricos/ga-11-30-vsd.png`,
         alt: 'Compressor de parafuso Atlas Copco GA 11+-30 com tecnologia VSD',
       },
+    ],
+    // ---- PDP (fonte: datasheet oficial GA 11+-30 50 Hz, 2935 0826 40) ----
+    pitch:
+      'Compressores de parafuso lubrificados de <b>11 a 30 kW</b> com vazão de 26,7 a 94,0 l/s e pressão de 7,5 a 13 bar — linha GA 11⁺-30 com motor IE4, controlador Elektronikon® Touch e versões VSD de velocidade variável para economia de energia.',
+    descricao: [
+      '<b>O GA 11⁺-30 é a linha de compressores de parafuso com injeção de óleo da Atlas Copco na faixa de 11 a 30 kW (15–40 hp), com pressão de trabalho de 7,5 a 13 bar e vazão (FAD) de 26,7 a 94,0 l/s.</b> São seis modelos — GA 11⁺, 15⁺, 18⁺, 22⁺, 26⁺ e GA 30 — projetados para regime de trabalho 100% contínuo, com motor classe IE4 e nível de ruído entre 67 e 70 dB(A), entre os mais baixos da categoria.',
+      'É o porte de compressor que sustenta a produção em metalmecânica, plásticos, alimentos e bebidas e qualquer planta onde o ar comprimido é insumo crítico. O controlador Elektronikon® Touch traz programação semanal e monitoramento remoto SMARTLINK de série; a versão Full Feature adiciona secador refrigerado integrado (ponto de orvalho de 2 a 3 °C) com separador de água, entregando ar seco direto na rede — sem equipamento externo. Nas versões VSD, a rotação acompanha a demanda real de ar, reduzindo o consumo de energia em até 35% na comparação com máquinas de velocidade fixa.',
+      'Como distribuidora autorizada Atlas Copco no Rio Grande do Sul, a ACB Sul fornece o GA 11⁺-30 para <b>venda ou locação</b>, com dimensionamento técnico, peças originais e assistência em campo em todo o RS e Santa Catarina. Solicite um orçamento informando pressão e vazão necessárias e receba a configuração adequada à sua operação.',
+    ],
+    especificacoes: [
+      { rotulo: 'Modelos', valor: 'GA 11⁺ · 15⁺ · 18⁺ · 22⁺ · 26⁺ · 30' },
+      { rotulo: 'Potência instalada', valor: '11–30 kW (15–40 hp)' },
+      { rotulo: 'Pressão máxima de trabalho', valor: '7,5–13 bar(e)' },
+      { rotulo: 'Vazão (FAD)', valor: '26,7–94,0 l/s (96–338 m³/h)' },
+      { rotulo: 'Nível de ruído', valor: '67–70 dB(A)' },
+      { rotulo: 'Motor', valor: 'Classe de eficiência IE4' },
+      { rotulo: 'Controlador', valor: 'Elektronikon® Touch + monitoramento SMARTLINK' },
+      { rotulo: 'Versão Full Feature', valor: 'Secador integrado (ponto de orvalho 2–3 °C)' },
+      { rotulo: 'Regime de trabalho', valor: '100% contínuo' },
+      { rotulo: 'Peso', valor: '411–567 kg' },
     ],
   },
 
