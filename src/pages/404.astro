@@ -1,0 +1,166 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { empresa, entityBlockTexto } from '../data/empresa';
+
+export const prerender = true;
+
+// Página 404 personalizada (CLAUDE.md §10 — UX e roteamento).
+// noindex: páginas de erro não devem ser indexadas. Mantém o EntityBlock no rodapé
+// para preservar densidade de fatos da entidade mesmo numa rota inexistente.
+const title = 'Página não encontrada (404) | ACB Sul Compressores';
+const description =
+  'A página que você procura não existe ou foi movida. Veja o catálogo de compressores Atlas Copco, os serviços de assistência técnica no RS ou fale com a ACB Sul.';
+
+// Links úteis para reconduzir o visitante ao conteúdo certo.
+const atalhos = [
+  {
+    href: '/produtos',
+    titulo: 'Catálogo de Produtos',
+    texto: 'Compressores de parafuso, pistão, portáteis, geradores e mais.',
+  },
+  {
+    href: '/servicos',
+    titulo: 'Assistência Técnica',
+    texto: 'Manutenção preventiva e corretiva Atlas Copco em todo o RS.',
+  },
+  {
+    href: '/produtos#pecas',
+    titulo: 'Peças Originais',
+    texto: 'Kits de revisão 250h / 500h / 1000h, filtros e lubrificantes.',
+  },
+  {
+    href: '/quem-somos',
+    titulo: 'A Empresa',
+    texto: 'Mais de 40 anos como distribuidora Atlas Copco em Porto Alegre.',
+  },
+];
+---
+
+<SiteLayout title={title} description={description} noindex={true} page="erro-404">
+  <SiteNav />
+
+  <main>
+    <!-- ============ HERO 404 ============ -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Trilha">
+          <a href="/">Início</a><span class="sep">/</span><span class="current">Erro 404</span>
+        </nav>
+        <div class="err-code" aria-hidden="true">404</div>
+        <span class="eyebrow">Página não encontrada</span>
+        <h1>Esta página não existe ou <span class="hl">foi movida</span></h1>
+        <p class="lead">
+          O endereço que você tentou abrir não está disponível. Mas a ACB Sul — distribuidora
+          autorizada Atlas Copco em Porto Alegre/RS — continua aqui. Use um dos atalhos abaixo ou fale
+          direto com nossa equipe.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px">
+          <a class="btn btn-accent btn-lg" href="/"
+            ><span class="ai"
+              ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                ><path d="M3 11.5 12 4l9 7.5M5 10v10h14V10"></path></svg
+              ></span
+            >Voltar para a Home</a
+          >
+          <a
+            class="btn btn-ghost-dark btn-lg"
+            data-wa-msg="Olá! Não encontrei o que procurava no site da ACB Sul. Pode me ajudar?"
+            >Falar no WhatsApp</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ATALHOS ÚTEIS ============ -->
+    <section class="section" style="background:var(--bg-2)" aria-label="Atalhos úteis">
+      <div class="container">
+        <div class="sec-head">
+          <span class="eyebrow">Para onde ir agora</span>
+          <h2>Talvez você esteja <span class="hl">procurando por isto</span></h2>
+        </div>
+        <div class="grid cols-4">
+          {
+            atalhos.map((a) => (
+              <a class="feat fade-up" href={a.href}>
+                <h3 style="margin:0">{a.titulo}</h3>
+                <p style="margin:0;color:var(--ink-2);font-size:15px">{a.texto}</p>
+                <span class="more" style="margin-top:auto">
+                  Acessar
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+        <div class="center-cta">
+          <a class="btn btn-outline btn-lg" href="/contato"
+            >Ir para a página de Contato</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ENTITYBLOCK (rodapé da página) ============ -->
+    <section class="entity-strip" aria-label="Sobre a ACB Sul">
+      <div class="container">
+        <div class="inner">
+          <span class="eyebrow">A ACB Sul</span>
+          <p>{entityBlockTexto}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</SiteLayout>
+
+<style>
+  /* Número 404 grande no hero escuro — usa o azul-claro da marca como destaque */
+  .err-code {
+    font-family: var(--hd);
+    font-weight: 800;
+    line-height: 0.9;
+    font-size: clamp(88px, 18vw, 200px);
+    letter-spacing: -0.04em;
+    background: linear-gradient(180deg, var(--blue-lt) 0%, rgba(255, 255, 255, 0.18) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+  /* Cards de atalho como links de coluna inteira */
+  .feat {
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .feat:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.07);
+  }
+  /* .more só é estilizado dentro de .svc-card no CSS global — replicamos aqui */
+  .feat .more {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding-top: 6px;
+    font-family: var(--hd);
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    transition: color 0.18s ease;
+  }
+  .feat .more svg {
+    width: 14px;
+    height: 14px;
+  }
+  .feat:hover .more {
+    color: var(--accent);
+  }
+</style>
