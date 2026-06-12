@@ -129,12 +129,17 @@ const faqSchema = {
   <!-- ============ HERO ============ -->
   <header class="hero" data-screen-label="Hero">
     <div class="hero-photo">
-      <img
-        class="hero-img"
-        src="/assets/hero-obra-qas.jpg"
-        alt="Gerador Atlas Copco QAS em obra, com técnico ao lado"
-        fetchpriority="high"
-      />
+      <picture>
+        <source srcset="/assets/hero-obra-qas.webp" type="image/webp" />
+        <img
+          class="hero-img"
+          src="/assets/hero-obra-qas.jpg"
+          alt="Gerador Atlas Copco QAS em obra, com técnico ao lado"
+          fetchpriority="high"
+          width="1672"
+          height="941"
+        />
+      </picture>
       <div class="hero-overlay"></div>
     </div>
     <div class="container">
@@ -178,10 +183,13 @@ const faqSchema = {
     <div class="container">
       <div class="entity-grid">
         <div class="entity-photo fade-up">
-          <img
-            src="/assets/hero-obra-qas.jpg" loading="lazy" decoding="async"
-            alt="Técnico ao lado de gerador Atlas Copco QAS em obra atendida pela ACB Sul"
-          />
+          <picture>
+            <source srcset="/assets/hero-obra-qas.webp" type="image/webp" />
+            <img
+              src="/assets/hero-obra-qas.jpg" loading="lazy" decoding="async"
+              alt="Técnico ao lado de gerador Atlas Copco QAS em obra atendida pela ACB Sul"
+            />
+          </picture>
           <div class="entity-badge">
             <b>40+</b>
             <span>anos de mercado</span>
