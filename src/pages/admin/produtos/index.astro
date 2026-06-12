@@ -15,9 +15,7 @@ const cat = Astro.url.searchParams.get('cat') ?? '';
 let itens = todos;
 if (cat) itens = itens.filter((p) => p.categoria === cat);
 if (q) {
-  itens = itens.filter((p) =>
-    `${p.codigo} ${p.tipo} ${p.nome ?? ''} ${p.slug}`.toLowerCase().includes(q),
-  );
+  itens = itens.filter((p) => `${p.nome} ${p.slug}`.toLowerCase().includes(q));
 }
 const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nomeCurto]));
 const excluido = Astro.url.searchParams.get('ok') === 'excluido';
@@ -92,8 +90,7 @@ const filtrando = Boolean(q || cat);
                   </a>
                   <br />
                   <span class="secundario">
-                    {p.codigo}
-                    {p.etiqueta ? ` · ${p.etiqueta}` : ''} — /{p.slug}
+                    {p.slug ? `/${p.slug}` : 'sem slug — defina na edição'}
                   </span>
                 </td>
                 <td>{nomeCategoria.get(p.categoria) ?? p.categoria}</td>
@@ -107,9 +104,19 @@ const filtrando = Boolean(q || cat);
                   {temPaginaPropria(p) && <span class="badge info">Página própria</span>}
                 </td>
                 <td>
-                  <a class="botao mini cinza" href={`/admin/produtos/${p.id}`}>
-                    Editar
-                  </a>
+                  <div class="acoes-linha">
+                    <a class="botao mini cinza" href={`/admin/produtos/${p.id}`}>
+                      Editar
+                    </a>
+                    <form
+                      method="POST"
+                      action={`/admin/produtos/${p.id}`}
+                      onsubmit="return confirm('Excluir este produto? Remove imagens e especificações. Esta ação não tem volta.')"
+                    >
+                      <input type="hidden" name="_acao" value="excluir" />
+                      <button class="botao mini perigo" type="submit">Excluir</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             );
@@ -151,6 +158,8 @@ const filtrando = Boolean(q || cat);
     background: var(--surface);
   }
   .limpar { color: var(--ink-2); font-size: 0.9rem; }
+  .acoes-linha { display: flex; gap: 0.4rem; align-items: center; }
+  .acoes-linha form { margin: 0; }
   .nome-produto { color: var(--ink); font-weight: 700; text-decoration: none; }
   .nome-produto:hover { color: var(--accent-strong); }
   .vazio a { color: var(--accent-strong); }

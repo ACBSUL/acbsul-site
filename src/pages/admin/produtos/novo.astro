@@ -15,27 +15,28 @@ if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
   const texto = (k: string) => String(f.get(k) ?? '').trim();
 
-  const codigo = texto('codigo');
-  const tipo = texto('tipo');
+  const nome = texto('nome');
   const categoriaId = Number(texto('categoriaId'));
 
-  if (!codigo || !tipo || !categoriaId) {
-    erro = 'Preencha código, tipo e categoria.';
+  if (!nome || !categoriaId) {
+    erro = 'Preencha o nome do produto e a categoria.';
   } else {
-    let slug = slugify(texto('slug') || codigo);
-    const [jaExiste] = await db
-      .select({ id: tabelas.produtos.id })
-      .from(tabelas.produtos)
-      .where(eq(tabelas.produtos.slug, slug));
-    if (jaExiste) slug = `${slug}-${Date.now().toString(36)}`;
+    // Slug é opcional na criação: se vier em branco, fica sem slug e a tela
+    // de edição sugere um a partir do nome (regra aprovada pelo cliente).
+    let slug: string | null = slugify(texto('slug')) || null;
+    if (slug) {
+      const [jaExiste] = await db
+        .select({ id: tabelas.produtos.id })
+        .from(tabelas.produtos)
+        .where(eq(tabelas.produtos.slug, slug));
+      if (jaExiste) slug = `${slug}-${Date.now().toString(36)}`;
+    }
 
     const [novo] = await db
       .insert(tabelas.produtos)
       .values({
         slug,
-        codigo,
-        etiqueta: texto('etiqueta') || null,
-        tipo,
+        nome,
         categoriaId,
         specsChips: parseChips(texto('specsChips')),
         publicado: false, // nasce como rascunho — publicar na edição
@@ -56,25 +57,22 @@ if (Astro.request.method === 'POST') {
 
   <form method="POST">
     <div class="cartao-form" style="max-width:760px">
-      <h2>Só o essencial — o resto o sistema deriva</h2>
+      <h2>Só o essencial para começar</h2>
       <p class="nota">
-        Nome de exibição, H1, title, meta e mensagem de WhatsApp são compostos
-        automaticamente a partir destes campos. O produto nasce como rascunho.
+        Informe o nome do produto e a categoria. O produto nasce como rascunho;
+        o conteúdo da página e o endereço (slug) você completa na próxima tela.
       </p>
       <div class="campos">
         <label class="campo">
-          Código/modelo Atlas Copco <span class="req" aria-hidden="true">*</span>
-          <input type="text" name="codigo" placeholder="QAS 140" required autofocus />
-          <span class="dica">Só o modelo — sem o tipo.</span>
-        </label>
-        <label class="campo">
-          Etiqueta (opcional)
-          <input type="text" name="etiqueta" placeholder="Diesel, VSD, Stage V…" />
-        </label>
-        <label class="campo">
-          Tipo (termo semântico) <span class="req" aria-hidden="true">*</span>
-          <input type="text" name="tipo" placeholder="Gerador de Energia" required />
-          <span class="dica">Nenhum produto é só código (PRD §7).</span>
+          Nome do produto <span class="req" aria-hidden="true">*</span>
+          <input
+            type="text"
+            name="nome"
+            placeholder="Compressor Elétrico Portátil E-AIR T500"
+            required
+            autofocus
+          />
+          <span class="dica">Nome completo, como deve aparecer no site (este é o título da página).</span>
         </label>
         <label class="campo">
           Categoria <span class="req" aria-hidden="true">*</span>
@@ -90,8 +88,9 @@ if (Astro.request.method === 'POST') {
           <input type="text" name="specsChips" placeholder="144 kVA, Diesel, Carenado" />
         </label>
         <label class="campo">
-          Slug (opcional — derivado do código)
-          <input type="text" name="slug" placeholder="qas-140" />
+          Slug do endereço (opcional)
+          <input type="text" name="slug" placeholder="deixe em branco — sugerimos depois pelo nome" />
+          <span class="dica">Se deixar em branco, a próxima tela sugere um slug a partir do nome.</span>
         </label>
       </div>
       <p style="margin-top:1.25rem">

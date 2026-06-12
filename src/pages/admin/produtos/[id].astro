@@ -2,18 +2,10 @@
 // Admin → Editar produto. Princípio do modelo aprovado: campos atômicos +
 // composição por regra — os derivados (nome, H1, SEO, alt, WhatsApp) são
 // mostrados em preview; overrides são opcionais. Upload → Supabase Storage.
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, ne } from 'drizzle-orm';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { db, tabelas } from '../../../db';
-import {
-  type Produto,
-  nomeProduto,
-  h1Produto,
-  altImagem,
-  seoTitleProduto,
-  seoDescriptionProduto,
-  waMsgProduto,
-} from '../../../data/produtos';
+import { type Produto, nomeProduto, altImagem } from '../../../data/produtos';
 import {
   carregarCategorias,
   parseChips,
@@ -42,39 +34,50 @@ if (Astro.request.method === 'POST') {
   }
 
   if (acao === 'salvar') {
-    const slug = slugify(texto('slug'));
-    await db
-      .update(t)
-      .set({
-        codigo: texto('codigo'),
-        etiqueta: texto('etiqueta') || null,
-        tipo: texto('tipo'),
-        categoriaId: Number(texto('categoriaId')),
-        marca: texto('marca') || null,
-        nome: texto('nome') || null,
-        slug: slug || undefined,
-        specsChips: parseChips(texto('specsChips')),
-        destaque: f.get('destaque') === 'on',
-        publicado: f.get('publicado') === 'on',
-        pitch: texto('pitch') || null,
-        descricao: parseParagrafos(texto('descricao')).length
-          ? parseParagrafos(texto('descricao'))
-          : null,
-        seoTitle: texto('seoTitle') || null,
-        seoDescription: texto('seoDescription') || null,
-        atualizadoEm: new Date(),
-      })
-      .where(eq(t.id, id));
+    const nome = texto('nome');
+    if (!nome) {
+      erro = 'O nome do produto não pode ficar em branco.';
+    } else {
+      // Slug é opcional: em branco = sem slug (o produto fica sem página
+      // pública até receber um). Garante unicidade entre os demais produtos.
+      let slug: string | null = slugify(texto('slug')) || null;
+      if (slug) {
+        const [conflito] = await db
+          .select({ id: t.id })
+          .from(t)
+          .where(and(eq(t.slug, slug), ne(t.id, id)));
+        if (conflito) slug = `${slug}-${Date.now().toString(36)}`;
+      }
 
-    // especificações: substituição completa (textarea "Rótulo | Valor")
-    await db.delete(tabelas.produtoSpecs).where(eq(tabelas.produtoSpecs.produtoId, id));
-    const specs = parseSpecs(texto('especificacoes'));
-    if (specs.length) {
-      await db.insert(tabelas.produtoSpecs).values(
-        specs.map((s, i) => ({ produtoId: id, rotulo: s.rotulo, valor: s.valor, ordem: i })),
-      );
+      await db
+        .update(t)
+        .set({
+          nome,
+          categoriaId: Number(texto('categoriaId')),
+          slug,
+          specsChips: parseChips(texto('specsChips')),
+          destaque: f.get('destaque') === 'on',
+          publicado: f.get('publicado') === 'on',
+          pitch: texto('pitch') || null,
+          descricao: parseParagrafos(texto('descricao')).length
+            ? parseParagrafos(texto('descricao'))
+            : null,
+          seoTitle: texto('seoTitle') || null,
+          seoDescription: texto('seoDescription') || null,
+          atualizadoEm: new Date(),
+        })
+        .where(eq(t.id, id));
+
+      // especificações: substituição completa (textarea "Rótulo | Valor")
+      await db.delete(tabelas.produtoSpecs).where(eq(tabelas.produtoSpecs.produtoId, id));
+      const specs = parseSpecs(texto('especificacoes'));
+      if (specs.length) {
+        await db.insert(tabelas.produtoSpecs).values(
+          specs.map((s, i) => ({ produtoId: id, rotulo: s.rotulo, valor: s.valor, ordem: i })),
+        );
+      }
+      return Astro.redirect(`/admin/produtos/${id}?ok=1`);
     }
-    return Astro.redirect(`/admin/produtos/${id}?ok=1`);
   }
 
   if (acao === 'img-add') {
@@ -84,13 +87,21 @@ if (Astro.request.method === 'POST') {
       if (problema) {
         erro = problema;
       } else {
-        const ext = arquivo.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-        const base = `${slugify(arquivo.name.replace(/\.[^.]+$/, '')) || 'imagem'}.${ext}`;
-        const url = await enviarImagemProduto(base, await arquivo.arrayBuffer(), arquivo.type);
+        // nome do arquivo = slug-do-produto + número sequencial (slug-1.webp, slug-2.webp…)
+        const [prod] = await db
+          .select({ slug: tabelas.produtos.slug })
+          .from(tabelas.produtos)
+          .where(eq(tabelas.produtos.id, id));
+        const slugProduto = prod?.slug || `produto-${id}`;
         const existentes = await db
-          .select({ id: tabelas.produtoImagens.id })
+          .select({ src: tabelas.produtoImagens.src })
           .from(tabelas.produtoImagens)
           .where(eq(tabelas.produtoImagens.produtoId, id));
+        // próximo número = maior já usado para este slug + 1 (evita sobrescrever)
+        const re = new RegExp(`${slugProduto}-(\\d+)\\.webp$`);
+        const proximo =
+          existentes.reduce((m, e) => Math.max(m, Number(e.src.match(re)?.[1] ?? 0)), 0) + 1;
+        const url = await enviarImagemProduto(`${slugProduto}-${proximo}`, await arquivo.arrayBuffer());
         await db.insert(tabelas.produtoImagens).values({
           produtoId: id,
           src: url,
@@ -152,35 +163,38 @@ const categoria = categorias.find((c) => c.id === linha.categoriaId);
 
 // pseudo-Produto para o preview dos derivados (mesmas regras do site)
 const pseudo: Produto = {
-  slug: linha.slug,
-  codigo: linha.codigo,
-  etiqueta: linha.etiqueta ?? undefined,
-  tipo: linha.tipo,
+  slug: linha.slug ?? '',
+  nome: linha.nome,
   categoria: (categoria?.slug ?? '') as Produto['categoria'],
-  marca: linha.marca ?? undefined,
-  nome: linha.nome ?? undefined,
   specsChips: linha.specsChips ?? [],
   imagens: [],
   seoTitle: linha.seoTitle ?? undefined,
   seoDescription: linha.seoDescription ?? undefined,
 };
 
-const tituloDerivado = seoTitleProduto(pseudo);
-const metaDerivada = seoDescriptionProduto(pseudo);
+// Slug sugerido a partir do nome — usado só quando o produto ainda não tem slug.
+const slugSugerido = slugify(linha.nome);
+const semSlug = !linha.slug;
+
 const ok = Astro.url.searchParams.get('ok');
 
 const especificacoesTexto = specs.map((s) => `${s.rotulo} | ${s.valor}`).join('\n');
 const descricaoTexto = (linha.descricao ?? []).join('\n\n');
 
+// HTML inicial dos editores (renderizado no servidor — princípio nº 1).
+const pitchInicial = linha.pitch ?? '';
+const descricaoInicialHtml = (linha.descricao ?? []).map((e) => `<p>${e}</p>`).join('');
+
 const temPitch = Boolean(linha.pitch);
 const temDescricao = Boolean(linha.descricao?.length);
 const temSpecs = specs.length > 0;
 const temImagem = imagens.length > 0;
-const completa = temPitch && temDescricao && temSpecs;
-const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
+// Página própria = Pitch + Descrição. Especificações e Imagem são recomendados.
+const completa = temPitch && temDescricao;
+const urlPublica = linha.slug ? `/produtos/${categoria?.slug}/${linha.slug}` : '';
 ---
 
-<AdminLayout titulo={`Produto · ${linha.codigo}`}>
+<AdminLayout titulo={`Produto · ${linha.nome}`}>
   <div class="acoes">
     <h1>{nomeProduto(pseudo)}</h1>
     <a class="voltar" href="/admin/produtos">← Todos os produtos</a>
@@ -191,25 +205,24 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
   {ok === 'criado' && <p class="flash" role="status">Rascunho criado — complete o conteúdo e publique aqui.</p>}
   {erro && <p class="flash erro" role="alert">{erro}</p>}
 
-  <form method="POST">
-    <input type="hidden" name="_acao" value="salvar" />
+  <div class="editor-grid">
+    <form method="POST" id="form-produto" class="editor-main">
+      <input type="hidden" name="_acao" value="salvar" />
 
-    <div class="editor-grid">
-      <div>
         <div class="cartao-form">
           <h2>Dados básicos</h2>
           <div class="campos">
-            <label class="campo">
-              Código/modelo <span class="req" aria-hidden="true">*</span>
-              <input type="text" name="codigo" value={linha.codigo} required />
-            </label>
-            <label class="campo">
-              Etiqueta
-              <input type="text" name="etiqueta" value={linha.etiqueta ?? ''} placeholder="Diesel, VSD…" />
-            </label>
-            <label class="campo">
-              Tipo (termo semântico) <span class="req" aria-hidden="true">*</span>
-              <input type="text" name="tipo" value={linha.tipo} required />
+            <label class="campo largo">
+              Nome do produto <span class="req" aria-hidden="true">*</span>
+              <input
+                type="text"
+                name="nome"
+                id="campo-nome"
+                value={linha.nome}
+                required
+                data-slug-sugestao={slugSugerido}
+              />
+              <span class="dica">Nome completo, como aparece no site (é o título da página).</span>
             </label>
             <label class="campo">
               Categoria <span class="req" aria-hidden="true">*</span>
@@ -222,20 +235,28 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
               </select>
             </label>
             <label class="campo">
-              Marca
-              <input type="text" name="marca" value={linha.marca ?? ''} placeholder="Atlas Copco (padrão)" />
-            </label>
-            <label class="campo">
-              Nome de exibição (override)
-              <input type="text" name="nome" value={linha.nome ?? ''} placeholder={`${linha.tipo} ${linha.codigo}`} />
-            </label>
-            <label class="campo">
-              Slug (URL) <span class="req" aria-hidden="true">*</span>
-              <input type="text" name="slug" value={linha.slug} required />
-            </label>
-            <label class="campo">
               Chips do card (vírgula)
               <input type="text" name="specsChips" value={(linha.specsChips ?? []).join(', ')} />
+            </label>
+            <label class="campo largo">
+              Slug do endereço (URL)
+              <span class="campo-slug">
+                <input
+                  type="text"
+                  name="slug"
+                  id="campo-slug"
+                  value={linha.slug || slugSugerido}
+                  placeholder="ex.: compressor-eletrico-portatil-e-air-t500"
+                />
+                <button type="button" class="botao mini cinza" id="btn-sugerir-slug">
+                  Sugerir do nome
+                </button>
+              </span>
+              <span class="dica">
+                {semSlug
+                  ? 'Sem slug salvo ainda — sugerimos um a partir do nome. Revise e salve para criar o endereço.'
+                  : 'Endereço público do produto. Mude com cuidado: links antigos deixam de funcionar.'}
+              </span>
             </label>
           </div>
         </div>
@@ -243,21 +264,52 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
         <div class="cartao-form">
           <h2>Conteúdo da página própria</h2>
           <p class="nota">
-            A página própria só vai ao ar com os três blocos preenchidos — acompanhe no painel
-            "Publicação" ao lado.
+            A página própria vai ao ar com o Pitch e a Descrição preenchidos — acompanhe no
+            painel "Publicação" ao lado.
           </p>
           <div class="campos">
+            <div class="campo largo">
+              <span class="rotulo-campo">Pitch — 1 a 2 frases de abertura</span>
+              <div class="rich" data-rich data-target="campo-pitch" data-join="inline">
+                <div class="rich-bar" role="toolbar" aria-label="Formatação do pitch">
+                  <button type="button" data-cmd="bold" title="Negrito"><b>N</b></button>
+                  <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
+                  <button type="button" data-cmd="createLink" title="Inserir link">Link</button>
+                  <button type="button" data-cmd="unlink" title="Remover link">Sem link</button>
+                  <button type="button" data-cmd="removeFormat" title="Limpar formatação">Limpar</button>
+                </div>
+                <div
+                  class="rich-area"
+                  contenteditable="true"
+                  data-placeholder="Frase de abertura — aparece em destaque no topo da página…"
+                  set:html={pitchInicial}
+                />
+              </div>
+              <textarea name="pitch" id="campo-pitch" hidden>{linha.pitch ?? ''}</textarea>
+              <span class="dica">Uma ou duas frases; use negrito para destacar números/termos.</span>
+            </div>
+            <div class="campo largo">
+              <span class="rotulo-campo">Descrição — 150 a 400 palavras (1ª frase em negrito, afirmação direta)</span>
+              <div class="rich" data-rich data-target="campo-descricao" data-join="blocks">
+                <div class="rich-bar" role="toolbar" aria-label="Formatação da descrição">
+                  <button type="button" data-cmd="bold" title="Negrito"><b>N</b></button>
+                  <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
+                  <button type="button" data-cmd="createLink" title="Inserir link">Link</button>
+                  <button type="button" data-cmd="unlink" title="Remover link">Sem link</button>
+                  <button type="button" data-cmd="removeFormat" title="Limpar formatação">Limpar</button>
+                </div>
+                <div
+                  class="rich-area rich-alto"
+                  contenteditable="true"
+                  data-placeholder="Descreva o produto, sua aplicação industrial e a Atlas Copco…"
+                  set:html={descricaoInicialHtml}
+                />
+              </div>
+              <textarea name="descricao" id="campo-descricao" hidden>{descricaoTexto}</textarea>
+              <span class="dica">Aperte Enter para criar um novo parágrafo. Cada parágrafo vira um bloco no site.</span>
+            </div>
             <label class="campo largo">
-              Pitch (1–2 frases de abertura; HTML simples permitido)
-              <textarea name="pitch" style="min-height:72px">{linha.pitch ?? ''}</textarea>
-            </label>
-            <label class="campo largo">
-              Descrição (150–400 palavras; parágrafos separados por linha em branco; o 1º começa com
-              afirmação direta em &lt;b&gt;)
-              <textarea name="descricao" style="min-height:190px">{descricaoTexto}</textarea>
-            </label>
-            <label class="campo largo">
-              Especificações técnicas (uma por linha: <code>Rótulo | Valor</code>)
+              Especificações técnicas (uma por linha: <code>Rótulo | Valor</code>) — opcional
               <textarea name="especificacoes" style="min-height:140px" placeholder={'Potência | 144 kVA\nCombustível | Diesel'}>{especificacoesTexto}</textarea>
               <span class="dica">Specs de fonte oficial Atlas Copco — nunca inventar números.</span>
             </label>
@@ -284,18 +336,18 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
             </label>
           </div>
         </div>
-      </div>
+    </form>
 
-      <aside class="editor-lateral">
+    <aside class="editor-lateral">
         <div class="cartao-form" style="margin-bottom:0">
           <h2>Publicação</h2>
           <p style="display:grid;gap:.6rem;margin-bottom:1rem">
             <label class="check">
-              <input type="checkbox" name="publicado" checked={linha.publicado} />
+              <input type="checkbox" name="publicado" form="form-produto" checked={linha.publicado} />
               Publicado no site
             </label>
             <label class="check">
-              <input type="checkbox" name="destaque" checked={linha.destaque} />
+              <input type="checkbox" name="destaque" form="form-produto" checked={linha.destaque} />
               Destaque no catálogo
             </label>
           </p>
@@ -303,18 +355,18 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
           <ul class="completude">
             <li class={temPitch ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Pitch</li>
             <li class={temDescricao ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Descrição</li>
-            <li class={temSpecs ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Especificações</li>
+            <li class={temSpecs ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Especificações (recomendado)</li>
             <li class={temImagem ? 'feito' : ''}><span class="marca-check" aria-hidden="true"></span> Imagem (recomendado)</li>
           </ul>
           <p class="nota" style="margin:0.75rem 0 0">
             {
               completa
                 ? 'Este produto tem página no Google.'
-                : 'Sem os 3 primeiros itens, o card aponta direto para o WhatsApp.'
+                : 'Sem Pitch e Descrição, o card aponta direto para o WhatsApp.'
             }
           </p>
           {
-            linha.publicado && completa && (
+            linha.publicado && completa && urlPublica && (
               <a class="botao mini cinza" style="margin-top:0.75rem" href={urlPublica} target="_blank" rel="noopener">
                 Ver no site ↗
               </a>
@@ -323,119 +375,236 @@ const urlPublica = `/produtos/${categoria?.slug}/${linha.slug}`;
         </div>
 
         <div class="cartao-form" style="margin-bottom:0">
-          <h2>Como o site vai exibir</h2>
-          <dl class="derivados">
-            <div>
-              <dt>Nome</dt>
-              <dd>{nomeProduto(pseudo)}</dd>
-            </div>
-            <div>
-              <dt>H1 da página</dt>
-              <dd>{h1Produto(pseudo)}</dd>
-            </div>
-            <div>
-              <dt>Title <span class={tituloDerivado.length > 60 ? 'alem' : ''}>({tituloDerivado.length}/60)</span></dt>
-              <dd>{tituloDerivado}</dd>
-            </div>
-            <div>
-              <dt>Meta <span class={metaDerivada.length > 155 ? 'alem' : ''}>({metaDerivada.length}/155)</span></dt>
-              <dd>{metaDerivada}</dd>
-            </div>
-            <div>
-              <dt>Mensagem de WhatsApp</dt>
-              <dd>{waMsgProduto(pseudo, categoria?.nome ?? '')}</dd>
-            </div>
-          </dl>
+          <h2>Imagens</h2>
+          {
+            imagens.length === 0 && (
+              <p class="nota">
+                Nenhuma imagem ainda — o card aparece sem foto no catálogo. Envie a primeira
+                abaixo (ela vira a principal).
+              </p>
+            )
+          }
+          <div class="galeria">
+            {
+              imagens.map((img) => (
+                <div class="item">
+                  <img src={img.src} alt={img.alt ?? ''} loading="lazy" />
+                  <p style="margin:.45rem 0 0;min-height:1.3rem">
+                    {img.principal && <span class="badge dest">Principal</span>}
+                  </p>
+                  <form method="POST">
+                    <input type="hidden" name="_acao" value="img-alt" />
+                    <input type="hidden" name="imgId" value={img.id} />
+                    <input
+                      type="text"
+                      name="alt"
+                      value={img.alt ?? ''}
+                      aria-label="Texto alternativo da imagem"
+                      placeholder={`vazio = "${altImagem(pseudo, { src: img.src })}"`}
+                    />
+                    <button class="botao mini cinza" type="submit">Salvar alt</button>
+                  </form>
+                  <form method="POST" style="margin-top:.35rem">
+                    <input type="hidden" name="imgId" value={img.id} />
+                    {!img.principal && (
+                      <button class="botao mini cinza" name="_acao" value="img-principal" type="submit">
+                        Tornar principal
+                      </button>
+                    )}
+                    <button
+                      class="botao mini perigo"
+                      name="_acao"
+                      value="img-remover"
+                      type="submit"
+                      onclick="return confirm('Remover esta imagem?')"
+                    >
+                      Remover
+                    </button>
+                  </form>
+                </div>
+              ))
+            }
+          </div>
+
+          <form method="POST" enctype="multipart/form-data" class="form-upload">
+            <input type="hidden" name="_acao" value="img-add" />
+            <label class="campo">
+              Nova imagem (JPG/PNG/WebP/AVIF · até 5 MB)
+              <input type="file" name="arquivo" accept="image/jpeg,image/png,image/webp,image/avif" required />
+            </label>
+            <label class="campo">
+              Alt (vazio = derivado)
+              <input type="text" name="alt" />
+            </label>
+            <button class="botao" type="submit">Enviar imagem</button>
+          </form>
         </div>
       </aside>
     </div>
 
     <div class="barra-salvar">
-      <button class="botao" type="submit">Salvar produto</button>
+      <button class="botao" type="submit" form="form-produto">Salvar produto</button>
       <span class="lembrete">Salvar publica as mudanças imediatamente no site.</span>
     </div>
-  </form>
 
-  <div class="cartao-form" style="margin-top:1.5rem">
-    <h2>Imagens</h2>
-    {
-      imagens.length === 0 && (
-        <p class="nota">
-          Nenhuma imagem ainda — o card aparece sem foto no catálogo. Envie a primeira abaixo
-          (ela vira a principal).
-        </p>
-      )
-    }
-    <div class="galeria">
-      {
-        imagens.map((img) => (
-          <div class="item">
-            <img src={img.src} alt={img.alt ?? ''} loading="lazy" />
-            <p style="margin:.45rem 0 0;min-height:1.3rem">
-              {img.principal && <span class="badge dest">Principal</span>}
-            </p>
-            <form method="POST">
-              <input type="hidden" name="_acao" value="img-alt" />
-              <input type="hidden" name="imgId" value={img.id} />
-              <input
-                type="text"
-                name="alt"
-                value={img.alt ?? ''}
-                aria-label="Texto alternativo da imagem"
-                placeholder={`vazio = "${altImagem(pseudo, { src: img.src })}"`}
-              />
-              <button class="botao mini cinza" type="submit">Salvar alt</button>
-            </form>
-            <form method="POST" style="margin-top:.35rem">
-              <input type="hidden" name="imgId" value={img.id} />
-              {!img.principal && (
-                <button class="botao mini cinza" name="_acao" value="img-principal" type="submit">
-                  Tornar principal
-                </button>
-              )}
-              <button
-                class="botao mini perigo"
-                name="_acao"
-                value="img-remover"
-                type="submit"
-                onclick="return confirm('Remover esta imagem?')"
-              >
-                Remover
-              </button>
-            </form>
-          </div>
-        ))
+  <script is:inline>
+    (function () {
+      // Sugestão de slug a partir do nome (mesma regra do servidor).
+      function slugify(s) {
+        return s
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
       }
-    </div>
+      var nome = document.getElementById('campo-nome');
+      var slug = document.getElementById('campo-slug');
+      var btn = document.getElementById('btn-sugerir-slug');
+      if (btn && nome && slug) {
+        btn.addEventListener('click', function () {
+          slug.value = slugify(nome.value);
+          slug.focus();
+        });
+      }
 
-    <form method="POST" enctype="multipart/form-data" class="form-upload">
-      <input type="hidden" name="_acao" value="img-add" />
-      <label class="campo">
-        Nova imagem (JPG/PNG/WebP/AVIF · até 5 MB)
-        <input type="file" name="arquivo" accept="image/jpeg,image/png,image/webp,image/avif" required />
-      </label>
-      <label class="campo">
-        Alt (vazio = derivado)
-        <input type="text" name="alt" />
-      </label>
-      <button class="botao" type="submit">Enviar imagem</button>
-    </form>
-  </div>
+      // ---- Editores de texto (WYSIWYG simples → HTML <b>/<i>/<a>) ----
+      try {
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+        document.execCommand('styleWithCSS', false, false);
+      } catch (e) {}
 
-  <div class="cartao-form zona-perigo">
-    <h2>Excluir produto</h2>
-    <p class="nota">Remove o produto, suas imagens e especificações. Sem volta.</p>
-    <form
-      method="POST"
-      onsubmit="return confirm('Excluir este produto e todas as suas imagens/specs? Esta ação não tem volta.')"
-    >
-      <input type="hidden" name="_acao" value="excluir" />
-      <button class="botao perigo" type="submit">Excluir produto</button>
-    </form>
-  </div>
+      // Quebra o conteúdo do editor em parágrafos (HTML interno de cada bloco).
+      function blocosDe(area) {
+        var out = [];
+        var buf = '';
+        function flush() {
+          var s = buf.trim();
+          if (s) out.push(s);
+          buf = '';
+        }
+        area.childNodes.forEach(function (n) {
+          if (n.nodeType === 1 && (n.tagName === 'P' || n.tagName === 'DIV')) {
+            flush();
+            var h = (n.innerHTML || '').trim();
+            if (h && h.toLowerCase() !== '<br>') out.push(h);
+          } else if (n.nodeType === 1 && n.tagName === 'BR') {
+            flush();
+          } else {
+            buf += n.nodeType === 1 ? n.outerHTML : n.textContent;
+          }
+        });
+        flush();
+        return out;
+      }
+
+      function sincronizar(rich) {
+        var area = rich.querySelector('.rich-area');
+        var alvo = document.getElementById(rich.getAttribute('data-target'));
+        if (!area || !alvo) return;
+        var blocos = blocosDe(area);
+        alvo.value =
+          rich.getAttribute('data-join') === 'blocks' ? blocos.join('\n\n') : blocos.join(' ');
+      }
+
+      var editores = document.querySelectorAll('[data-rich]');
+      editores.forEach(function (rich) {
+        var area = rich.querySelector('.rich-area');
+        rich.querySelectorAll('.rich-bar button').forEach(function (b) {
+          // mousedown preventDefault mantém a seleção dentro do editor.
+          b.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+          });
+          b.addEventListener('click', function () {
+            var cmd = b.getAttribute('data-cmd');
+            area.focus();
+            if (cmd === 'createLink') {
+              var url = prompt('Endereço do link (https://…):', 'https://');
+              if (url) document.execCommand('createLink', false, url);
+            } else {
+              document.execCommand(cmd, false, null);
+            }
+            sincronizar(rich);
+          });
+        });
+        area.addEventListener('input', function () {
+          sincronizar(rich);
+        });
+        area.addEventListener('blur', function () {
+          sincronizar(rich);
+        });
+      });
+
+      var formProduto = document.getElementById('form-produto');
+      if (formProduto) {
+        formProduto.addEventListener('submit', function () {
+          editores.forEach(sincronizar);
+        });
+      }
+    })();
+  </script>
 </AdminLayout>
 
 <style>
+  .campo-slug {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .campo-slug input { flex: 1; }
+  .campo-slug .botao.mini { white-space: nowrap; }
+
+  /* rótulo de um campo sem <label> (editor de texto) */
+  .rotulo-campo { display: block; margin-bottom: 0.32rem; }
+
+  /* ============ editor de texto (WYSIWYG simples) ============ */
+  .rich {
+    margin-top: 0.32rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .rich:focus-within { outline: 3px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .rich-bar {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    padding: 0.4rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .rich-bar button {
+    min-width: 34px;
+    height: 30px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color var(--t), background var(--t);
+  }
+  .rich-bar button:hover { border-color: var(--ink-3); background: var(--surface-2); }
+  .rich-area {
+    padding: 0.65rem 0.8rem;
+    min-height: 84px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink);
+    outline: none;
+  }
+  .rich-area.rich-alto { min-height: 210px; }
+  .rich-area p { margin: 0 0 0.7rem; }
+  .rich-area p:last-child { margin-bottom: 0; }
+  .rich-area:empty::before {
+    content: attr(data-placeholder);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
   .sub-painel {
     font-size: 0.78rem;
     font-weight: 700;

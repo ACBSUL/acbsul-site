@@ -7,7 +7,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from '../src/db/schema';
 import { categorias as categoriasSeed } from '../src/data/categorias';
-import { produtos as produtosSeed } from '../src/data/produtos';
+import { produtos as produtosSeed, nomeSeed } from '../src/data/produtos';
 
 const url = process.env.DATABASE_URL;
 if (!url || url.includes('[SENHA-DO-BANCO]')) {
@@ -72,12 +72,8 @@ async function main() {
       .insert(schema.produtos)
       .values({
         slug: p.slug,
-        codigo: p.codigo,
-        etiqueta: p.etiqueta ?? null,
-        tipo: p.tipo,
+        nome: nomeSeed(p),
         categoriaId,
-        marca: p.marca ?? null,
-        nome: p.nome ?? null,
         specsChips: p.specsChips,
         destaque: p.destaque ?? false,
         pitch: p.pitch ?? null,

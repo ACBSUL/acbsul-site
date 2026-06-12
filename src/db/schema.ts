@@ -36,20 +36,13 @@ export const categorias = pgTable('categorias', {
 
 export const produtos = pgTable('produtos', {
   id: serial('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  /** código/modelo Atlas Copco — só o modelo (ex.: "QAS 140") */
-  codigo: text('codigo').notNull(),
-  /** complemento exibido junto ao código (ex.: "Diesel", "VSD") */
-  etiqueta: text('etiqueta'),
-  /** termo semântico obrigatório (PRD §7 — nenhum produto é só código) */
-  tipo: text('tipo').notNull(),
+  /** identificador na URL — NULL = ainda sem slug (admin sugere a partir do nome) */
+  slug: text('slug').unique(),
+  /** nome do produto: único campo de identidade (ex.: "Compressor Elétrico Portátil E-AIR T500") */
+  nome: text('nome').notNull(),
   categoriaId: integer('categoria_id')
     .notNull()
     .references(() => categorias.id),
-  /** NULL = "Atlas Copco" */
-  marca: text('marca'),
-  /** override do nome de exibição (NULL = tipo + codigo) */
-  nome: text('nome'),
   /** 2–3 chips curtos do card */
   specsChips: text('specs_chips').array().notNull().default([]),
   destaque: boolean('destaque').notNull().default(false),
@@ -75,7 +68,7 @@ export const produtoImagens = pgTable('produto_imagens', {
     .notNull()
     .references(() => produtos.id, { onDelete: 'cascade' }),
   src: text('src').notNull(),
-  /** NULL = derivado (nomeProduto + marca) */
+  /** NULL = derivado (nome + Atlas Copco) */
   alt: text('alt'),
   principal: boolean('principal').notNull().default(false),
   ordem: integer('ordem').notNull().default(0),

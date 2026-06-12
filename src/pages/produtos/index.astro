@@ -6,7 +6,6 @@ import { empresa, entityBlockTexto } from '../../data/empresa';
 import { catIcons, iconTodas } from '../../data/cat-icons';
 import {
   nomeProduto,
-  codigoEtiqueta,
   imagemPrincipal,
   altImagem,
   temPaginaPropria,
@@ -208,18 +207,6 @@ const itemListSchema = {
                     }
                   </nav>
                 </div>
-                <div class="side-help">
-                  <h3>Não sabe qual linha atende sua operação?</h3>
-                  <p>
-                    Informe pressão, vazão ou carga e um especialista da ACB Sul dimensiona o
-                    equipamento Atlas Copco certo.
-                  </p>
-                  <a
-                    class="btn btn-wa btn-block"
-                    data-wa-msg="Olá! Preciso de ajuda para escolher o equipamento Atlas Copco ideal."
-                    >Falar com especialista</a
-                  >
-                </div>
               </div>
             </div>
             <div class="fsheet-overlay" id="fsheetOverlay"></div>
@@ -265,7 +252,7 @@ const itemListSchema = {
                         </div>
                       )}
                       <div class="pbody">
-                        <span class="code">{codigoEtiqueta(p)}</span>
+                        <span class="code">{nomeCategoria.get(p.categoria)}</span>
                         <h3>{nomeProduto(p)}</h3>
                         <div class="spec-chips">
                           {p.specsChips.map((s) => (

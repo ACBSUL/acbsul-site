@@ -1,0 +1,167 @@
+---
+// Admin → Nova categoria: o mínimo para nascer (nome, slug, ícone, ordem,
+// visibilidade). WhatsApp da categoria, introdução e SEO completam na edição.
+import { eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import { catIcons } from '../../../data/cat-icons';
+import { slugify } from '../../../lib/catalogo';
+
+export const prerender = false;
+
+const icones = Object.keys(catIcons);
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+
+  const nome = texto('nome');
+  const nomeCurto = texto('nomeCurto') || nome;
+
+  if (!nome) {
+    erro = 'Informe o nome da categoria.';
+  } else {
+    let slug = slugify(texto('slug') || nome) || 'categoria';
+    const [jaExiste] = await db
+      .select({ id: tabelas.categorias.id })
+      .from(tabelas.categorias)
+      .where(eq(tabelas.categorias.slug, slug));
+    if (jaExiste) slug = `${slug}-${Date.now().toString(36)}`;
+
+    const [nova] = await db
+      .insert(tabelas.categorias)
+      .values({
+        slug,
+        nome,
+        nomeCurto,
+        icone: texto('icone') || icones[0],
+        ordem: Number(texto('ordem')) || 0,
+        ativa: f.get('ativa') === 'on',
+      })
+      .returning({ id: tabelas.categorias.id });
+    return Astro.redirect(`/admin/categorias/${nova.id}?ok=criada`);
+  }
+}
+
+// Sugere a próxima ordem (última + 1) para a categoria aparecer no fim da lista.
+const existentes = await db
+  .select({ ordem: tabelas.categorias.ordem })
+  .from(tabelas.categorias);
+const proximaOrdem = existentes.reduce((m, c) => Math.max(m, c.ordem), 0) + 1;
+---
+
+<AdminLayout titulo="Nova categoria">
+  <div class="acoes">
+    <h1>Nova categoria</h1>
+    <a class="voltar" href="/admin/categorias">← Todas as categorias</a>
+  </div>
+
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
+
+  <form method="POST">
+    <div class="cartao-form" style="max-width:760px">
+      <h2>Identificação</h2>
+      <p class="nota">
+        O WhatsApp da categoria, a introdução e o SEO você completa na próxima tela.
+      </p>
+      <div class="campos">
+        <label class="campo">
+          Nome completo <span class="req" aria-hidden="true">*</span>
+          <input
+            type="text"
+            name="nome"
+            id="campo-nome"
+            placeholder="Compressores de Parafuso"
+            required
+            autofocus
+          />
+        </label>
+        <label class="campo">
+          Nome curto (chips/menus)
+          <input type="text" name="nomeCurto" placeholder="Parafuso" />
+          <span class="dica">Em branco = usa o nome completo.</span>
+        </label>
+        <label class="campo">
+          Ordem de exibição
+          <input type="number" name="ordem" value={proximaOrdem} min="0" />
+        </label>
+        <div class="campo largo">
+          <span class="rotulo-campo">Ícone</span>
+          <div class="icon-picker" role="radiogroup" aria-label="Ícone da categoria">
+            {icones.map((i, idx) => (
+              <label class="icon-opt" title={i}>
+                <input type="radio" name="icone" value={i} checked={idx === 0} />
+                <span class="icon-box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    set:html={catIcons[i]}
+                  />
+                  <span class="icon-nome">{i.replace(/-/g, ' ')}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <label class="campo largo">
+          Slug do endereço (opcional)
+          <span class="campo-slug">
+            <input
+              type="text"
+              name="slug"
+              id="campo-slug"
+              placeholder="em branco — geramos a partir do nome"
+            />
+            <button type="button" class="botao mini cinza" id="btn-sugerir-slug">
+              Sugerir do nome
+            </button>
+          </span>
+          <span class="dica">Vira o endereço da categoria no catálogo. Em branco = gerado do nome.</span>
+        </label>
+      </div>
+      <p class="check-linha">
+        <label class="check">
+          <input type="checkbox" name="ativa" checked />
+          Categoria visível no site
+        </label>
+      </p>
+      <p style="margin-top:1.25rem">
+        <button class="botao" type="submit">Criar categoria</button>
+      </p>
+    </div>
+  </form>
+
+  <script is:inline>
+    (function () {
+      function slugify(s) {
+        return s
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+      var nome = document.getElementById('campo-nome');
+      var slug = document.getElementById('campo-slug');
+      var btn = document.getElementById('btn-sugerir-slug');
+      if (btn && nome && slug) {
+        btn.addEventListener('click', function () {
+          slug.value = slugify(nome.value);
+          slug.focus();
+        });
+      }
+    })();
+  </script>
+</AdminLayout>
+
+<style>
+  .campo-slug { display: flex; gap: 0.5rem; align-items: stretch; }
+  .campo-slug input { flex: 1; }
+  .campo-slug .botao.mini { white-space: nowrap; }
+  .check-linha { margin-top: 1rem; }
+</style>

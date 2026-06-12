@@ -7,7 +7,6 @@ import {
   marcaDe,
   nomeProduto,
   h1Produto,
-  codigoEtiqueta,
   imagemPrincipal,
   altImagem,
   temPaginaPropria,
@@ -50,7 +49,6 @@ const productSchema = {
   name: h1Produto(p),
   image: img ? new URL(img.src, empresa.url).href : undefined,
   description: seoDescriptionProduto(p),
-  mpn: p.codigo,
   brand: { '@type': 'Brand', name: marcaDe(p) },
   category: categoria.nome,
   url: urlAbs,
@@ -101,7 +99,7 @@ const breadcrumbSchema = {
           <a href="/">Início</a><span class="sep">/</span>
           <a href="/produtos">Produtos</a><span class="sep">/</span>
           <a href={`/produtos#${categoria.slug}`}>{categoria.nome}</a><span class="sep">/</span>
-          <span class="current">{codigoEtiqueta(p)}</span>
+          <span class="current">{nomeProduto(p)}</span>
         </nav>
       </div>
     </section>
@@ -131,13 +129,6 @@ const breadcrumbSchema = {
                   ></span
                 >Solicitar mais informações</button
               >
-              <!-- WhatsAppCTA por categoria (PRD §8): número/mensagem vêm da config do admin -->
-              <a
-                class="btn btn-wa btn-lg"
-                data-wa-msg={categoria.whatsappMensagem || waMsgProduto(p, categoria.nome)}
-                data-wa-num={categoria.whatsappNumero || undefined}
-                >Falar com especialista</a
-              >
             </div>
           </div>
         </div>
@@ -148,29 +139,55 @@ const breadcrumbSchema = {
     <section class="section tight" style="background:var(--bg-2)">
       <div class="container">
         <div class="pdp-detail-grid">
-          <div>
-            <table class="spec-table">
-              <caption>Especificações técnicas</caption>
-              <tbody>
-                {
-                  (p.especificacoes ?? []).map((s) => (
-                    <tr>
-                      <th>{s.rotulo}</th>
-                      <td>{s.valor}</td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-            <p class="form-note" style="margin-top:12px">
-              Especificações de referência. Valores exatos confirmados na proposta conforme
-              configuração e tensão da rede.
-            </p>
-          </div>
+          {
+            (p.especificacoes ?? []).length > 0 && (
+              <div>
+                <table class="spec-table">
+                  <caption>Especificações técnicas</caption>
+                  <tbody>
+                    {(p.especificacoes ?? []).map((s) => (
+                      <tr>
+                        <th>{s.rotulo}</th>
+                        <td>{s.valor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p class="form-note" style="margin-top:12px">
+                  Especificações de referência. Valores exatos confirmados na proposta conforme
+                  configuração e tensão da rede.
+                </p>
+              </div>
+            )
+          }
 
           <div class="pdp-desc">
-            <h2>Sobre o {p.codigo}</h2>
+            <h2>Sobre o produto</h2>
             {(p.descricao ?? []).map((par) => <p set:html={par} />)}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA: SOLICITAR INFORMAÇÕES DO PRODUTO ============ -->
+    <section class="section tight">
+      <div class="container">
+        <div class="cta-band">
+          <div>
+            <h2>Quer saber mais sobre o <span class="hl">{nomeProduto(p)}</span>?</h2>
+            <p>
+              Fale com a ACB Sul e receba especificações completas, disponibilidade e uma proposta
+              sob medida para a sua aplicação — venda ou locação, com atendimento no RS e em SC.
+            </p>
+          </div>
+          <div class="acts">
+            <button class="btn btn-accent btn-lg" type="button" data-abrir-lead
+              ><span class="ai"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M5 12h14M13 6l6 6-6 6"></path></svg
+                ></span
+              >Solicitar mais informações</button
+            >
           </div>
         </div>
       </div>
@@ -201,7 +218,7 @@ const breadcrumbSchema = {
                       </div>
                     )}
                     <div class="pbody">
-                      <span class="code">{codigoEtiqueta(r)}</span>
+                      <span class="code">{categoria.nome}</span>
                       <h3>{nomeProduto(r)}</h3>
                       <div class="spec-chips">
                         {r.specsChips.map((s) => (
@@ -270,7 +287,7 @@ const breadcrumbSchema = {
     <div class="lead-dialog">
       <div class="lead-head">
         {img && <img src={img.src} alt={altImagem(p, img)} />}
-        <span class="lt"><span>{codigoEtiqueta(p)}</span><b>{nomeProduto(p)}</b></span>
+        <span class="lt"><span>{categoria.nome}</span><b>{nomeProduto(p)}</b></span>
         <button class="lead-close" type="button" data-close aria-label="Fechar">&times;</button>
       </div>
       <form data-leadform novalidate>
@@ -347,8 +364,8 @@ const breadcrumbSchema = {
   <script is:inline>
     (function () {
       var modal = document.getElementById('leadModal');
-      var abrir = document.getElementById('abrirLead');
-      if (!modal || !abrir) return;
+      var gatilhos = document.querySelectorAll('#abrirLead, [data-abrir-lead]');
+      if (!modal || !gatilhos.length) return;
       function open() {
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -357,7 +374,9 @@ const breadcrumbSchema = {
         modal.classList.remove('open');
         document.body.style.overflow = '';
       }
-      abrir.addEventListener('click', open);
+      gatilhos.forEach(function (b) {
+        b.addEventListener('click', open);
+      });
       modal.addEventListener('click', function (e) {
         if (e.target === modal || e.target.closest('[data-close]')) close();
       });

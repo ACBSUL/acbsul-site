@@ -26,19 +26,11 @@ export interface ProdutoSpec {
 }
 
 export interface Produto {
-  /** identificador na URL */
+  /** identificador na URL (vazio = ainda sem slug — admin sugere a partir do nome) */
   slug: string;
-  /** código/modelo Atlas Copco — só o modelo (ex.: "QAS 140") */
-  codigo: string;
-  /** complemento exibido junto ao código (ex.: "Diesel", "VSD", "Stage V") */
-  etiqueta?: string;
-  /** termo semântico obrigatório (PRD §7 — nenhum produto é só código) */
-  tipo: string;
+  /** nome do produto — único campo de identidade (ex.: "Compressor Elétrico Portátil E-AIR T500") */
+  nome: string;
   categoria: CategoriaSlug;
-  /** default "Atlas Copco" */
-  marca?: string;
-  /** override do nome de exibição (vazio = `tipo + codigo`) */
-  nome?: string;
   /** 2–3 chips curtos do card */
   specsChips: string[];
   /** galeria — primeira (ou principal:true) é a imagem do card/OG */
@@ -70,42 +62,38 @@ export interface Produto {
 
 const MARCA_PADRAO = 'Atlas Copco';
 
-export const marcaDe = (p: Produto): string => p.marca ?? MARCA_PADRAO;
+export const marcaDe = (_p: Produto): string => MARCA_PADRAO;
 
-/** nome de exibição (card, form, schema): override ou `tipo + codigo` */
-export const nomeProduto = (p: Produto): string => p.nome ?? `${p.tipo} ${p.codigo}`;
+/** nome de exibição (card, form, schema) = o nome digitado */
+export const nomeProduto = (p: Produto): string => p.nome;
 
-/** H1 do PDP: "CÓDIGO — Tipo Marca" */
-export const h1Produto = (p: Produto): string => `${p.codigo} — ${p.tipo} ${marcaDe(p)}`;
-
-/** código + etiqueta para o <span class="code"> */
-export const codigoEtiqueta = (p: Produto): string =>
-  p.etiqueta ? `${p.codigo} · ${p.etiqueta}` : p.codigo;
+/** H1 do PDP = o nome digitado (decisão do cliente: nome puro) */
+export const h1Produto = (p: Produto): string => p.nome;
 
 export const imagemPrincipal = (p: Produto): ProdutoImagem | null =>
   p.imagens.find((i) => i.principal) ?? p.imagens[0] ?? null;
 
 export const altImagem = (p: Produto, img: ProdutoImagem): string =>
-  img.alt ?? `${nomeProduto(p)} ${marcaDe(p)}`;
+  img.alt ?? `${p.nome} ${MARCA_PADRAO}`;
 
-/** o produto tem página própria quando o conteúdo de PDP está completo */
+/** o produto tem página própria com Pitch + Descrição. Especificações é opcional. */
 export const temPaginaPropria = (p: Produto): boolean =>
-  Boolean(p.pitch && p.descricao?.length && p.especificacoes?.length);
+  Boolean(p.pitch && p.descricao?.length);
 
 export const urlProduto = (p: Produto): string => `/produtos/${p.categoria}/${p.slug}`;
 
 /** mensagem pré-preenchida de WhatsApp do card */
 export const waMsgProduto = (p: Produto, nomeCategoria: string): string =>
-  `Olá! Quero um orçamento: ${nomeProduto(p)} (${nomeCategoria}).`;
+  `Olá! Quero um orçamento: ${p.nome} (${nomeCategoria}).`;
 
 /** <title> do PDP (override ou derivado; validar ≤60 no admin) */
 export const seoTitleProduto = (p: Produto): string =>
-  p.seoTitle ?? `${p.codigo} · ${p.tipo} ${marcaDe(p)} | ACB Sul`;
+  p.seoTitle ?? `${p.nome} | ACB Sul`;
 
 /** meta description do PDP (override ou derivado; validar ≤155 no admin) */
 export const seoDescriptionProduto = (p: Produto): string =>
   p.seoDescription ??
-  `${nomeProduto(p)} ${marcaDe(p)}. Venda e locação com assistência técnica no RS e SC — ACB Sul, Porto Alegre.`;
+  `${p.nome} ${MARCA_PADRAO}. Venda e locação com assistência técnica no RS e SC — ACB Sul, Porto Alegre.`;
 
 /** contagem de produtos publicados por categoria (chips de filtro) */
 export function contagemPorCategoria(): Record<string, number> {
@@ -121,9 +109,40 @@ const P = '/assets/products';
 
 /* ============================================================
    CATÁLOGO (seed)
-   ============================================================ */
+   ============================================================
+   O array abaixo usa a forma LEGADA (codigo/tipo/etiqueta/marca):
+   é dado de seed bruto. O nome final do produto é derivado em
+   scripts/seed.ts por `nomeSeed()`. O site em produção lê do banco
+   (lib/catalogo.ts), que já entrega o `nome` único. */
 
-export const produtos: Produto[] = [
+export interface ProdutoSeed {
+  slug: string;
+  /** código/modelo (forma legada do seed) */
+  codigo: string;
+  /** complemento legado (ex.: "Diesel", "VSD") */
+  etiqueta?: string;
+  /** termo semântico legado */
+  tipo: string;
+  categoria: CategoriaSlug;
+  /** marca legada (vazio = Atlas Copco) */
+  marca?: string;
+  /** nome final, se já definido (senão = `tipo codigo`) */
+  nome?: string;
+  specsChips: string[];
+  imagens: ProdutoImagem[];
+  destaque?: boolean;
+  pitch?: string;
+  descricao?: string[];
+  especificacoes?: ProdutoSpec[];
+  seoTitle?: string;
+  seoDescription?: string;
+  publicado?: boolean;
+}
+
+/** nome final de um item de seed: override explícito ou `tipo + codigo` */
+export const nomeSeed = (p: ProdutoSeed): string => p.nome ?? `${p.tipo} ${p.codigo}`;
+
+export const produtos: ProdutoSeed[] = [
   // ========== COMPRESSORES ELÉTRICOS ==========
   {
     slug: 'ga-gx',

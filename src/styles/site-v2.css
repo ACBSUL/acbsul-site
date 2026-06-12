@@ -39,7 +39,7 @@
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:96px;}
 body{margin:0;font-family:var(--bd);color:var(--ink);background:var(--bg);line-height:1.6;font-size:17px;
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:clip;}
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:clip;overflow-wrap:break-word;}
 img{max-width:100%;display:block;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
@@ -168,14 +168,15 @@ p{margin:0;text-wrap:pretty;}
 .drawer .panel .dclose{background:none;border:none;color:#fff;font-size:30px;line-height:1;}
 .drawer .panel a.dl{font-family:var(--hd);font-weight:600;font-size:18px;color:#dbe4ee;padding:13px 10px;border-bottom:1px solid rgba(255,255,255,.08);}
 .drawer .panel .dcta{margin-top:18px;display:flex;flex-direction:column;gap:10px;}
-/* grupo expansível (Produtos) no drawer */
+/* grupo expansível (Produtos) no drawer — link navega, botão expande */
 .drawer .dgroup{border-bottom:1px solid rgba(255,255,255,.08);}
-.drawer .dgroup summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;
-  font-family:var(--hd);font-weight:600;font-size:18px;color:#dbe4ee;padding:13px 10px;}
-.drawer .dgroup summary::-webkit-details-marker{display:none;}
-.drawer .dgroup summary svg{width:17px;height:17px;color:var(--blue-lt);transition:transform .2s;flex:none;}
-.drawer .dgroup[open] summary svg{transform:rotate(180deg);}
-.drawer .dsub{display:flex;flex-direction:column;padding:0 6px 12px;}
+.drawer .dgroup-head{display:flex;align-items:center;}
+.drawer .dgroup-head .dgroup-link{flex:1;border-bottom:none;}
+.drawer .dgroup-toggle{background:none;border:none;color:#dbe4ee;padding:13px 12px;display:flex;align-items:center;cursor:pointer;}
+.drawer .dgroup-toggle svg{width:18px;height:18px;color:var(--blue-lt);transition:transform .2s;}
+.drawer .dgroup.open .dgroup-toggle svg{transform:rotate(180deg);}
+.drawer .dsub{display:none;flex-direction:column;padding:0 6px 12px;}
+.drawer .dgroup.open .dsub{display:flex;}
 .drawer .dsub a{font-size:15px;color:#9fb0c5;padding:8px 12px;border-radius:8px;}
 .drawer .dsub a:hover{color:#fff;background:rgba(255,255,255,.06);}
 .drawer .dsub .dall{font-family:var(--hd);font-weight:700;color:var(--blue-lt);margin-top:4px;}
@@ -358,7 +359,13 @@ p{margin:0;text-wrap:pretty;}
 /* min-width:0 impede que conteúdo nowrap (botões uppercase) alargue o grid além da viewport */
 .contact-card>*,.cta-band>*{min-width:0;}
 @media(max-width:840px){.contact-card{grid-template-columns:1fr;}}
-@media(max-width:600px){.contact-left,.contact-right{padding:28px 22px;}}
+@media(max-width:600px){
+  .contact-left,.contact-right{padding:28px 22px;}
+  .contact-channel{gap:12px;}
+  .contact-channel .ico{width:42px;height:42px;}
+  .contact-channel b{font-size:13.5px;font-weight:500;letter-spacing:-.005em;}
+  .contact-channel .cc-mail b{font-size:13px;}
+}
 .contact-left{background:var(--ink-dark);color:#fff;padding:clamp(32px,4vw,52px);position:relative;overflow:hidden;}
 .contact-left::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.02) 0 2px,transparent 2px 24px);}
 .contact-left>*{position:relative;z-index:2;}
@@ -368,8 +375,9 @@ p{margin:0;text-wrap:pretty;}
 .contact-channel{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
 .contact-channel .ico{width:46px;height:46px;border-radius:50%;background:var(--blue-lt);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;}
 .contact-channel .ico svg{width:20px;height:20px;}
+.contact-channel>span:last-child{min-width:0;}
 .contact-channel .lab{font-family:var(--hd);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8fa0b5;}
-.contact-channel b{font-family:var(--hd);font-size:17px;color:#fff;display:block;}
+.contact-channel b{font-family:var(--hd);font-size:15.5px;font-weight:600;color:#fff;display:block;overflow-wrap:anywhere;}
 .contact-right{background:var(--bg);padding:clamp(32px,4vw,52px);}
 .contact-right h3{font-size:24px;margin-bottom:6px;color:var(--ink);}
 .contact-right .sub{color:var(--ink-2);font-size:15px;margin-bottom:24px;}
@@ -435,6 +443,7 @@ p{margin:0;text-wrap:pretty;}
 .footer ul a:hover{color:#fff;}
 .footer .fcontact li{display:flex;gap:11px;font-size:14.5px;line-height:1.5;align-items:flex-start;}
 .footer .fcontact svg{width:18px;height:18px;color:var(--blue-lt);flex:none;margin-top:3px;}
+.footer .fcontact li>span{min-width:0;overflow-wrap:anywhere;}
 .footer .fcontact b{color:#fff;display:block;font-weight:600;}
 .fbottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:22px;font-size:13px;color:#6b7d93;}
 .fbottom a{color:#9fb0c5;font-weight:600;transition:color .14s;}
@@ -631,16 +640,15 @@ p{margin:0;text-wrap:pretty;}
    CATÁLOGO E-COMMERCE (/produtos) — sidebar de filtros + grade
    ============================================================ */
 .catalog-layout{display:grid;grid-template-columns:262px 1fr;gap:clamp(24px,3vw,40px);align-items:start;}
-/* max-height + overflow: em notebooks de tela baixa a sidebar inteira (lista + ajuda) rola por dentro */
-.catalog-side{position:sticky;top:96px;display:flex;flex-direction:column;gap:18px;
-  max-height:calc(100vh - 112px);overflow-y:auto;scrollbar-width:thin;}
+/* sidebar de filtros: altura livre — mostra todas as categorias (inclusive novas), sem rolagem interna */
+.catalog-side{position:sticky;top:96px;display:flex;flex-direction:column;gap:18px;}
 .side-box{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden;}
 .side-head{display:block;font-family:var(--hd);font-weight:700;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--ink-3);padding:16px 18px 10px;}
-.cat-list{display:flex;flex-direction:column;gap:2px;padding:0 8px 10px;}
+.cat-list{display:flex;flex-direction:column;gap:4px;padding:0 8px 12px;}
 /* item com ícone em caixinha azul — mesma linguagem do megamenu (.mega-grid .mi) */
-.cat-link{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;
-  font-family:var(--hd);font-weight:600;font-size:14px;color:var(--ink-2);transition:background .13s,color .13s;}
+.cat-link{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;
+  font-family:var(--hd);font-weight:400;font-size:14px;line-height:1.3;color:var(--ink-2);transition:background .13s,color .13s;}
 .cat-link .mi{width:32px;height:32px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
   background:rgba(43,168,223,.12);border:1px solid rgba(43,168,223,.28);color:var(--blue-lt);
   transition:background .13s,color .13s,border-color .13s;}
@@ -733,11 +741,12 @@ p{margin:0;text-wrap:pretty;}
   .fsheet-overlay{display:block;position:fixed;inset:0;z-index:96;background:rgba(7,15,28,.6);
     opacity:0;pointer-events:none;transition:opacity .25s;}
   .sheet-open .fsheet-overlay{opacity:1;pointer-events:auto;}
-  .fsheet{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:97;
+  /* painel full-screen: cobre toda a tela e rola por dentro quando há muitas linhas */
+  .fsheet{display:flex;flex-direction:column;position:fixed;inset:0;z-index:97;
     background:rgba(13,26,46,.97);backdrop-filter:blur(14px) saturate(140%);
-    border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;
-    max-height:82vh;overflow:hidden;
-    transform:translateY(103%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+    border:none;border-radius:0;
+    height:100vh;height:100dvh;max-height:none;overflow:hidden;
+    transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
     box-shadow:0 -18px 50px rgba(0,0,0,.45);}
   .fsheet::before{content:"";position:absolute;inset:0;pointer-events:none;background:
     radial-gradient(560px 320px at 0% 0%,rgba(5,152,198,.12),transparent 60%),
@@ -745,14 +754,14 @@ p{margin:0;text-wrap:pretty;}
   .fsheet>*{position:relative;z-index:2;}
   .fsheet.open{transform:none;}
   .fsheet-head{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;
-    padding:22px 20px 12px;flex:none;}
-  .fsheet-head::before{content:"";position:absolute;top:9px;left:50%;transform:translateX(-50%);
-    width:44px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);}
+    padding:calc(env(safe-area-inset-top,0px) + 16px) 20px 14px;flex:none;
+    border-bottom:1px solid rgba(255,255,255,.08);}
   .fsheet-head b{font-family:var(--hd);font-weight:700;font-size:11px;letter-spacing:.22em;
     text-transform:uppercase;color:var(--blue-lt);}
   .fsheet-close{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#cfd9e4;
     font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;}
-  .fsheet-body{display:flex;flex-direction:column;gap:14px;overflow-y:auto;padding:0 12px 18px;
+  .fsheet-body{display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1;min-height:0;
+    padding:14px 12px calc(env(safe-area-inset-bottom,0px) + 24px);
     -webkit-overflow-scrolling:touch;}
   /* sem flex:none os filhos encolhem e a lista fica cortada em vez de rolar */
   .fsheet-body>*{flex:none;}

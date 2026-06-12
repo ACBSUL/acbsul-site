@@ -106,6 +106,14 @@
       const shut=()=>{drawer.classList.remove("open");document.body.style.overflow="";};
       burger.addEventListener("click",open);
       drawer.addEventListener("click",e=>{if(e.target===drawer||e.target.closest(".dclose")||e.target.closest("a"))shut();});
+      /* grupos expansíveis (ex.: Produtos): o botão de seta expande sem fechar o drawer */
+      drawer.querySelectorAll("[data-dgroup] .dgroup-toggle").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const g=btn.closest("[data-dgroup]");if(!g)return;
+          const isOpen=g.classList.toggle("open");
+          btn.setAttribute("aria-expanded",isOpen?"true":"false");
+        });
+      });
     }
 
     /* whatsapp links */

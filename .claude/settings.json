@@ -91,7 +91,27 @@
       "PowerShell(npx tsx scripts/preencher-pecas.ts)",
       "PowerShell(npx tsx scripts/verificar-pdps.ts)",
       "PowerShell(npx tsx scripts/test-admin-e2e.ts 2>&1)",
-      "PowerShell(npx tsx scripts/shot-um.ts /admin .qa-screens/dashboard-zerado.png 1280)"
+      "PowerShell(npx tsx scripts/shot-um.ts /admin .qa-screens/dashboard-zerado.png 1280)",
+      "Bash(npx tsx *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5030/admin)",
+      "Bash(curl -s http://localhost:5030/admin/produtos)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'astro|5030' } | Select-Object ProcessId, CommandLine | Format-List)",
+      "PowerShell(Stop-Process -Id 32416,35092 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; $still = Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match '5030' }; if \\($still\\) { \"ainda rodando: $\\($still.ProcessId -join ','\\)\" } else { \"5030 parado\" })",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5030/produtos)",
+      "Bash(curl -s http://localhost:5030/produtos)",
+      "Bash(curl -s -o /dev/null -w \"/produtos/compressores-portateis/e-air-t500 -> %{http_code}\\\\n\" http://localhost:5030/produtos/compressores-portateis/e-air-t500)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:5030/produtos\" -UseBasicParsing; \"/produtos -> $\\($r.StatusCode\\)\"; \\($r.Content | Select-String -Pattern '<h3>\\([^<]+\\)</h3>' -AllMatches\\).Matches | Select-Object -First 5 | ForEach-Object { $_.Groups[1].Value }; try { $p = Invoke-WebRequest -Uri \"http://localhost:5030/produtos/compressores-portateis/e-air-t500\" -UseBasicParsing; \"PDP e-air-t500 -> $\\($p.StatusCode\\)\"; if \\($p.Content -match '<h1>\\([^<]+\\)</h1>'\\) { \"H1: $\\($Matches[1]\\)\" } } catch { \"PDP erro: $\\($_.Exception.Message\\)\" })",
+      "Bash(curl -s --max-time 30 -o /dev/null -w \"/produtos -> %{http_code}\\\\n\" http://localhost:5030/produtos)",
+      "Bash(MSYS_NO_PATHCONV=1 curl -s --max-time 30 -w \"\\\\n-> %{http_code}\\\\n\" \"http://localhost:5030/produtos\")",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5030 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { \"Escutando na 5030 \\(PIDs: $\\($conn.OwningProcess -join ','\\)\\)\" } else { \"NADA escutando na 5030\" }; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'astro' } | Select-Object ProcessId, @{n='Cmd';e={\\($_.CommandLine -split 'astro'\\)[1]}} | Format-Table -AutoSize)",
+      "PowerShell($astro = Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'astro|run dev' }; \"Matando: $\\($astro.ProcessId -join ', '\\)\"; $astro.ProcessId | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; $left = Get-NetTCPConnection -LocalPort 5030 -State Listen -ErrorAction SilentlyContinue; if \\($left\\) { \"AINDA na 5030: $\\($left.OwningProcess -join ','\\)\" } else { \"5030 livre\" })",
+      "PowerShell(for \\($i=0; $i -lt 25; $i++\\) { try { $r = Invoke-WebRequest -Uri \"http://localhost:5030/produtos\" -UseBasicParsing -TimeoutSec 10; break } catch { Start-Sleep 1 } }; if \\($r\\) { \"/produtos -> $\\($r.StatusCode\\)\"; \\($r.Content | Select-String -Pattern '<h3>\\([^<]+\\)</h3>' -AllMatches\\).Matches | Select-Object -First 4 | ForEach-Object { 'card: ' + $_.Groups[1].Value } } else { 'sem resposta de /produtos' })",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5030 -State Listen -ErrorAction SilentlyContinue; \"Listeners na 5030: $\\($conn.OwningProcess | Sort-Object -Unique\\)\"; \\(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'astro.js dev' }\\).Count.ToString\\(\\) + \" processo\\(s\\) astro dev\")",
+      "Bash(node -e \"try{const s=require\\('sharp'\\);console.log\\('sharp OK', require\\('sharp/package.json'\\).version\\)}catch\\(e\\){console.log\\('sharp AUSENTE:', e.message.split\\('\\\\n'\\)[0]\\)}\")",
+      "Bash(curl -s http://localhost:5030/)",
+      "Bash(sort -rn -k1)",
+      "Bash(git -c core.safecrlf=false diff src/db/schema.ts src/data/produtos.ts src/components/SiteNav.astro)",
+      "Bash(git -c core.safecrlf=false commit -m '@ *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\agenc\\meusprojetos\\acbsul\\src\\pages\\produtos\\[categoria]"

@@ -4,13 +4,24 @@
 // Categorias apontam para o filtro do catálogo (/produtos#slug) até as páginas
 // de categoria do Passo 2 existirem. "Peças" aponta para destino real já
 // publicado (/produtos#pecas) até a página própria existir.
-import { categorias } from '../data/categorias';
+import { categorias as categoriasSeed } from '../data/categorias';
 import { catIcons } from '../data/cat-icons';
+import { carregarCategorias } from '../lib/catalogo';
 
 const path = Astro.url.pathname;
 const emProdutos = path === '/produtos' || path.startsWith('/produtos/');
 const emQuemSomos = path === '/quem-somos';
 const emServicos = path === '/servicos';
+
+// Categorias do banco (o admin reflete no menu na hora). Fallback para o seed
+// se o banco não estiver acessível — ex.: build SSG sem DATABASE_URL.
+let categorias: { slug: string; nome: string; icone: string }[] = categoriasSeed;
+try {
+  const doBanco = (await carregarCategorias()).filter((c) => c.ativa);
+  if (doBanco.length) categorias = doBanco;
+} catch {
+  // mantém o seed
+}
 ---
 
 <!-- ============ NAVBAR ============ -->
@@ -80,20 +91,26 @@ const emServicos = path === '/servicos';
         aria-label="Fechar">&times;</button
       >
     </div>
-    <a class="dl" href="/">Início</a>
     <a class:list={['dl', { active: emQuemSomos }]} href="/quem-somos">A ACBSUL</a>
-    <details class:list={['dgroup', { active: emProdutos }]} open={emProdutos}>
-      <summary
-        >Produtos
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
-          ><path d="m6 9 6 6 6-6"></path></svg
-        ></summary
-      >
+    <div class:list={['dgroup', { active: emProdutos, open: emProdutos }]} data-dgroup>
+      <div class="dgroup-head">
+        <a class:list={['dl', 'dgroup-link', { active: emProdutos }]} href="/produtos">Produtos</a>
+        <button
+          type="button"
+          class="dgroup-toggle"
+          aria-label="Ver categorias"
+          aria-expanded={emProdutos ? 'true' : 'false'}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+            ><path d="m6 9 6 6 6-6"></path></svg
+          >
+        </button>
+      </div>
       <div class="dsub">
         {categorias.map((c) => <a href={`/produtos#${c.slug}`}>{c.nome}</a>)}
         <a class="dall" href="/produtos">Ver catálogo completo →</a>
       </div>
-    </details>
+    </div>
     <a class="dl" href="/produtos#pecas">Peças</a>
     <a class:list={['dl', { active: emServicos }]} href="/servicos">Serviços</a>
     <div class="dcta">

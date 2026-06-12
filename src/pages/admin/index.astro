@@ -48,7 +48,7 @@ const primeiroNome = usuario?.name?.split(' ')[0] ?? 'admin';
                 ? 'Tudo publicado — nada esperando.'
                 : `${rascunhos
                     .slice(0, 3)
-                    .map((p) => p.codigo)
+                    .map((p) => p.nome)
                     .join(', ')}${rascunhos.length > 3 ? ` e mais ${rascunhos.length - 3}` : ''}`
             }
           </span>
