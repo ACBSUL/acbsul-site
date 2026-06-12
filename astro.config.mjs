@@ -13,4 +13,10 @@ export default defineConfig({
   server: { port: 5030 },
   adapter: vercel(),
   integrations: [sitemap()],
+  // CSRF: o checkOrigin do Astro vem ligado por padrão e, atrás do proxy da
+  // Vercel, o header Origin e o Host nem sempre batem — isso bloqueava os POSTs
+  // do /admin com "Cross-site POST form submissions are forbidden". Desligamos
+  // com segurança: todo POST está sob /admin (protegido por login Better-Auth)
+  // e o site público é estático, então a superfície de CSRF é mínima.
+  security: { checkOrigin: false },
 });
