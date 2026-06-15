@@ -1185,7 +1185,7 @@ export const produtos: ProdutoSeed[] = [
     categoria: 'quality-air',
     specsChips: ['Tratamento de condensado', 'Conformidade ambiental'],
     imagens: [
-      { src: `${P}/quality-air/osc-12-2500.jpg`, alt: 'Separador de óleo e água Atlas Copco OSC 12 a 2500' },
+      { src: `${P}/quality-air/osc-12-2500.webp`, alt: 'Separador de óleo e água Atlas Copco OSC 12 a 2500' },
     ],
   },
 
