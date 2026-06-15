@@ -1,7 +1,9 @@
 ---
 // JSON-LD global LocalBusiness (PRD Anexo 12.3). Vai em todas as páginas.
 import { empresa } from '../data/empresa';
+import { carregarConfig } from '../lib/config';
 
+const cfg = await carregarConfig();
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
@@ -9,8 +11,8 @@ const schema = {
   description:
     'Distribuidor autorizado Atlas Copco no Rio Grande do Sul. Compressores industriais, assistência técnica, peças originais e locação.',
   url: empresa.url,
-  telephone: '+55-51-3377-3626',
-  email: empresa.email,
+  telephone: cfg.telefoneTel,
+  email: cfg.email,
   address: {
     '@type': 'PostalAddress',
     streetAddress: empresa.endereco.rua,

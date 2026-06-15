@@ -2,14 +2,20 @@
 // Dashboard do admin — visão de trabalho, não de vaidade: o que está
 // publicado e o que precisa de ação (princípio 2 do PRODUCT.md:
 // "publicar sem medo" = estado público sempre visível).
+import { eq } from 'drizzle-orm';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { temPaginaPropria } from '../../data/produtos';
 import { carregarCategorias, carregarProdutos } from '../../lib/catalogo';
+import { db, tabelas } from '../../db';
 
 export const prerender = false;
 
 const categorias = await carregarCategorias();
 const produtos = await carregarProdutos();
+const leadsNovos = await db
+  .select({ id: tabelas.leads.id })
+  .from(tabelas.leads)
+  .where(eq(tabelas.leads.atendido, false));
 
 const publicados = produtos.filter((p) => p.publicado !== false);
 const rascunhos = produtos.filter((p) => p.publicado === false);
@@ -27,6 +33,9 @@ const primeiroNome = usuario?.name?.split(' ')[0] ?? 'admin';
   </div>
 
   <div class="resumo">
+    <a href="/admin/leads">
+      <b>{leadsNovos.length}</b> leads novos
+    </a>
     <a href="/admin/produtos">
       <b>{publicados.length}</b> produtos publicados
     </a>
@@ -37,6 +46,21 @@ const primeiroNome = usuario?.name?.split(' ')[0] ?? 'admin';
 
   <h2 class="titulo-bloco">Para fazer</h2>
   <ul class="pendencias">
+    <li>
+      <a href="/admin/leads">
+        <span class={`num ${leadsNovos.length === 0 ? 'zero' : ''}`}>{leadsNovos.length}</span>
+        <span class="texto">
+          <b>Leads aguardando atendimento</b>
+          <span>
+            {
+              leadsNovos.length === 0
+                ? 'Nenhuma solicitação nova esperando retorno.'
+                : 'Solicitações recebidas pelo site — retorne o quanto antes.'
+            }
+          </span>
+        </span>
+      </a>
+    </li>
     <li>
       <a href="/admin/produtos">
         <span class={`num ${rascunhos.length === 0 ? 'zero' : ''}`}>{rascunhos.length}</span>

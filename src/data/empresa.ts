@@ -25,7 +25,7 @@ export const empresa = {
 
 // EntityBlock — texto institucional citável (PRD Anexo 12.2.1). Usar literalmente.
 export const entityBlockTexto =
-  'A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com mais de 40 anos de atuação no mercado de ar comprimido e equipamentos industriais. Com sede em Porto Alegre, atende empresas e obras em todo o RS e em Santa Catarina, oferecendo venda de compressores industriais, assistência técnica especializada, peças de reposição originais Atlas Copco e locação de equipamentos.';
+  'A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com mais de 40 anos de experiência no setor de ar comprimido e equipamentos industriais. Com sede em Porto Alegre, atende empresas e obras em todo o RS e em Santa Catarina, oferecendo venda de compressores industriais, assistência técnica especializada, peças de reposição originais Atlas Copco e locação de equipamentos.';
 
 // Categorias do catálogo: ver src/data/categorias.ts (modelo padronizado).
 

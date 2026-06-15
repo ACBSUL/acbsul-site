@@ -3,8 +3,11 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../data/empresa';
+import { carregarConfig } from '../lib/config';
 
 export const prerender = true;
+
+const cfg = await carregarConfig();
 
 // Página de Serviços (PRD §7 + Anexo 12.2.2). Conteúdo da página antiga reescrito
 // com foco em explicação do serviço + conversão (WhatsApp por serviço e orçamento).
@@ -26,7 +29,7 @@ const faqItems = [
     q: 'Com que frequência devo fazer a manutenção do compressor?',
     lead: 'A manutenção segue as horas trabalhadas indicadas pelo fabricante — geralmente a cada 250, 500 e 1000 horas para troca de óleo, filtros e componentes.',
     a: 'Na ACB Sul, o controle é feito por horímetro: avisamos quando a próxima revisão do seu equipamento se aproxima.',
-    open: true,
+    open: false,
   },
   {
     q: 'O que inclui um plano de manutenção preventiva?',
@@ -49,7 +52,7 @@ const faqItems = [
   {
     q: 'Quanto custa a manutenção de um compressor?',
     lead: 'O valor depende do modelo do equipamento, das horas de operação e do tipo de serviço necessário.',
-    a: `Solicite uma avaliação sem compromisso pelo WhatsApp, pelo formulário de contato ou pelo telefone ${empresa.telefone} — respondemos em horário comercial.`,
+    a: `Solicite uma avaliação sem compromisso pelo WhatsApp, pelo formulário de contato ou pelo telefone ${cfg.telefone} — respondemos em horário comercial.`,
     open: false,
   },
 ];

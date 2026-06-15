@@ -36,6 +36,13 @@ const ativo = (p: string) =>
               Início
             </a>
             <a
+              href="/admin/leads"
+              class={ativo('/admin/leads')}
+              aria-current={ativo('/admin/leads') ? 'page' : undefined}
+            >
+              Leads
+            </a>
+            <a
               href="/admin/categorias"
               class={ativo('/admin/categorias')}
               aria-current={ativo('/admin/categorias') ? 'page' : undefined}
@@ -48,6 +55,13 @@ const ativo = (p: string) =>
               aria-current={ativo('/admin/produtos') ? 'page' : undefined}
             >
               Produtos
+            </a>
+            <a
+              href="/admin/configuracoes"
+              class={ativo('/admin/configuracoes')}
+              aria-current={ativo('/admin/configuracoes') ? 'page' : undefined}
+            >
+              Configurações
             </a>
           </nav>
           <a class="ver-site" href="/" target="_blank" rel="noopener">

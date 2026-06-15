@@ -12,6 +12,18 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
+// Configurações globais do site — linha única (id = 1). Cada campo NULL/vazio
+// significa "usar o padrão de src/data/empresa.ts". Editável em /admin/configuracoes.
+export const configuracoes = pgTable('configuracoes', {
+  id: integer('id').primaryKey().default(1),
+  /** número geral de WhatsApp (fallback das categorias sem número) — só dígitos, formato wa.me */
+  whatsappGeral: text('whatsapp_geral'),
+  /** telefone fixo de exibição, ex.: (51) 3377-3626 */
+  telefone: text('telefone'),
+  email: text('email'),
+  atualizadoEm: timestamp('atualizado_em').notNull().defaultNow(),
+});
+
 export const categorias = pgTable('categorias', {
   id: serial('id').primaryKey(),
   /** identificador na URL (/produtos#slug e /produtos/[slug]/...) */
@@ -72,6 +84,26 @@ export const produtoImagens = pgTable('produto_imagens', {
   alt: text('alt'),
   principal: boolean('principal').notNull().default(false),
   ordem: integer('ordem').notNull().default(0),
+});
+
+// Leads recebidos pelo formulário "Solicitar mais informações" (PDP) e afins.
+// Salvo antes de redirecionar o lead ao WhatsApp da categoria. Visível em /admin/leads.
+export const leads = pgTable('leads', {
+  id: serial('id').primaryKey(),
+  /** de onde veio o lead: 'produto' (formulário da PDP) ou 'contato-direto' (form da home) */
+  origem: text('origem').notNull().default('produto'),
+  /** nome do produto de origem (NULL = formulário sem produto específico) */
+  produto: text('produto'),
+  /** slug da categoria — define o WhatsApp de destino */
+  categoriaSlug: text('categoria_slug'),
+  nome: text('nome').notNull(),
+  telefone: text('telefone').notNull(),
+  email: text('email').notNull(),
+  /** Compra / Locação / Compra ou locação */
+  interesse: text('interesse'),
+  /** controle do admin: lead já retornado? */
+  atendido: boolean('atendido').notNull().default(false),
+  criadoEm: timestamp('criado_em').notNull().defaultNow(),
 });
 
 export const produtoSpecs = pgTable('produto_specs', {

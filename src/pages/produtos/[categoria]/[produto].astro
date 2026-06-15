@@ -290,10 +290,11 @@ const breadcrumbSchema = {
         <span class="lt"><span>{categoria.nome}</span><b>{nomeProduto(p)}</b></span>
         <button class="lead-close" type="button" data-close aria-label="Fechar">&times;</button>
       </div>
-      <form data-leadform novalidate>
+      <form data-leadform data-lead-wa novalidate>
         <h3>Solicitar mais informações</h3>
         <p class="sub">Retornamos em horário comercial.</p>
         <input type="hidden" name="produto" value={nomeProduto(p)} />
+        <input type="hidden" name="categoria" value={categoria.slug} />
         <div class="frow">
           <div class="field">
             <label>Nome <span class="req">*</span></label><input
@@ -328,11 +329,6 @@ const breadcrumbSchema = {
             </select>
           </div>
         </div>
-        <div class="field">
-          <label>Mensagem</label><textarea
-            name="mensagem"
-            placeholder="Vazão/pressão necessária, local de uso, prazo..."></textarea>
-        </div>
         <button type="submit" class="btn btn-accent btn-block"
           ><span class="ai"
             ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
@@ -352,7 +348,8 @@ const breadcrumbSchema = {
         </div>
         <h3>Solicitação enviada!</h3>
         <p style="color:var(--ink-2)">
-          Recebemos seu pedido sobre o {nomeProduto(p)}. Um especialista da ACB Sul retornará em breve.
+          Recebemos seu pedido sobre o {nomeProduto(p)}. Estamos te levando ao WhatsApp do
+          especialista — se não abrir, verifique o bloqueio de pop-ups.
         </p>
       </div>
     </div>

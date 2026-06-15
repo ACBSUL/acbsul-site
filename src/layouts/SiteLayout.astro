@@ -1,7 +1,7 @@
 ---
 import '../styles/site-v2.css';
 import LocalBusinessSchema from '../components/LocalBusinessSchema.astro';
-import { empresa } from '../data/empresa';
+import { carregarConfig } from '../lib/config';
 
 interface Props {
   title: string;
@@ -23,11 +23,12 @@ const {
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogUrl = new URL(ogImage, Astro.site).href;
 
-// Dados de negócio expostos ao site-v2.js (fonte única: empresa.ts).
+// Dados de negócio expostos ao site-v2.js (config do admin + padrões de empresa.ts).
+const cfg = await carregarConfig();
 const biz = {
-  phone: empresa.telefone,
-  waNumber: empresa.whatsapp,
-  email: empresa.email,
+  phone: cfg.telefone,
+  waNumber: cfg.whatsapp,
+  email: cfg.email,
 };
 ---
 

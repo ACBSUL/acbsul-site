@@ -229,6 +229,23 @@ p{margin:0;text-wrap:pretty;}
     linear-gradient(0deg,rgba(8,16,30,.58) 0%,rgba(8,16,30,.05) 42%,transparent 60%);}
 .hero-photo image-slot{width:100%;height:100%;--isl-bg:#0D1A2E;}
 .hero-photo .hero-img{width:100%;height:100%;object-fit:cover;object-position:center center;}
+/* slide de fundo do hero: 3 imagens em crossfade (CSS puro) */
+.hero-slides{position:absolute;inset:0;}
+.hero-slide{position:absolute;inset:0;opacity:0;animation:heroSlideFade 21s infinite;will-change:opacity;}
+.hero-slide:nth-child(1){animation-delay:0s;}
+.hero-slide:nth-child(2){animation-delay:7s;}
+.hero-slide:nth-child(3){animation-delay:14s;}
+@keyframes heroSlideFade{
+  0%{opacity:0;}
+  6%{opacity:1;}
+  33.33%{opacity:1;}
+  39%{opacity:0;}
+  100%{opacity:0;}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-slide{animation:none;opacity:0;}
+  .hero-slide:nth-child(1){opacity:1;}
+}
 .hero .container{position:relative;z-index:3;width:100%;padding-block:clamp(150px,18vh,210px) clamp(70px,9vw,110px);}
 .hero-copy{max-width:680px;}
 .hero-copy .eyebrow{display:block;margin-bottom:22px;}
@@ -238,12 +255,27 @@ p{margin:0;text-wrap:pretty;}
 .hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
 /* mobile: texto ocupa a largura toda → escurecer a foto inteira p/ manter contraste */
 @media(max-width:700px){
-  .hero-photo::after{background:linear-gradient(0deg,rgba(8,16,30,.93) 0%,rgba(8,16,30,.74) 50%,rgba(8,16,30,.42) 100%);}
+  /* overlay: 100% transparente do topo ate a "linha" (~310px), depois degrade ate o escuro */
+  .hero-photo::after{background:linear-gradient(180deg,
+    rgba(8,16,30,0) 0,
+    rgba(8,16,30,0) 310px,
+    rgba(8,16,30,.55) 380px,
+    rgba(8,16,30,.9) 520px,
+    rgba(8,16,30,.95) 100%);}
   .hero-overlay{background:none;}
+  /* navbar fixa ~80px no topo + 260px de respiro até o titulo = 340px */
+  .hero{min-height:auto;}
+  .hero .container{padding-block:340px 72px;}
+  /* titulo um pouco menor p/ caber em 3 linhas no mobile */
+  .hero h1{font-size:26px;}
+  /* eyebrow fica sobre a parte clara da foto -> sombra p/ leitura (mantem o azul) */
+  .hero-copy .eyebrow{text-shadow:0 1px 2px rgba(8,16,30,.98),0 0 12px rgba(8,16,30,.9);}
+  /* imagem no tamanho enviado (sem ampliar), ancorada no topo-centro */
+  .hero-slide{display:flex;justify-content:center;align-items:flex-start;}
+  .hero-photo .hero-img{width:auto;height:auto;max-width:100%;object-fit:none;object-position:top center;}
 }
 @media(max-width:600px){
-  .hero{min-height:auto;}
-  .hero .container{padding-block:128px 56px;}
+  .hero .container{padding-block:340px 56px;}
   .hero-copy .eyebrow{font-size:11.5px;letter-spacing:.2em;margin-bottom:16px;}
   .hero .lead{margin-bottom:26px;}
   .hero-actions{flex-direction:column;align-items:stretch;}

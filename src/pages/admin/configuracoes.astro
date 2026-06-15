@@ -1,0 +1,103 @@
+---
+// Admin → Configurações: dados de contato globais da empresa (linha única
+// id=1 na tabela `configuracoes`). Campo vazio = usa o padrão de empresa.ts.
+// O número de WhatsApp daqui é o "número geral" — fallback das categorias
+// sem WhatsApp próprio (ver /admin/categorias).
+import { eq } from 'drizzle-orm';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../db';
+import { empresa } from '../../data/empresa';
+
+export const prerender = false;
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+
+  const valores = {
+    // só dígitos, formato wa.me: DDI+DDD+número (ex.: 5551999998888)
+    whatsappGeral: texto('whatsappGeral').replace(/\D/g, '') || null,
+    telefone: texto('telefone') || null,
+    email: texto('email') || null,
+    atualizadoEm: new Date(),
+  };
+
+  await db
+    .insert(tabelas.configuracoes)
+    .values({ id: 1, ...valores })
+    .onConflictDoUpdate({ target: tabelas.configuracoes.id, set: valores });
+
+  return Astro.redirect('/admin/configuracoes?ok=1');
+}
+
+const [cfg] = await db
+  .select()
+  .from(tabelas.configuracoes)
+  .where(eq(tabelas.configuracoes.id, 1));
+
+const salvo = Astro.url.searchParams.get('ok') === '1';
+---
+
+<AdminLayout titulo="Configurações">
+  <div class="acoes">
+    <h1>Configurações</h1>
+    <p class="sub">Dados de contato da empresa usados em todo o site.</p>
+  </div>
+
+  {salvo && <p class="flash" role="status">Configurações salvas. O site público já reflete a mudança.</p>}
+
+  <form method="POST">
+    <div class="cartao-form">
+      <h2>WhatsApp geral</h2>
+      <p class="nota">
+        Número que recebe os leads das categorias <b>sem WhatsApp próprio</b> (as que aparecem como
+        “número geral”). Também é o número do botão flutuante de WhatsApp do site.
+      </p>
+      <div class="campos">
+        <label class="campo largo">
+          Número (DDI+DDD+número, só dígitos)
+          <input
+            type="text"
+            name="whatsappGeral"
+            value={cfg?.whatsappGeral ?? ''}
+            placeholder={empresa.whatsapp}
+            inputmode="numeric"
+          />
+          <span class="dica">Vazio = usa o padrão do sistema ({empresa.whatsapp}).</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="cartao-form">
+      <h2>Telefone e e-mail</h2>
+      <p class="nota">Aparecem no rodapé, na seção de contato e nos dados estruturados (SEO).</p>
+      <div class="campos">
+        <label class="campo">
+          Telefone fixo
+          <input
+            type="text"
+            name="telefone"
+            value={cfg?.telefone ?? ''}
+            placeholder={empresa.telefone}
+          />
+          <span class="dica">Vazio = usa o padrão ({empresa.telefone}).</span>
+        </label>
+        <label class="campo">
+          E-mail
+          <input
+            type="email"
+            name="email"
+            value={cfg?.email ?? ''}
+            placeholder={empresa.email}
+          />
+          <span class="dica">Vazio = usa o padrão ({empresa.email}).</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="barra-salvar">
+      <button class="botao" type="submit">Salvar configurações</button>
+      <span class="lembrete">As páginas do catálogo entram no ar na hora; as páginas estáticas, no próximo deploy.</span>
+    </div>
+  </form>
+</AdminLayout>

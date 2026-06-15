@@ -12,12 +12,74 @@ const todos = await carregarProdutos();
 const q = (Astro.url.searchParams.get('q') ?? '').trim().toLowerCase();
 const cat = Astro.url.searchParams.get('cat') ?? '';
 
+const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nomeCurto]));
+
 let itens = todos;
 if (cat) itens = itens.filter((p) => p.categoria === cat);
 if (q) {
   itens = itens.filter((p) => `${p.nome} ${p.slug}`.toLowerCase().includes(q));
 }
-const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nomeCurto]));
+
+// Ordenação por coluna. Padrão: mais recente primeiro (data ↓).
+type Coluna = 'nome' | 'categoria' | 'status' | 'data';
+const colunasValidas: Coluna[] = ['nome', 'categoria', 'status', 'data'];
+const sortParam = Astro.url.searchParams.get('sort');
+const sort: Coluna = colunasValidas.includes(sortParam as Coluna)
+  ? (sortParam as Coluna)
+  : 'data';
+const dir = Astro.url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
+const fator = dir === 'asc' ? 1 : -1;
+
+const cmpTexto = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+
+itens = [...itens].sort((a, b) => {
+  switch (sort) {
+    case 'nome':
+      return fator * cmpTexto(nomeProduto(a), nomeProduto(b));
+    case 'categoria':
+      return (
+        fator *
+        cmpTexto(
+          nomeCategoria.get(a.categoria) ?? a.categoria,
+          nomeCategoria.get(b.categoria) ?? b.categoria,
+        )
+      );
+    case 'status': {
+      // publicado (1) acima de rascunho (0) na ordem decrescente
+      const va = a.publicado !== false ? 1 : 0;
+      const vb = b.publicado !== false ? 1 : 0;
+      return fator * (va - vb);
+    }
+    case 'data':
+    default:
+      return fator * (new Date(a.criadoEm).getTime() - new Date(b.criadoEm).getTime());
+  }
+});
+
+// Monta o link de um cabeçalho, preservando busca/filtro e alternando a direção.
+// Direção inicial ao escolher uma coluna nova: data ↓ (recente), demais ↑ (A–Z).
+function linkOrdenacao(coluna: Coluna): string {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (cat) params.set('cat', cat);
+  let novaDir: 'asc' | 'desc';
+  if (sort === coluna) {
+    novaDir = dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    novaDir = coluna === 'data' ? 'desc' : 'asc';
+  }
+  params.set('sort', coluna);
+  params.set('dir', novaDir);
+  return `/admin/produtos?${params.toString()}`;
+}
+const seta = (coluna: Coluna) => (sort === coluna ? (dir === 'asc' ? ' ↑' : ' ↓') : '');
+
+const fmtData = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
 const excluido = Astro.url.searchParams.get('ok') === 'excluido';
 const filtrando = Boolean(q || cat);
 ---
@@ -58,9 +120,26 @@ const filtrando = Boolean(q || cat);
       <thead>
         <tr>
           <th scope="col"><span class="sr-only">Foto</span></th>
-          <th scope="col">Produto</th>
-          <th scope="col">Categoria</th>
-          <th scope="col">Status</th>
+          <th scope="col" aria-sort={sort === 'nome' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <a class={`ord ${sort === 'nome' ? 'ativo' : ''}`} href={linkOrdenacao('nome')}>
+              Produto{seta('nome')}
+            </a>
+          </th>
+          <th scope="col" aria-sort={sort === 'categoria' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <a class={`ord ${sort === 'categoria' ? 'ativo' : ''}`} href={linkOrdenacao('categoria')}>
+              Categoria{seta('categoria')}
+            </a>
+          </th>
+          <th scope="col" aria-sort={sort === 'status' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <a class={`ord ${sort === 'status' ? 'ativo' : ''}`} href={linkOrdenacao('status')}>
+              Status{seta('status')}
+            </a>
+          </th>
+          <th scope="col" aria-sort={sort === 'data' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <a class={`ord ${sort === 'data' ? 'ativo' : ''}`} href={linkOrdenacao('data')}>
+              Data{seta('data')}
+            </a>
+          </th>
           <th scope="col"><span class="sr-only">Ações</span></th>
         </tr>
       </thead>
@@ -68,7 +147,7 @@ const filtrando = Boolean(q || cat);
         {
           itens.length === 0 && (
             <tr>
-              <td colspan="5" class="vazio">
+              <td colspan="6" class="vazio">
                 <b>Nenhum produto encontrado.</b>
                 <br />
                 Tente outra busca ou <a href="/admin/produtos">limpe os filtros</a>.
@@ -102,6 +181,11 @@ const filtrando = Boolean(q || cat);
                   )}
                   {p.destaque && <span class="badge dest">Destaque</span>}
                   {temPaginaPropria(p) && <span class="badge info">Página própria</span>}
+                </td>
+                <td>
+                  <time class="data" datetime={new Date(p.criadoEm).toISOString()}>
+                    {fmtData.format(new Date(p.criadoEm))}
+                  </time>
                 </td>
                 <td>
                   <div class="acoes-linha">
@@ -162,6 +246,17 @@ const filtrando = Boolean(q || cat);
   .acoes-linha form { margin: 0; }
   .nome-produto { color: var(--ink); font-weight: 700; text-decoration: none; }
   .nome-produto:hover { color: var(--accent-strong); }
+  .ord {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .ord:hover { color: var(--accent-strong); }
+  .ord.ativo { color: var(--accent-strong); }
+  .data { color: var(--ink-2); font-size: 0.9rem; white-space: nowrap; }
   .vazio a { color: var(--accent-strong); }
   .sr-only {
     position: absolute;

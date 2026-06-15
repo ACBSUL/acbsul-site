@@ -3,8 +3,11 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../data/empresa';
+import { carregarConfig } from '../lib/config';
 
 export const prerender = true;
+
+const cfg = await carregarConfig();
 
 const title =
   'ACB Sul Compressores | Atlas Copco no RS — Ar Comprimido e Energia para a Indústria';
@@ -17,7 +20,7 @@ const faqItems = [
     q: 'A ACB Sul é distribuidora autorizada Atlas Copco?',
     lead: 'Sim. A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul.',
     a: 'Isso garante acesso à linha completa de produtos, peças originais com garantia de fábrica e suporte técnico oficial da marca.',
-    open: true,
+    open: false,
   },
   {
     q: 'Vocês fazem assistência técnica em campo?',
@@ -40,7 +43,7 @@ const faqItems = [
   {
     q: 'Como solicito um orçamento?',
     lead: '',
-    a: `Você pode solicitar pelo formulário desta página, pelo WhatsApp da linha desejada ou pelo telefone ${empresa.telefone}, em horário comercial.`,
+    a: `Você pode solicitar pelo formulário desta página, pelo WhatsApp da linha desejada ou pelo telefone ${cfg.telefone}, em horário comercial.`,
     open: false,
   },
 ];
@@ -129,17 +132,20 @@ const faqSchema = {
   <!-- ============ HERO ============ -->
   <header class="hero" data-screen-label="Hero">
     <div class="hero-photo">
-      <picture>
-        <source srcset="/assets/hero-obra-qas.webp" type="image/webp" />
-        <img
-          class="hero-img"
-          src="/assets/hero-obra-qas.jpg"
-          alt="Gerador Atlas Copco QAS em obra, com técnico ao lado"
-          fetchpriority="high"
-          width="1672"
-          height="941"
-        />
-      </picture>
+      <div class="hero-slides" aria-hidden="true">
+        <picture class="hero-slide">
+          <source srcset="/assets/slides/slide-01-home-mobile.webp" media="(max-width:700px)" />
+          <img class="hero-img" src="/assets/slides/slide-01-home.webp" alt="" fetchpriority="high" decoding="async" />
+        </picture>
+        <picture class="hero-slide">
+          <source srcset="/assets/slides/slide-02-home-mobile.webp" media="(max-width:700px)" />
+          <img class="hero-img" src="/assets/slides/slide-02-home.webp" alt="" loading="lazy" decoding="async" />
+        </picture>
+        <picture class="hero-slide">
+          <source srcset="/assets/slides/slide-03-home-mobile.webp" media="(max-width:700px)" />
+          <img class="hero-img" src="/assets/slides/slide-03-home.webp" alt="" loading="lazy" decoding="async" />
+        </picture>
+      </div>
       <div class="hero-overlay"></div>
     </div>
     <div class="container">
@@ -148,7 +154,7 @@ const faqSchema = {
         <h1>Compressores Industriais e Assistência Técnica <span class="hl">Atlas Copco no RS</span></h1>
         <p class="tagline">Ar comprimido e energia para <span class="hl">grandes operações</span>.</p>
         <p class="lead">
-          A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul há mais de 40 anos.
+          A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com expertise de mais de 40 anos.
           Com sede em Porto Alegre, fornece compressores, geradores, peças originais e assistência
           técnica para a indústria do RS e de Santa Catarina.
         </p>
@@ -170,10 +176,10 @@ const faqSchema = {
   <div class="marquee" aria-hidden="true">
     <div class="track">
       <span>Peças Originais Atlas Copco</span><span>Assistência Técnica RS &amp; SC</span><span
-        >40+ Anos de Mercado</span
+        >40+ Anos de Experiência</span
       ><span>Venda &amp; Locação</span><span>Distribuidor Autorizado</span>
       <span>Peças Originais Atlas Copco</span><span>Assistência Técnica RS &amp; SC</span><span
-        >40+ Anos de Mercado</span
+        >40+ Anos de Experiência</span
       ><span>Venda &amp; Locação</span><span>Distribuidor Autorizado</span>
     </div>
   </div>
@@ -192,12 +198,12 @@ const faqSchema = {
           </picture>
           <div class="entity-badge">
             <b>40+</b>
-            <span>anos de mercado</span>
+            <span>anos de experiência</span>
           </div>
         </div>
         <div class="entity-block">
           <span class="eyebrow">A ACB Sul</span>
-          <h2>Quatro décadas de engenharia em <span class="hl">ar comprimido e energia</span></h2>
+          <h2>Quatro décadas de experiência em <span class="hl">ar comprimido e energia</span></h2>
           <p>{entityBlockTexto}</p>
           <ul class="entity-facts">
             <li>
@@ -562,7 +568,7 @@ const faqSchema = {
                 ><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4z"></path><path
                   d="m9 12 2 2 4-4"></path></svg
               ></span
-            ><h3>40+ Anos de Mercado</h3><p>
+            ><h3>40+ Anos de Experiência</h3><p>
               Quatro décadas de engenharia aplicada em ar comprimido no Sul.
             </p>
           </div>
@@ -870,7 +876,7 @@ const faqSchema = {
                 ></path></svg
               ></span
             >
-            <span><span class="lab">Telefone</span><b>{empresa.telefone}</b></span>
+            <span><span class="lab">Telefone</span><b>{cfg.telefone}</b></span>
           </div>
           <div class="contact-channel">
             <span class="ico"
@@ -879,7 +885,7 @@ const faqSchema = {
               ></span
             >
             <span class="cc-mail"
-              ><span class="lab">E-mail</span><b set:html={empresa.email.replace('@', '@<wbr>')}
+              ><span class="lab">E-mail</span><b set:html={cfg.email.replace('@', '@<wbr>')}
               /></span
             >
           </div>
@@ -898,7 +904,8 @@ const faqSchema = {
           </div>
         </div>
         <div class="contact-right">
-          <form data-leadform novalidate>
+          <form data-leadform data-lead-wa novalidate>
+            <input type="hidden" name="origem" value="contato-direto" />
             <h3>Solicite uma análise</h3>
             <p class="sub">Preencha os dados técnicos da sua operação.</p>
             <div class="frow">
@@ -934,7 +941,7 @@ const faqSchema = {
             </div>
             <div class="field">
               <label>Linha de interesse</label>
-              <select name="linha">
+              <select name="interesse">
                 <option>Compressores de Parafuso</option><option>Compressores de Pistão</option><option
                   >Compressores Portáteis</option
                 >
@@ -945,11 +952,6 @@ const faqSchema = {
                   >Assistência Técnica</option
                 >
               </select>
-            </div>
-            <div class="field">
-              <label>Mensagem / Observações</label><textarea
-                name="mensagem"
-                placeholder="Pressão/vazão necessária, equipamento de interesse, prazo..."></textarea>
             </div>
             <button type="submit" class="btn btn-accent btn-block btn-lg"
               ><span class="ai"

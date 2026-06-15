@@ -15,6 +15,7 @@ export interface CategoriaDb extends Categoria {
 export interface ProdutoDb extends Produto {
   id: number;
   categoriaId: number;
+  criadoEm: Date;
 }
 
 const ou = <T>(v: T | null): T | undefined => v ?? undefined;
@@ -85,6 +86,7 @@ export async function carregarProdutos(): Promise<ProdutoDb[]> {
     seoTitle: ou(r.seoTitle),
     seoDescription: ou(r.seoDescription),
     publicado: r.publicado,
+    criadoEm: r.criadoEm,
   }));
 }
 

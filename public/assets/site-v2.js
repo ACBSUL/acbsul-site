@@ -163,6 +163,39 @@
     }
 
     /* lead forms */
+    function mostrarSucesso(form){
+      const ok2=form.parentElement.querySelector(".form-ok");
+      if(ok2){form.style.display="none";ok2.classList.add("show");}
+    }
+    // salva o lead no banco e abre o WhatsApp da categoria em aba nova,
+    // mantendo a página do produto (forms com data-lead-wa)
+    function enviarLeadWa(form){
+      const btn=form.querySelector("[type=submit]");
+      if(btn)btn.disabled=true;
+      // abre a aba JÁ no gesto do usuário (senão o bloqueador de pop-up barra);
+      // a URL real entra quando a API responde.
+      const win=window.open("","_blank");
+      const dados={};
+      new FormData(form).forEach((v,k)=>{dados[k]=v;});
+      fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(dados)})
+        .then(r=>r.json())
+        .then(res=>{
+          if(res&&res.ok&&res.whatsapp){
+            mostrarSucesso(form);
+            if(win&&!win.closed){win.location.href=res.whatsapp;}
+            else{window.open(res.whatsapp,"_blank","noopener");}
+          }else{
+            if(win&&!win.closed)win.close();
+            if(btn)btn.disabled=false;
+            alert("Não foi possível enviar agora. Confira os dados e tente novamente.");
+          }
+        })
+        .catch(()=>{
+          if(win&&!win.closed)win.close();
+          if(btn)btn.disabled=false;
+          alert("Não foi possível enviar agora. Verifique sua conexão e tente novamente.");
+        });
+    }
     document.querySelectorAll("form[data-leadform]").forEach(form=>{
       form.addEventListener("submit",e=>{
         e.preventDefault();let ok=true;
@@ -172,8 +205,8 @@
           f&&f.classList.toggle("error",!valid);if(!valid)ok=false;
         });
         if(!ok){form.querySelector(".field.error input,.field.error select,.field.error textarea")?.focus();return;}
-        const ok2=form.parentElement.querySelector(".form-ok");
-        if(ok2){form.style.display="none";ok2.classList.add("show");}
+        if(form.hasAttribute("data-lead-wa")){enviarLeadWa(form);}
+        else{mostrarSucesso(form);}
       });
       form.querySelectorAll("input,select,textarea").forEach(inp=>inp.addEventListener("input",()=>inp.closest(".field")?.classList.remove("error")));
     });
