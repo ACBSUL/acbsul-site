@@ -172,6 +172,7 @@ export const produtos: ProdutoSeed[] = [
       { rotulo: 'Pressão de trabalho', valor: '7,5–13 bar' },
       { rotulo: 'Vazão (FAD) — GX', valor: '4,0–26,6 l/s' },
       { rotulo: 'Vazão (FAD) — série GA', valor: 'até 5.082 m³/h' },
+      { rotulo: 'Vazão em PCM (linhas G e GA)', valor: '19–246 PCM conforme modelo' },
       { rotulo: 'Nível de ruído — GX', valor: '61–67 dB(A)' },
       { rotulo: 'Regime de trabalho', valor: '100% contínuo' },
       { rotulo: 'Variantes', valor: 'Piso ou tanque · Full Feature (secador integrado) · VSD/VSD⁺' },
@@ -204,12 +205,49 @@ export const produtos: ProdutoSeed[] = [
       { rotulo: 'Potência instalada', valor: '11–30 kW (15–40 hp)' },
       { rotulo: 'Pressão máxima de trabalho', valor: '7,5–13 bar(e)' },
       { rotulo: 'Vazão (FAD)', valor: '26,7–94,0 l/s (96–338 m³/h)' },
+      { rotulo: 'Vazão em PCM', valor: '79–190 PCM (velocidade fixa) · 14–208 PCM (VSD+)' },
       { rotulo: 'Nível de ruído', valor: '67–70 dB(A)' },
       { rotulo: 'Motor', valor: 'Classe de eficiência IE4' },
       { rotulo: 'Controlador', valor: 'Elektronikon® Touch + monitoramento SMARTLINK' },
       { rotulo: 'Versão Full Feature', valor: 'Secador integrado (ponto de orvalho 2–3 °C)' },
       { rotulo: 'Regime de trabalho', valor: '100% contínuo' },
       { rotulo: 'Peso', valor: '411–567 kg' },
+    ],
+  },
+
+  {
+    slug: 'compressores-parafuso-linha-g',
+    codigo: 'G4–G22',
+    tipo: 'Compressor de Parafuso',
+    nome: 'Compressores de Parafuso Linha G (G4–G22)',
+    categoria: 'compressores-eletricos',
+    specsChips: ['4–22 kW', '19–128 PCM', 'Fixa e VSD'],
+    imagens: [
+      {
+        src: `${P}/compressores-eletricos/compressores-parafuso-linha-g.webp`,
+        alt: 'Compressor de parafuso Atlas Copco da Linha G (modelo G7 FF) sobre reservatório',
+      },
+    ],
+    // ---- PDP (fonte: apresentação ACBSul rev01 26.05.26 — Industrial Air, linha G) ----
+    pitch:
+      'Compressores de parafuso lubrificados Atlas Copco da <b>Linha G (G4 a G22)</b>, de 4 a 22 kW e 19 a 128 PCM, com pressões de 7 a 13 bar e versões de velocidade fixa ou VSD — ar comprimido contínuo para pequenas e médias indústrias.',
+    descricao: [
+      '<b>A Linha G da Atlas Copco reúne os compressores de parafuso lubrificados de menor porte da série Industrial Air, de 4 a 22 kW (G4, G5, G7, G7L, G11, G15, G18 e G22), com vazão de 19 a 128 PCM e pressões de 100 a 175 psi (7 a 13 bar).</b> São compressores de transmissão por polia e correia, motor IP55 e partida estrela-triângulo, projetados para entregar ar comprimido de forma contínua e econômica em oficinas, serralherias e pequenas e médias linhas de produção.',
+      'Cada modelo é configurável conforme a operação: versões montadas sobre base (BM), sobre tanque de ar (TM, de 100 a 265 litros), com secador de ar integrado (FF, Full Feature) ou sem secador (P). As tensões trifásicas disponíveis são 220, 380 e 440 V, e o óleo sintético RS Ultra prolonga os intervalos de manutenção. Para quem precisa ajustar a produção de ar à demanda real, a Linha G também tem versões VSD de velocidade variável (G7, G11, G15, G18 e G22 VSD FF), que partem com inversor de frequência e reduzem o consumo de energia ao acompanhar o uso, com dreno eletrônico de condensado incluso.',
+      'Como distribuidora autorizada Atlas Copco no Rio Grande do Sul, a ACB Sul dimensiona o compressor da Linha G adequado à pressão e à vazão da sua operação, com <b>venda ou locação</b>, peças originais e assistência técnica em todo o RS e Santa Catarina. Solicite um orçamento informando a pressão (psi) e a vazão (PCM) necessárias e receba a indicação do modelo G certo.',
+    ],
+    especificacoes: [
+      { rotulo: 'Tecnologia', valor: 'Parafuso rotativo lubrificado (injeção de óleo)' },
+      { rotulo: 'Modelos (velocidade fixa)', valor: 'G4 · G5 · G7 · G7L · G11 · G15 · G18 · G22' },
+      { rotulo: 'Modelos VSD', valor: 'G7 · G11 · G15 · G18 · G22 VSD FF' },
+      { rotulo: 'Potência do motor', valor: '4–22 kW' },
+      { rotulo: 'Vazão (FAD)', valor: '19–128 PCM conforme modelo' },
+      { rotulo: 'Pressão de trabalho', valor: '100–175 psi (7–13 bar)' },
+      { rotulo: 'Transmissão', valor: 'Polia e correia' },
+      { rotulo: 'Motor', valor: 'IP55 · partida estrela-triângulo (VSD: inversor de frequência)' },
+      { rotulo: 'Tensões (trifásico)', valor: '220 / 380 / 440 V' },
+      { rotulo: 'Óleo', valor: 'Sintético RS Ultra' },
+      { rotulo: 'Variantes', valor: 'BM (base) · TM (tanque) · FF (secador integrado) · P (sem secador)' },
     ],
   },
 
@@ -319,6 +357,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xahs-157',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAHS 157',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -332,6 +371,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xas-157-pdg',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAS 157 PdG',
     tipo: 'Compressor Portátil',
     nome: 'Compressor Portátil XAS 157 PdG com Gerador',
@@ -385,6 +425,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xats-167',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XATS 167',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -398,6 +439,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xas-187',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAS 187',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -411,6 +453,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xas-770',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAS 770',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -424,6 +467,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xahs-805',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAHS 805',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -437,6 +481,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xats-805',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XATS 805',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -450,6 +495,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xams-900',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XAMS 900',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -463,6 +509,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'xats-910',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'XATS 910',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
@@ -475,15 +522,15 @@ export const produtos: ProdutoSeed[] = [
     ],
   },
   {
-    slug: 'w1100',
-    codigo: 'W1100',
+    slug: 'w1000',
+    codigo: 'W1000',
     tipo: 'Compressor Portátil',
     categoria: 'compressores-portateis',
-    specsChips: ['1000–1100 pcm', '19–28 bar', 'Alta pressão'],
+    specsChips: ['920–1060 pcm', '19–28 bar', 'DrillAir'],
     imagens: [
       {
-        src: `${P}/compressores-portateis/w1100.jpg`,
-        alt: 'Compressor portátil Atlas Copco W1100 de até 1100 pcm e 28 bar',
+        src: `${P}/compressores-portateis/w1000.jpg`,
+        alt: 'Compressor portátil de perfuração Atlas Copco DrillAir W1000',
       },
     ],
   },
@@ -514,9 +561,132 @@ export const produtos: ProdutoSeed[] = [
     ],
   },
 
+  // ---- Faltantes da apresentação ACBSul rev01 26.05.26 (imagens extraídas do PDF) ----
+  {
+    slug: 'xas-58-kd',
+    codigo: 'XAS 58 Kd',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['115 pcm', '7 bar', 'Linha Small Air'],
+    imagens: [{ src: `${P}/compressores-portateis/xas-58-kd.webp`, alt: 'Compressor de ar portátil Atlas Copco XAS 58 Kd de 115 pcm' }],
+  },
+  {
+    slug: 'xas-98-kd',
+    codigo: 'XAS 98 Kd',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['186 pcm', '7 bar', 'Linha Small Air'],
+    imagens: [{ src: `${P}/compressores-portateis/xas-98-kd.webp`, alt: 'Compressor de ar portátil Atlas Copco XAS 98 Kd de 186 pcm' }],
+  },
+  {
+    slug: 'x-air-290-14',
+    codigo: 'X-Air 290/14 Pd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['272 pcm', '14 bar', 'Diesel'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-290-14.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air 290/14 de 272 pcm' }],
+  },
+  {
+    slug: 'x-air-300-12',
+    codigo: 'X-Air 300/12 Pd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['296 pcm', '12 bar', 'Diesel'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-300-12.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air 300/12 de 296 pcm' }],
+  },
+  {
+    slug: 'x-air-350-10',
+    codigo: 'X-Air 350/10 Pd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['339 pcm', '10 bar', 'Diesel'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-350-10.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air 350/10 de 339 pcm' }],
+  },
+  {
+    slug: 'x-air-400-7',
+    codigo: 'X-Air 400/7 Pd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['404 pcm', '7 bar', 'Diesel'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-400-7.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air 400/7 de 404 pcm' }],
+  },
+  {
+    slug: 'xahs-450-cud',
+    codigo: 'XAHS 450 Cud',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['441 pcm', '12 bar', 'Linha XAS boX'],
+    imagens: [{ src: `${P}/compressores-portateis/xahs-450-cud.webp`, alt: 'Compressor portátil Atlas Copco XAHS 450 Cud da linha XAS boX' }],
+  },
+  {
+    slug: 'xahs-750-cud',
+    codigo: 'XAHS 750 Cud',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['727 pcm', '12 bar', 'Linha XAS boX'],
+    imagens: [{ src: `${P}/compressores-portateis/xahs-750-cud.webp`, alt: 'Compressor portátil Atlas Copco XAHS 750 Cud da linha XAS boX' }],
+  },
+  {
+    slug: 'xahs-850-cud-pace',
+    codigo: 'XAHS 850 Cud PACE',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['678–848 pcm', '5–12 bar', 'PACE'],
+    imagens: [{ src: `${P}/compressores-portateis/xahs-850-cud-pace.webp`, alt: 'Compressor portátil Atlas Copco XAHS 850 Cud PACE da linha XAS boX' }],
+  },
+  {
+    slug: 'x-air-plus-815-14',
+    codigo: 'X-Air+ 815/14 MWMd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['818 pcm', '14 bar', 'Linha Large'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-plus-815-14.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air+ 815/14 de 818 pcm' }],
+  },
+  {
+    slug: 'x-air-plus-970-10',
+    codigo: 'X-Air+ 970/10 MWMd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['992 pcm', '7–10 bar', 'PACE'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-plus-970-10.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air+ 970/10 de 992 pcm' }],
+  },
+  {
+    slug: 'x-air-plus-900-20',
+    codigo: 'X-Air+ 900/20 MWMd',
+    etiqueta: 'Diesel',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['880 pcm', '14–20 bar', 'Alta pressão'],
+    imagens: [{ src: `${P}/compressores-portateis/x-air-plus-900-20.webp`, alt: 'Compressor portátil a diesel Atlas Copco X-Air+ 900/20 de 880 pcm' }],
+  },
+  {
+    slug: 'y1300-sd',
+    codigo: 'Y1300 Sd',
+    tipo: 'Compressor Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['1166–1309 pcm', '17–35 bar', 'DrillAir (perfuração)'],
+    imagens: [{ src: `${P}/compressores-portateis/y1300-sd.webp`, alt: 'Compressor portátil de perfuração Atlas Copco DrillAir Y1300 Sd' }],
+  },
+  {
+    slug: 'e-air-t400',
+    codigo: 'E-AIR T400',
+    etiqueta: 'Elétrico',
+    tipo: 'Compressor Elétrico Portátil',
+    categoria: 'compressores-portateis',
+    specsChips: ['399 pcm', '10 bar', '100% elétrico'],
+    imagens: [{ src: `${P}/compressores-portateis/e-air-t400.webp`, alt: 'Compressor de ar portátil 100% elétrico Atlas Copco E-AIR T400' }],
+  },
+
   // ========== GERADORES DE ENERGIA ==========
   {
     slug: 'qas-24',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'QAS 24',
     etiqueta: 'Diesel',
     tipo: 'Gerador de Energia',
@@ -594,6 +764,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'qas-140',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'QAS 140',
     etiqueta: 'Diesel',
     tipo: 'Gerador de Energia',
@@ -605,6 +776,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'qas-170',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'QAS 170',
     etiqueta: 'Diesel',
     tipo: 'Gerador de Energia',
@@ -627,6 +799,7 @@ export const produtos: ProdutoSeed[] = [
   },
   {
     slug: 'qas-210',
+    publicado: false, // rascunho: fora de linha (só manutenção) — decisão cliente
     codigo: 'QAS 210',
     etiqueta: 'Diesel',
     tipo: 'Gerador de Energia',
@@ -724,6 +897,26 @@ export const produtos: ProdutoSeed[] = [
     imagens: [
       { src: `${P}/torre-de-iluminacao/qlt-m20.jpg`, alt: 'Torre de iluminação Atlas Copco QLT M20' },
     ],
+  },
+
+  {
+    slug: 'hilight-v7-led',
+    codigo: 'HiLight V7⁺',
+    etiqueta: 'LED',
+    tipo: 'Torre de Iluminação LED',
+    categoria: 'torre-de-iluminacao',
+    specsChips: ['LED', 'até 7.360 m²', 'até 105 h'],
+    imagens: [{ src: `${P}/torre-de-iluminacao/hilight-v7-led.webp`, alt: 'Torre de iluminação LED Atlas Copco HiLight V7+' }],
+  },
+  {
+    slug: 'hilight-ms4-solar',
+    codigo: 'HiLight MS4',
+    etiqueta: 'Solar',
+    tipo: 'Torre de Iluminação Solar',
+    nome: 'Torre de Iluminação Solar HiLight MS4',
+    categoria: 'torre-de-iluminacao',
+    specsChips: ['Solar', 'até 3.846 m²', 'Sustentável'],
+    imagens: [{ src: `${P}/torre-de-iluminacao/hilight-ms4-solar.webp`, alt: 'Torre de iluminação solar Atlas Copco HiLight MS4' }],
   },
 
   // ========== ROMPEDORES ==========

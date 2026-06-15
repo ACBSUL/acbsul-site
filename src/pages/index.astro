@@ -87,7 +87,8 @@ const orgSchema = {
   '@type': 'Organization',
   name: empresa.nome,
   url: empresa.url,
-  description: `${empresa.posicionamento}, com ${empresa.longevidade} de atuação.`,
+  description: `${empresa.posicionamento}. Fundada em ${empresa.fundacao}, reúne ${empresa.experiencia} de experiência no mercado de compressores Atlas Copco através de seus fundadores.`,
+  foundingDate: String(empresa.fundacao),
   brand: { '@type': 'Brand', name: 'Atlas Copco' },
   areaServed: ['Rio Grande do Sul', 'Santa Catarina'],
 };
@@ -154,9 +155,10 @@ const faqSchema = {
         <h1>Compressores Industriais e Assistência Técnica <span class="hl">Atlas Copco no RS</span></h1>
         <p class="tagline">Ar comprimido e energia para <span class="hl">grandes operações</span>.</p>
         <p class="lead">
-          A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com expertise de mais de 40 anos.
-          Com sede em Porto Alegre, fornece compressores, geradores, peças originais e assistência
-          técnica para a indústria do RS e de Santa Catarina.
+          A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com mais de 40 anos
+          de experiência no mercado de compressores através de seus fundadores. Com sede em Porto
+          Alegre, fornece compressores, geradores, peças originais e assistência técnica para a
+          indústria do RS e de Santa Catarina.
         </p>
         <div class="hero-actions">
           <a class="btn btn-accent btn-lg" href="#contato"
@@ -203,7 +205,7 @@ const faqSchema = {
         </div>
         <div class="entity-block">
           <span class="eyebrow">A ACB Sul</span>
-          <h2>Quatro décadas de experiência em <span class="hl">ar comprimido e energia</span></h2>
+          <h2>A experiência de quem está há <span class="hl">40 anos no ar comprimido</span></h2>
           <p>{entityBlockTexto}</p>
           <ul class="entity-facts">
             <li>
@@ -569,7 +571,7 @@ const faqSchema = {
                   d="m9 12 2 2 4-4"></path></svg
               ></span
             ><h3>40+ Anos de Experiência</h3><p>
-              Quatro décadas de engenharia aplicada em ar comprimido no Sul.
+              A bagagem de mais de 40 anos dos nossos fundadores em ar comprimido no Sul.
             </p>
           </div>
         </div>

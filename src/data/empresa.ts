@@ -4,7 +4,14 @@
 export const empresa = {
   nome: 'ACB Sul Compressores',
   posicionamento: 'Distribuidor autorizado Atlas Copco no Rio Grande do Sul',
-  longevidade: 'mais de 40 anos', // [CONFIRMAR ano de fundação]
+  // Apresentação oficial do cliente (rev01 26.05.26): a empresa foi fundada em
+  // 2017; os "mais de 40 anos" são a EXPERIÊNCIA dos fundadores no mercado de
+  // compressores — não a idade da empresa. Não usar "longevidade" como idade.
+  fundacao: 2017,
+  experiencia: 'mais de 40 anos', // experiência dos fundadores/equipe no setor
+  // Mantido para schema/copy, já no enquadramento honesto (experiência, não idade da empresa).
+  longevidade: 'mais de 40 anos de experiência',
+  estoqueItens: '2.500', // itens de reposição a pronta entrega (pág. 5 da apresentação)
   endereco: {
     rua: 'Rua Santa Catarina, 304',
     bairro: 'Santa Maria Goretti',
@@ -23,9 +30,10 @@ export const empresa = {
   url: 'https://acbsulcompressores.com.br',
 } as const;
 
-// EntityBlock — texto institucional citável (PRD Anexo 12.2.1). Usar literalmente.
+// EntityBlock — texto institucional citável (frase-âncora de GEO). Enquadramento
+// honesto: empresa fundada em 2017; os 40+ anos são a experiência dos fundadores.
 export const entityBlockTexto =
-  'A ACB Sul é distribuidora autorizada Atlas Copco no Rio Grande do Sul, com mais de 40 anos de experiência no setor de ar comprimido e equipamentos industriais. Com sede em Porto Alegre, atende empresas e obras em todo o RS e em Santa Catarina, oferecendo venda de compressores industriais, assistência técnica especializada, peças de reposição originais Atlas Copco e locação de equipamentos.';
+  'A ACB Sul Compressores é distribuidora autorizada Atlas Copco no Rio Grande do Sul. Fundada em 2017, reúne mais de 40 anos de experiência no mercado de compressores Atlas Copco através de seus fundadores e atende, a partir de Porto Alegre, empresas e obras em todo o RS e em Santa Catarina, com venda de compressores industriais, assistência técnica especializada, peças de reposição originais Atlas Copco, estoque de mais de 2.500 itens a pronta entrega e locação de equipamentos novos e seminovos.';
 
 // Categorias do catálogo: ver src/data/categorias.ts (modelo padronizado).
 

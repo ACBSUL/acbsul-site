@@ -11,9 +11,9 @@ export const prerender = true;
 // (PRD §7). Fato novo incorporado do site atual: única distribuidora autorizada
 // Atlas Copco da divisão Power Technique no RS e parte de SC.
 
-const title = 'A ACB Sul — Distribuidora Atlas Copco há mais de 40 anos no RS';
+const title = 'A ACB Sul — Distribuidora Atlas Copco Power Technique no RS';
 const description =
-  'Única distribuidora autorizada Atlas Copco Power Technique no RS e parte de SC: mais de 40 anos em compressores, geradores, peças e assistência técnica.';
+  'Distribuidora autorizada Atlas Copco Power Technique no RS e parte de SC. Fundada em 2017, reúne mais de 40 anos de experiência em compressores e geradores através de seus fundadores.';
 
 const urlPagina = `${empresa.url}/quem-somos`;
 
@@ -28,7 +28,8 @@ const aboutSchema = {
     '@type': 'Organization',
     name: empresa.nome,
     url: empresa.url,
-    description: `${empresa.posicionamento} — divisão Power Technique, com ${empresa.longevidade} de atuação em compressores, geradores e assistência técnica.`,
+    description: `${empresa.posicionamento} — divisão Power Technique. Fundada em ${empresa.fundacao}, reúne ${empresa.experiencia} de experiência em compressores, geradores e assistência técnica através de seus fundadores.`,
+    foundingDate: String(empresa.fundacao),
     brand: { '@type': 'Brand', name: 'Atlas Copco' },
     areaServed: ['Rio Grande do Sul', 'Santa Catarina'],
     address: {
@@ -80,11 +81,13 @@ const breadcrumbSchema = {
           <a href="/">Início</a><span class="sep">/</span><span class="current">A ACBSUL</span>
         </nav>
         <span class="eyebrow">A ACBSUL</span>
-        <h1>Mais de 40 anos de ar comprimido e energia <span class="hl">Atlas Copco no RS</span></h1>
+        <h1>Ar comprimido e energia <span class="hl">Atlas Copco no RS</span></h1>
         <p class="lead">
           A ACB Sul Compressores é a única distribuidora autorizada Atlas Copco — divisão Power
-          Technique — no Rio Grande do Sul e em parte de Santa Catarina. De Porto Alegre, atende a
-          indústria e a construção com venda, locação, peças originais e assistência técnica.
+          Technique — no Rio Grande do Sul e em parte de Santa Catarina. Fundada em 2017, reúne mais
+          de 40 anos de experiência no mercado de compressores através de seus fundadores e atende de
+          Porto Alegre a indústria e a construção com venda, locação, peças originais e assistência
+          técnica.
         </p>
       </div>
     </section>
@@ -153,18 +156,19 @@ const breadcrumbSchema = {
           </div>
           <div class="entity-block">
             <span class="eyebrow">Nossa história</span>
-            <h2>Quatro décadas ao lado da <span class="hl">indústria gaúcha</span></h2>
+            <h2>Fundada em 2017, com a bagagem de <span class="hl">40 anos no setor</span></h2>
             <p>
-              Com expertise de mais de 40 anos no setor de compressores, a ACB Sul construiu
-              sua trajetória sobre três fundamentos: a excelência no relacionamento humano, a
-              transparência em cada transação e o uso absoluto da ética — o caminho que faz a
-              satisfação do cliente convergir, de forma justa, com o sucesso da empresa.
+              A ACB Sul Compressores foi fundada em 2017 e reúne mais de 40 anos de experiência no
+              mercado de compressores e na assistência técnica de equipamentos Atlas Copco através de
+              seus fundadores. A empresa nasce sobre três fundamentos: a excelência no relacionamento
+              humano, a transparência em cada transação e o uso absoluto da ética — o caminho que faz
+              a satisfação do cliente convergir, de forma justa, com o sucesso da empresa.
             </p>
             <p style="margin-top:14px">
-              Ao longo dessa trajetória, a empresa se consolidou como o elo entre a tecnologia da
-              maior fabricante mundial de compressores e as operações que não podem parar no Rio
-              Grande do Sul e em Santa Catarina — atuando em máquinas pneumáticas, soluções de
-              energia portátil e equipamentos para construção civil e indústria.
+              Com essa bagagem, a empresa se consolidou como o elo entre a tecnologia da maior
+              fabricante mundial de compressores e as operações que não podem parar no Rio Grande do
+              Sul e em Santa Catarina — atuando em máquinas pneumáticas, soluções de energia portátil
+              e equipamentos para construção civil e indústria.
             </p>
           </div>
         </div>
@@ -190,8 +194,11 @@ const breadcrumbSchema = {
             <h2>Oficina própria e assistência <span class="hl">em todo o RS e SC</span></h2>
             <p>
               A estrutura da ACB Sul em Porto Alegre conta com oficina equipada para manutenção
-              preventiva e corretiva de compressores de ar comprimido e estoque com toda a linha de
-              peças de reposição Atlas Copco — com condições especiais de entrega e pagamento.
+              preventiva e corretiva de compressores de ar comprimido e um estoque local com mais de
+              2.500 itens de reposição Atlas Copco a pronta entrega — com condições especiais de
+              entrega e pagamento. Mantém ainda em estoque toda a linha Atlas Copco — compressores,
+              geradores, torres de iluminação e ferramentas — em produtos novos e seminovos para
+              venda ou locação.
             </p>
             <p style="margin-top:14px">
               Técnicos altamente especializados e treinados pelo fabricante atendem em campo em
@@ -209,7 +216,7 @@ const breadcrumbSchema = {
       <div class="container">
         <div class="sec-head">
           <span class="eyebrow">Nossos diferenciais</span>
-          <h2>O que sustenta <span class="hl">40 anos de confiança</span></h2>
+          <h2>O que sustenta a <span class="hl">confiança dos clientes</span></h2>
           <p>
             Princípios simples, praticados todos os dias — da primeira conversa ao pós-venda.
           </p>

@@ -6,13 +6,17 @@ import { aplicar, type Conteudo } from './aplicar-conteudo';
 const fechoGer = (nome: string) =>
   `Como distribuidora autorizada Atlas Copco no Rio Grande do Sul, a ACB Sul fornece o ${nome} para <b>venda ou locação</b>, com dimensionamento elétrico, peças originais e assistência técnica no RS e em Santa Catarina — atendimento a partir de Porto Alegre, cobrindo a região metropolitana e o interior.`;
 
-// gerador QAS: P1 + P2 específico por porte + fecho
+// gerador QAS: P1 + P2 específico por porte + fecho.
+// prime/standby: potências oficiais (apresentação ACBSul rev01 26.05.26). Quando
+// informados, substituem a linha genérica "Potência" por prime + standby.
 const qas = (
   slug: string,
   modelo: string,
   kva: string,
   aplicacao: string,
   paragrafo2: string,
+  prime?: string,
+  standby?: string,
 ): Conteudo => ({
   slug,
   pitch: `Gerador de energia diesel de <b>${kva}</b> com cabine silenciada — energia confiável para ${aplicacao}, em regime principal ou de emergência.`,
@@ -23,7 +27,12 @@ const qas = (
   ],
   especificacoes: [
     ['Modelo', modelo],
-    ['Potência', kva],
+    ...((prime && standby
+      ? [
+          ['Potência prime', prime],
+          ['Potência standby', standby],
+        ]
+      : [['Potência', kva]]) as Array<[string, string]>),
     ['Combustível', 'Diesel'],
     ['Carenagem', 'Cabine metálica silenciada'],
     ['Regime', 'Principal (prime) ou emergência (standby)'],
@@ -45,6 +54,8 @@ const conteudos: Conteudo[] = [
     '40 kVA',
     'comércios, eventos e canteiros de obra',
     'Quarenta kVA cobrem com folga um canteiro de obras em atividade plena — betoneiras, serras, iluminação e escritório de campo — ou um evento de médio porte com som, iluminação e praça de alimentação. No comércio, sustenta supermercados pequenos e clínicas durante interrupções da rede. É um dos portes mais procurados na locação justamente pela versatilidade: cabe em muitos cenários sem sobrar nem faltar capacidade.',
+    '35,9 kVA',
+    '38 kVA',
   ),
   qas(
     'qas-55',
@@ -52,6 +63,8 @@ const conteudos: Conteudo[] = [
     '55 kVA',
     'obras, eventos e backup comercial',
     'Com 55 kVA, o gerador acompanha obras em ritmo de produção — gruas leves, centrais de concreto compactas, múltiplos pontos de força — e estruturas de evento com demanda simultânea de som, LED e climatização. Como backup, protege estabelecimentos comerciais de médio porte contra perdas em horário de pico. O controlador da linha QAS permite partida automática na falta de rede, assumindo a carga sem intervenção do operador.',
+    '50 kVA',
+    '55 kVA',
   ),
   qas(
     'qas-70',
@@ -59,6 +72,8 @@ const conteudos: Conteudo[] = [
     '70 kVA',
     'indústrias leves, obras e eventos de porte',
     'Setenta kVA atendem a indústria leve em horário de ponta (evitando a tarifa mais cara), o canteiro com equipamentos elétricos de maior porte e eventos com infraestrutura completa. A cabine silenciada da linha QAS mantém o nível de ruído compatível com áreas urbanas e ambientes de público, e o chassi com olhais e bolsões de empilhadeira agiliza a movimentação entre contratos — característica que locadoras valorizam no giro da frota.',
+    '62 kVA',
+    '68 kVA',
   ),
   qas(
     'qas-85',
@@ -66,6 +81,8 @@ const conteudos: Conteudo[] = [
     '86 kVA',
     'indústrias, obras e backup de médio porte',
     'O porte de 86 kVA é o ponto de equilíbrio entre mobilidade e capacidade: alimenta linhas de produção leves, sistemas de bombeamento, câmaras frias e canteiros com central de concreto. Em backup, cobre prédios comerciais e unidades de saúde de médio porte. Com partida automática configurável e instrumentação completa no painel, integra-se a sistemas de transferência (ATS) para assumir a carga em segundos na queda da rede.',
+    '68,5 kVA',
+    '79,9 kVA',
   ),
   qas(
     'qas-105',
@@ -73,6 +90,8 @@ const conteudos: Conteudo[] = [
     '102 kVA',
     'indústrias e operações que não podem parar',
     'Acima dos 100 kVA, o gerador entra no terreno das operações críticas: frigoríficos, laticínios e agroindústrias que não podem perder a cadeia de frio, condomínios e hospitais regionais, obras com equipamentos pesados de força. O QAS 105 entrega essa potência mantendo a mobilidade da linha — cabine compacta, transporte simples — e a robustez de motor industrial dimensionado para longas jornadas em regime prime.',
+    '92,5 kVA',
+    '101,8 kVA',
   ),
   qas(
     'qas-130',
@@ -80,6 +99,8 @@ const conteudos: Conteudo[] = [
     '130 kVA',
     'indústrias, agroindústria e infraestrutura',
     'Cento e trinta kVA sustentam plantas industriais de médio porte, sistemas de irrigação e secadores na agroindústria, e infraestrutura crítica de saneamento e telecomunicações. Na locação, é um porte coringa para paradas programadas de manutenção, quando a fábrica precisa manter setores essenciais energizados. O conjunto silenciado e o tanque de combustível de longa autonomia reduzem as intervenções durante turnos extensos.',
+    '113,5 kVA',
+    '125,5 kVA',
   ),
   qas(
     'qas-140',
@@ -101,6 +122,8 @@ const conteudos: Conteudo[] = [
     '180 kVA',
     'indústrias e operações de média-alta demanda',
     'Cento e oitenta kVA é potência para operações de média-alta demanda: fábricas em expansão, estações de bombeamento de saneamento, mineração de pequeno porte e grandes eventos. O QAS 180 trabalha tanto como fonte principal em locais sem rede quanto como retaguarda automática integrada a ATS. Manutenção acessível e telemetria opcional ajudam locadoras e indústrias a manter a disponibilidade do ativo sob controle.',
+    '155 kVA',
+    '165 kVA',
   ),
   qas(
     'qas-210',
@@ -115,6 +138,8 @@ const conteudos: Conteudo[] = [
     '225 kVA',
     'backup industrial e grandes operações',
     'Com 225 kVA, o QAS 225 cobre o topo da demanda de médio-grande porte: indústrias com processos contínuos, complexos comerciais, estações de tratamento e eventos de grande estrutura. A capacidade extra sobre o QAS 210 dá margem de segurança para partidas de motores grandes — bombas, compressores e sistemas de climatização — sem afundamento de tensão. Construção industrial, autonomia estendida e manutenção planejável completam o perfil.',
+    '201,1 kVA',
+    '221,3 kVA',
   ),
   qas(
     'qas-360',
@@ -122,6 +147,8 @@ const conteudos: Conteudo[] = [
     '365 kVA',
     'grandes indústrias e infraestrutura pesada',
     'Trezentos e sessenta e cinco kVA colocam o QAS 360 no circuito das grandes cargas: plantas industriais completas, mineração, obras de infraestrutura pesada e backup de instalações onde a interrupção é inaceitável. Suporta operação prime contínua em locais sem rede e parte automaticamente em standby integrado a sistemas de transferência. O conjunto mantém a filosofia QAS: silenciado, móvel e pronto para alternar entre contratos.',
+    '321 kVA',
+    '361,5 kVA',
   ),
   qas(
     'qas-550',
@@ -129,6 +156,8 @@ const conteudos: Conteudo[] = [
     '550 kVA',
     'alta potência para indústria e grandes projetos',
     'O QAS 550 é o porte de alta potência da linha: 550 kVA para alimentar fábricas inteiras, grandes eventos nacionais, obras de infraestrutura de grande escala e operações de mineração. Em paradas programadas de subestações, assume setores completos da planta. A engenharia da linha QAS em potências altas mantém a praticidade móvel — transporte rodoviário padrão e instalação rápida — algo raro nessa faixa de potência.',
+    '500 kVA',
+    '530 kVA',
   ),
   {
     slug: 'qac-1100',
@@ -178,6 +207,8 @@ const conteudos: Conteudo[] = [
     especificacoes: [
       ['Modelo', 'HiLight V5⁺'],
       ['Tecnologia', 'Refletores LED'],
+      ['Cobertura', 'até 5.000 m²'],
+      ['Autonomia', 'até 244 h'],
       ['Formato', 'Torre móvel rebocável com mastro recolhível'],
       ['Vantagens', 'Baixo consumo · luz uniforme · partida instantânea'],
       ['Aplicações típicas', 'Obras noturnas · eventos · mineração · logística'],

@@ -17,3 +17,9 @@ npm-debug.log*
 .DS_Store
 # arquivos de trabalho do PRD (não versionar o zip de origem)
 ACBSul - Site.zip
+# uploads de origem (PDFs/material bruto usado para preencher o catálogo)
+_uploads/
+# scripts de rascunho/debug descartáveis
+scripts/_*.mjs
+# rascunhos da ferramenta de design impeccable
+.impeccable/critique/
