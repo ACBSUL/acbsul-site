@@ -4,7 +4,9 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../data/empresa';
 
-export const prerender = true;
+// SSR (não estática): o rodapé le os dados de contato do banco a cada acesso,
+// para que mudancas no /admin apareçam na hora — sem deploy.
+export const prerender = false;
 
 // Página 404 personalizada (CLAUDE.md §10 — UX e roteamento).
 // noindex: páginas de erro não devem ser indexadas. Mantém o EntityBlock no rodapé

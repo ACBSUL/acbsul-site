@@ -5,7 +5,9 @@ import SiteFooter from '../components/SiteFooter.astro';
 import { empresa, entityBlockTexto } from '../data/empresa';
 import { carregarConfig } from '../lib/config';
 
-export const prerender = true;
+// SSR (não estática): le os dados de contato do banco a cada acesso, para que
+// mudancas no /admin apareçam na hora — sem deploy.
+export const prerender = false;
 
 const cfg = await carregarConfig();
 
