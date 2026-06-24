@@ -32,9 +32,6 @@ const ativo = (p: string) =>
             <span class="tag-admin">Admin</span>
           </a>
           <nav aria-label="Seções do painel">
-            <a href="/admin" class={ativo('/admin')} aria-current={ativo('/admin') ? 'page' : undefined}>
-              Início
-            </a>
             <a
               href="/admin/leads"
               class={ativo('/admin/leads')}
@@ -581,35 +578,4 @@ const ativo = (p: string) =>
     font-size: 0.82rem;
     font-family: inherit;
   }
-
-  /* dashboard: pendências */
-  .pendencias { list-style: none; padding: 0; display: grid; gap: 0.6rem; }
-  .pendencias a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    padding: 0.75rem 1rem;
-    transition: border-color var(--t), background var(--t);
-  }
-  .pendencias a:hover { border-color: var(--accent); background: var(--surface-2); }
-  .pendencias .num {
-    flex: none;
-    min-width: 2.1rem;
-    height: 2.1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    font-weight: 800;
-  }
-  .pendencias .num.zero { background: var(--ok-bg); color: var(--ok-ink); }
-  .pendencias .texto b { display: block; font-size: 0.95rem; }
-  .pendencias .texto span { color: var(--ink-2); font-size: 0.84rem; }
 </style>

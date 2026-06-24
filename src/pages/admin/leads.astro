@@ -1,15 +1,28 @@
 ---
-// Admin → Leads: solicitações recebidas pelo formulário "Solicitar mais
-// informações" das páginas de produto. Permite marcar como atendido e excluir.
+// Admin → Leads: solicitações recebidas pelos formulários do site.
+// Visão principal: Kanban (Contato Aberto / Respondido / Encaminhado para CRM),
+// com arrastar-e-soltar para mover entre etapas e botão "Marcar atendido" por card.
+// Visão secundária: lista (tabela) com seleção em massa.
 import { desc, eq, inArray } from 'drizzle-orm';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { db, tabelas } from '../../db';
 
 export const prerender = false;
 
+const ETAPAS = ['aberto', 'respondido', 'crm'] as const;
+type Etapa = (typeof ETAPAS)[number];
+const COLUNAS: { id: Etapa; nome: string }[] = [
+  { id: 'aberto', nome: 'Contato Aberto' },
+  { id: 'respondido', nome: 'Respondido' },
+  { id: 'crm', nome: 'Encaminhado para CRM' },
+];
+
 if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
   const acao = String(f.get('_acao') ?? '');
+  const vista = String(f.get('vista') ?? '') === 'lista' ? '?vista=lista' : '';
+  const ehAjax = String(f.get('_ajax') ?? '') === '1';
+  const fim = () => (ehAjax ? new Response(null, { status: 204 }) : Astro.redirect('/admin/leads' + vista));
 
   if (acao === 'excluir-selecionados') {
     const ids = f
@@ -19,7 +32,7 @@ if (Astro.request.method === 'POST') {
     if (ids.length) {
       await db.delete(tabelas.leads).where(inArray(tabelas.leads.id, ids));
     }
-    return Astro.redirect('/admin/leads');
+    return fim();
   }
 
   const id = Number(f.get('id'));
@@ -31,16 +44,29 @@ if (Astro.request.method === 'POST') {
         .update(tabelas.leads)
         .set({ atendido: acao === 'atender' })
         .where(eq(tabelas.leads.id, id));
+    } else if (acao === 'mover') {
+      const etapa = String(f.get('etapa') ?? '');
+      if ((ETAPAS as readonly string[]).includes(etapa)) {
+        await db.update(tabelas.leads).set({ etapa }).where(eq(tabelas.leads.id, id));
+      }
     }
   }
-  return Astro.redirect('/admin/leads');
+  return fim();
 }
+
+const vistaParam = Astro.url.searchParams.get('vista');
+const vista = vistaParam === 'lista' ? 'lista' : 'kanban';
 
 const linhas = await db.select().from(tabelas.leads).orderBy(desc(tabelas.leads.criadoEm));
 const categorias = await db.select().from(tabelas.categorias);
 const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nome]));
 
 const novos = linhas.filter((l) => !l.atendido).length;
+
+// agrupa por etapa (etapa desconhecida cai em 'aberto')
+const normEtapa = (e: string | null): Etapa =>
+  (ETAPAS as readonly string[]).includes(e ?? '') ? (e as Etapa) : 'aberto';
+const porEtapa = (etapa: Etapa) => linhas.filter((l) => normEtapa(l.etapa) === etapa);
 
 const fmtData = (d: Date) =>
   new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(d));
@@ -51,14 +77,26 @@ const waLead = (tel: string) => {
   if (n && !n.startsWith('55')) n = '55' + n;
   return `https://wa.me/${n}`;
 };
+
+const campoVista = vista === 'lista' ? 'lista' : '';
 ---
 
 <AdminLayout titulo="Leads">
-  <div class="acoes">
-    <h1>Leads</h1>
-    <p class="sub">
-      Solicitações recebidas pelo site. {novos > 0 ? `${novos} aguardando atendimento.` : 'Tudo atendido.'}
-    </p>
+  <div class="acoes cab">
+    <div>
+      <h1>Leads</h1>
+      <p class="sub">
+        Solicitações recebidas pelo site. {novos > 0 ? `${novos} aguardando atendimento.` : 'Tudo atendido.'}
+      </p>
+    </div>
+    <div class="vista-troca" role="tablist" aria-label="Modo de visualização">
+      <a href="/admin/leads" class={`vt ${vista === 'kanban' ? 'on' : ''}`} role="tab" aria-selected={vista === 'kanban'}>
+        Quadro
+      </a>
+      <a href="/admin/leads?vista=lista" class={`vt ${vista === 'lista' ? 'on' : ''}`} role="tab" aria-selected={vista === 'lista'}>
+        Lista
+      </a>
+    </div>
   </div>
 
   {
@@ -67,12 +105,123 @@ const waLead = (tel: string) => {
         <p class="vazio">
           <b>Nenhum lead ainda.</b>
           <br />
-          Quando alguém enviar o formulário de um produto, aparece aqui.
+          Quando alguém enviar um formulário do site, aparece aqui.
         </p>
+      </div>
+    ) : vista === 'kanban' ? (
+      <div class="kanban" data-kanban>
+        {COLUNAS.map((col) => {
+          const cards = porEtapa(col.id);
+          return (
+            <section class="coluna" data-coluna={col.id} aria-label={col.nome}>
+              <header class="coluna-cab">
+                <span class={`ponto ${col.id}`} />
+                <h2>{col.nome}</h2>
+                <span class="qtd" data-qtd>{cards.length}</span>
+              </header>
+              <div class="coluna-corpo" data-drop>
+                {cards.map((l) => {
+                  const idx = COLUNAS.findIndex((c) => c.id === col.id);
+                  const anterior = COLUNAS[idx - 1]?.id;
+                  const proxima = COLUNAS[idx + 1]?.id;
+                  return (
+                    <article
+                      class={`card ${l.atendido ? 'atendido' : ''}`}
+                      draggable="true"
+                      data-card
+                      data-id={l.id}
+                      data-etapa={col.id}
+                    >
+                      <div class="card-topo">
+                        {l.origem === 'contato-direto' ? (
+                          <span class="badge dir">Contato direto</span>
+                        ) : (
+                          <span class="badge prod">Produto</span>
+                        )}
+                        {l.atendido && <span class="badge ok">Atendido</span>}
+                        <span class="quando">{fmtData(l.criadoEm)}</span>
+                      </div>
+
+                      <b class="card-nome">{l.nome}</b>
+
+                      {l.origem !== 'contato-direto' && (l.produto || l.categoriaSlug) && (
+                        <p class="card-prod">
+                          {l.produto ?? '—'}
+                          {l.categoriaSlug && (
+                            <span class="secundario"> · {nomeCategoria.get(l.categoriaSlug) ?? l.categoriaSlug}</span>
+                          )}
+                        </p>
+                      )}
+
+                      {l.interesse && <p class="card-interesse">{l.interesse}</p>}
+
+                      <div class="card-contato">
+                        <a class="link-contato" href={waLead(l.telefone)} target="_blank" rel="noopener">
+                          {l.telefone}
+                        </a>
+                        <a class="link-contato secundario" href={`mailto:${l.email}`}>{l.email}</a>
+                      </div>
+
+                      <div class="card-acoes">
+                        <form method="POST" class="f-atender">
+                          <input type="hidden" name="id" value={l.id} />
+                          <input type="hidden" name="_acao" value={l.atendido ? 'reabrir' : 'atender'} />
+                          <button class="botao mini cinza" type="submit">
+                            {l.atendido ? 'Reabrir' : 'Marcar atendido'}
+                          </button>
+                        </form>
+
+                        <div class="mover">
+                          <form method="POST" class="f-mover">
+                            <input type="hidden" name="id" value={l.id} />
+                            <input type="hidden" name="_acao" value="mover" />
+                            <input type="hidden" name="etapa" value={anterior ?? ''} />
+                            <button
+                              class="botao-icone"
+                              type="submit"
+                              disabled={!anterior}
+                              title="Mover para a coluna anterior"
+                              aria-label="Mover para a coluna anterior"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                            </button>
+                          </form>
+                          <form method="POST" class="f-mover">
+                            <input type="hidden" name="id" value={l.id} />
+                            <input type="hidden" name="_acao" value="mover" />
+                            <input type="hidden" name="etapa" value={proxima ?? ''} />
+                            <button
+                              class="botao-icone"
+                              type="submit"
+                              disabled={!proxima}
+                              title="Mover para a próxima coluna"
+                              aria-label="Mover para a próxima coluna"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+                            </button>
+                          </form>
+                          <form method="POST" class="f-excluir" onsubmit="return confirm('Excluir este lead? Esta ação não pode ser desfeita.')">
+                            <input type="hidden" name="id" value={l.id} />
+                            <input type="hidden" name="_acao" value="excluir" />
+                            <button class="botao-icone perigo" type="submit" title="Excluir lead" aria-label={`Excluir lead de ${l.nome}`}>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+                <p class="coluna-vazia" data-vazia hidden={cards.length > 0}>Arraste cards para cá.</p>
+              </div>
+            </section>
+          );
+        })}
       </div>
     ) : (
       <>
         <form method="POST" id="leads-bulk" class="barra-massa" onsubmit="return confirm('Excluir os leads selecionados? Esta ação não pode ser desfeita.')">
+          <input type="hidden" name="vista" value="lista" />
           <span class="contagem" data-contagem>Nenhum lead selecionado</span>
           <button class="botao perigo mini" type="submit" name="_acao" value="excluir-selecionados" data-excluir disabled>
             Excluir selecionados
@@ -90,6 +239,7 @@ const waLead = (tel: string) => {
                 <th scope="col">Origem</th>
                 <th scope="col">Contato</th>
                 <th scope="col">Interesse</th>
+                <th scope="col">Etapa</th>
                 <th scope="col">Status</th>
                 <th scope="col"><span class="sr-only">Ações</span></th>
               </tr>
@@ -136,6 +286,9 @@ const waLead = (tel: string) => {
                 </td>
                 <td>{l.interesse ?? '—'}</td>
                 <td>
+                  <span class="badge etapa">{COLUNAS.find((c) => c.id === normEtapa(l.etapa))?.nome}</span>
+                </td>
+                <td>
                   {l.atendido ? (
                     <span class="badge ok">Atendido</span>
                   ) : (
@@ -145,6 +298,7 @@ const waLead = (tel: string) => {
                 <td>
                   <div class="acoes-linha">
                     <form method="POST">
+                      <input type="hidden" name="vista" value="lista" />
                       <input type="hidden" name="id" value={l.id} />
                       <input type="hidden" name="_acao" value={l.atendido ? 'reabrir' : 'atender'} />
                       <button class="botao mini cinza" type="submit">
@@ -152,6 +306,7 @@ const waLead = (tel: string) => {
                       </button>
                     </form>
                     <form method="POST" onsubmit="return confirm('Excluir este lead? Esta ação não pode ser desfeita.')">
+                      <input type="hidden" name="vista" value="lista" />
                       <input type="hidden" name="id" value={l.id} />
                       <input type="hidden" name="_acao" value="excluir" />
                       <button class="botao-icone perigo" type="submit" title="Excluir lead" aria-label={`Excluir lead de ${l.nome}`}>
@@ -178,32 +333,119 @@ const waLead = (tel: string) => {
 
 <script is:inline>
   (function () {
+    // ---- Seleção em massa (visão lista) ----
     var form = document.getElementById('leads-bulk');
-    if (!form) return;
-    var marcaTodos = document.querySelector('[data-marca-todos]');
-    var checks = Array.prototype.slice.call(document.querySelectorAll('[data-check]'));
-    var botao = form.querySelector('[data-excluir]');
-    var contagem = form.querySelector('[data-contagem]');
+    if (form) {
+      var marcaTodos = document.querySelector('[data-marca-todos]');
+      var checks = Array.prototype.slice.call(document.querySelectorAll('[data-check]'));
+      var botao = form.querySelector('[data-excluir]');
+      var contagem = form.querySelector('[data-contagem]');
 
-    function atualizar() {
-      var n = checks.filter(function (c) { return c.checked; }).length;
-      botao.disabled = n === 0;
-      contagem.textContent =
-        n === 0 ? 'Nenhum lead selecionado' : n + (n === 1 ? ' lead selecionado' : ' leads selecionados');
+      var atualizar = function () {
+        var n = checks.filter(function (c) { return c.checked; }).length;
+        botao.disabled = n === 0;
+        contagem.textContent =
+          n === 0 ? 'Nenhum lead selecionado' : n + (n === 1 ? ' lead selecionado' : ' leads selecionados');
+        if (marcaTodos) {
+          marcaTodos.checked = n > 0 && n === checks.length;
+          marcaTodos.indeterminate = n > 0 && n < checks.length;
+        }
+      };
+
       if (marcaTodos) {
-        marcaTodos.checked = n > 0 && n === checks.length;
-        marcaTodos.indeterminate = n > 0 && n < checks.length;
+        marcaTodos.addEventListener('change', function () {
+          checks.forEach(function (c) { c.checked = marcaTodos.checked; });
+          atualizar();
+        });
       }
+      checks.forEach(function (c) { c.addEventListener('change', atualizar); });
+      atualizar();
     }
 
-    if (marcaTodos) {
-      marcaTodos.addEventListener('change', function () {
-        checks.forEach(function (c) { c.checked = marcaTodos.checked; });
-        atualizar();
+    // ---- Arrastar e soltar (visão Kanban) ----
+    var quadro = document.querySelector('[data-kanban]');
+    if (!quadro) return;
+
+    var arrastando = null;
+
+    function recontar() {
+      quadro.querySelectorAll('[data-coluna]').forEach(function (col) {
+        var n = col.querySelectorAll('[data-card]').length;
+        var qtd = col.querySelector('[data-qtd]');
+        if (qtd) qtd.textContent = String(n);
+        var vazia = col.querySelector('[data-vazia]');
+        if (vazia) vazia.hidden = n > 0;
       });
     }
-    checks.forEach(function (c) { c.addEventListener('change', atualizar); });
-    atualizar();
+
+    function persistir(id, etapa) {
+      var body = new URLSearchParams();
+      body.set('_acao', 'mover');
+      body.set('_ajax', '1');
+      body.set('id', id);
+      body.set('etapa', etapa);
+      fetch('/admin/leads', { method: 'POST', body: body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+        .catch(function () { location.reload(); });
+    }
+
+    quadro.querySelectorAll('[data-card]').forEach(function (card) {
+      card.addEventListener('dragstart', function (e) {
+        arrastando = card;
+        card.classList.add('arrastando');
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', function () {
+        card.classList.remove('arrastando');
+        arrastando = null;
+        quadro.querySelectorAll('[data-drop]').forEach(function (d) { d.classList.remove('sobre'); });
+      });
+    });
+
+    quadro.querySelectorAll('[data-coluna]').forEach(function (col) {
+      var drop = col.querySelector('[data-drop]');
+      var etapa = col.getAttribute('data-coluna');
+      if (!drop) return;
+
+      drop.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        drop.classList.add('sobre');
+      });
+      drop.addEventListener('dragleave', function () { drop.classList.remove('sobre'); });
+      drop.addEventListener('drop', function (e) {
+        e.preventDefault();
+        drop.classList.remove('sobre');
+        if (!arrastando) return;
+        var origem = arrastando.getAttribute('data-etapa');
+        if (origem === etapa) return;
+
+        var vazia = drop.querySelector('[data-vazia]');
+        if (vazia) drop.insertBefore(arrastando, vazia);
+        else drop.appendChild(arrastando);
+
+        arrastando.setAttribute('data-etapa', etapa);
+        atualizarSetas(arrastando, etapa);
+        recontar();
+        persistir(arrastando.getAttribute('data-id'), etapa);
+      });
+    });
+
+    var ORDEM = ['aberto', 'respondido', 'crm'];
+    function atualizarSetas(card, etapa) {
+      var i = ORDEM.indexOf(etapa);
+      var forms = card.querySelectorAll('.f-mover');
+      // form[0] = anterior, form[1] = próxima
+      if (forms[0]) {
+        var ant = ORDEM[i - 1] || '';
+        forms[0].querySelector('input[name="etapa"]').value = ant;
+        forms[0].querySelector('button').disabled = !ant;
+      }
+      if (forms[1]) {
+        var prox = ORDEM[i + 1] || '';
+        forms[1].querySelector('input[name="etapa"]').value = prox;
+        forms[1].querySelector('button').disabled = !prox;
+      }
+    }
   })();
 </script>
 
@@ -216,39 +458,102 @@ const waLead = (tel: string) => {
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-  .barra-massa {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    margin-bottom: 0.9rem;
-    min-height: 38px;
+  .cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+  /* alternador de visão */
+  .vista-troca { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r); overflow: hidden; flex: none; }
+  .vista-troca .vt {
+    padding: 0.42rem 0.95rem; font-size: 0.86rem; font-weight: 600; color: var(--ink-2);
+    text-decoration: none; background: var(--surface); transition: background var(--t), color var(--t);
   }
+  .vista-troca .vt + .vt { border-left: 1px solid var(--line-strong); }
+  .vista-troca .vt:hover { color: var(--ink); }
+  .vista-troca .vt.on { background: var(--accent); color: #fff; }
+
+  /* Kanban */
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .kanban { grid-template-columns: 1fr; } }
+
+  .coluna {
+    background: var(--surface-2, var(--surface));
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+  }
+  .coluna-cab {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .coluna-cab h2 { font-size: 0.92rem; font-weight: 700; margin: 0; flex: 1; color: var(--ink); }
+  .coluna-cab .qtd {
+    font-size: 0.78rem; font-weight: 700; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    min-width: 22px; text-align: center; padding: 0.05rem 0.4rem;
+  }
+  .ponto { width: 9px; height: 9px; border-radius: 999px; flex: none; }
+  .ponto.aberto { background: var(--dest-ink, #d97706); }
+  .ponto.respondido { background: var(--info-ink, #2563eb); }
+  .ponto.crm { background: var(--ok-ink, #16a34a); }
+
+  .coluna-corpo {
+    padding: 0.7rem; display: flex; flex-direction: column; gap: 0.7rem;
+    flex: 1; transition: background var(--t);
+  }
+  .coluna-corpo.sobre { background: var(--info-bg); outline: 2px dashed var(--accent); outline-offset: -6px; border-radius: var(--r); }
+  .coluna-vazia { color: var(--ink-2); font-size: 0.82rem; text-align: center; padding: 1.2rem 0.5rem; margin: 0; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r);
+    padding: 0.7rem 0.8rem; cursor: grab; display: flex; flex-direction: column; gap: 0.4rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card:active { cursor: grabbing; }
+  .card.arrastando { opacity: 0.5; }
+  .card.atendido { opacity: 0.66; }
+  .card-topo { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .card-topo .quando { margin-left: auto; font-size: 0.74rem; color: var(--ink-2); }
+  .card-nome { font-size: 0.96rem; color: var(--ink); }
+  .card-prod { margin: 0; font-size: 0.82rem; color: var(--ink); }
+  .card-interesse { margin: 0; font-size: 0.8rem; color: var(--ink-2); }
+  .card-contato { display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.15rem; }
+  .card-acoes { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-top: 0.3rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+  .card-acoes form { margin: 0; }
+  .mover { display: flex; gap: 0.35rem; align-items: center; }
+
+  /* tabela / lista */
+  .barra-massa { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.9rem; min-height: 38px; }
   .barra-massa .contagem { color: var(--ink-2); font-size: 0.88rem; font-weight: 600; }
   .barra-massa .botao.perigo[disabled] { opacity: 0.45; pointer-events: none; }
   .col-check { width: 38px; text-align: center; }
   .col-check input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
   .acoes-linha { display: flex; gap: 0.45rem; align-items: center; }
   .acoes-linha form { margin: 0; }
+
+  /* badges / contatos (compartilhados) */
   .badge.dir { background: var(--info-bg); color: var(--info-ink); }
-  .badge.prod { background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); margin-bottom: 0.25rem; }
+  .badge.prod { background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); }
+  .badge.etapa { background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); }
   .link-contato { color: var(--ink); text-decoration: none; font-weight: 600; }
   .link-contato:hover { color: var(--accent); text-decoration: underline; }
   .link-contato.secundario { color: var(--ink-2); font-weight: 400; font-size: 0.82rem; }
   .feito-linha { opacity: 0.62; }
+
   .botao-icone {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    flex: none;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r);
-    background: var(--surface);
-    color: var(--ink-2);
-    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex: none;
+    border: 1px solid var(--line-strong); border-radius: var(--r);
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
     transition: background var(--t), border-color var(--t), color var(--t);
   }
+  .botao-icone:disabled { opacity: 0.35; pointer-events: none; }
   .botao-icone svg { width: 17px; height: 17px; }
   .botao-icone.perigo { color: var(--erro-ink); }
   .botao-icone.perigo:hover { background: var(--erro-bg); border-color: currentColor; }

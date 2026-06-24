@@ -101,8 +101,10 @@ export const leads = pgTable('leads', {
   email: text('email').notNull(),
   /** Compra / Locação / Compra ou locação */
   interesse: text('interesse'),
-  /** controle do admin: lead já retornado? */
+  /** controle do admin: lead já retornado? (selo "Atendido", independente da etapa) */
   atendido: boolean('atendido').notNull().default(false),
+  /** etapa no funil/Kanban: 'aberto' | 'respondido' | 'crm' */
+  etapa: text('etapa').notNull().default('aberto'),
   criadoEm: timestamp('criado_em').notNull().defaultNow(),
 });
 
