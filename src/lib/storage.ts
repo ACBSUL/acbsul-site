@@ -39,17 +39,35 @@ export async function enviarImagemProduto(
   nomeBase: string,
   dados: ArrayBuffer | Buffer,
 ): Promise<string> {
+  return enviarImagem(nomeBase, dados, LARGURA_MAXIMA);
+}
+
+/** Imagem do popup/banner — maior que a de produto (aparece grande na tela). */
+export const LARGURA_POPUP = 900; // px
+
+export async function enviarImagemPopup(
+  nomeBase: string,
+  dados: ArrayBuffer | Buffer,
+): Promise<string> {
+  return enviarImagem(nomeBase, dados, LARGURA_POPUP);
+}
+
+async function enviarImagem(
+  nomeBase: string,
+  dados: ArrayBuffer | Buffer,
+  largura: number,
+): Promise<string> {
   const base = env('SUPABASE_URL');
   const chave = env('SUPABASE_SERVICE_ROLE_KEY');
   if (!base || !chave) {
     throw new Error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY não configurados');
   }
 
-  // Tratamento: orienta pelo EXIF, no máx. 530px de largura (sem ampliar) → WebP 85%.
+  // Tratamento: orienta pelo EXIF, limita a largura (sem ampliar) → WebP 85%.
   const entrada = Buffer.isBuffer(dados) ? dados : Buffer.from(dados);
   const webp = await sharp(entrada)
     .rotate()
-    .resize({ width: LARGURA_MAXIMA, withoutEnlargement: true })
+    .resize({ width: largura, withoutEnlargement: true })
     .webp({ quality: QUALIDADE_WEBP })
     .toBuffer();
 

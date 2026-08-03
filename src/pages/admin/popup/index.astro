@@ -1,0 +1,151 @@
+---
+// Admin → Popup: lista dos banners de popup do site, com ativar/desativar,
+// editar e excluir. Só um popup aparece por página no site: entre os ATIVOS,
+// vale o mais recentemente atualizado cujo alcance casa com a URL.
+import { desc, eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import { PAGINAS_DISPONIVEIS } from '../../../lib/popups';
+
+export const prerender = false;
+
+const t = tabelas.popups;
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const acao = String(f.get('_acao') ?? '');
+  const id = Number(f.get('id') ?? 0);
+
+  if (acao === 'novo') {
+    const [criado] = await db
+      .insert(t)
+      .values({
+        nomeInterno: 'Novo popup',
+        titulo: 'Compressor à diesel disponível para locação',
+        rotulo: 'Equipamento para locação',
+      })
+      .returning({ id: t.id });
+    return Astro.redirect(`/admin/popup/${criado.id}`);
+  }
+
+  if (acao === 'alternar' && id) {
+    const [atual] = await db.select({ ativo: t.ativo }).from(t).where(eq(t.id, id));
+    if (atual) {
+      await db
+        .update(t)
+        .set({ ativo: !atual.ativo, atualizadoEm: new Date() })
+        .where(eq(t.id, id));
+    }
+    return Astro.redirect('/admin/popup?ok=' + (atual?.ativo ? 'off' : 'on'));
+  }
+
+  if (acao === 'excluir' && id) {
+    await db.delete(t).where(eq(t.id, id));
+    return Astro.redirect('/admin/popup?ok=excluido');
+  }
+}
+
+const lista = await db.select().from(t).orderBy(desc(t.atualizadoEm));
+
+const ok = Astro.url.searchParams.get('ok');
+const avisos: Record<string, string> = {
+  on: 'Popup ativado. Já está aparecendo no site.',
+  off: 'Popup desativado. Não aparece mais no site.',
+  excluido: 'Popup excluído.',
+  '1': 'Popup salvo.',
+};
+
+const rotuloPagina = (v: string) =>
+  PAGINAS_DISPONIVEIS.find((p) => p.valor === v)?.rotulo ?? v;
+
+function comoAparece(p: (typeof lista)[number]) {
+  if (p.gatilho === 'imediato') return 'Assim que a página abre';
+  if (p.gatilho === 'rolagem') return `Ao rolar ${p.rolagemPercentual}% da página`;
+  return `${p.atrasoSegundos}s depois de abrir a página`;
+}
+---
+
+<AdminLayout titulo="Popup">
+  <div class="acoes">
+    <h1>Popup do site</h1>
+    <p class="sub">
+      Banner que abre por cima do site (ex.: divulgação de locação de equipamentos).
+      Vários podem ficar cadastrados, mas por página aparece só um — o ativo mais recente
+      que se aplica àquela página.
+    </p>
+    <form method="POST">
+      <input type="hidden" name="_acao" value="novo" />
+      <button class="botao" type="submit">+ Novo popup</button>
+    </form>
+  </div>
+
+  {ok && avisos[ok] && <p class="flash" role="status">{avisos[ok]}</p>}
+
+  {lista.length === 0 ? (
+    <div class="tabela-rolagem">
+      <p class="vazio">
+        Nenhum popup cadastrado ainda. Clique em <b>+ Novo popup</b> para criar o primeiro.
+      </p>
+    </div>
+  ) : (
+    <div class="tabela-rolagem">
+      <table class="lista">
+        <thead>
+          <tr>
+            <th>Imagem</th>
+            <th>Popup</th>
+            <th>Quando aparece</th>
+            <th>Onde aparece</th>
+            <th>Situação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {lista.map((p) => (
+            <tr>
+              <td>
+                {p.imagemSrc ? (
+                  <img class="mini-foto" src={p.imagemSrc} alt="" />
+                ) : (
+                  <span class="secundario">—</span>
+                )}
+              </td>
+              <td>
+                <a href={`/admin/popup/${p.id}`}><b>{p.nomeInterno}</b></a>
+                <div class="secundario">{p.titulo}</div>
+              </td>
+              <td class="secundario">{comoAparece(p)}</td>
+              <td class="secundario">
+                {p.alcance === 'todo-site'
+                  ? 'Todo o site'
+                  : p.paginas.length
+                    ? p.paginas.map(rotuloPagina).join(', ')
+                    : 'Nenhuma página escolhida'}
+              </td>
+              <td>
+                {p.ativo ? <span class="badge ok">Ativo</span> : <span class="badge off">Desativado</span>}
+              </td>
+              <td>
+                <div class="linha-acoes">
+                  <a class="botao cinza mini" href={`/admin/popup/${p.id}`}>Editar</a>
+                  <form method="POST">
+                    <input type="hidden" name="_acao" value="alternar" />
+                    <input type="hidden" name="id" value={p.id} />
+                    <button class="botao cinza mini" type="submit">
+                      {p.ativo ? 'Desativar' : 'Ativar'}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</AdminLayout>
+
+<style is:global>
+  .linha-acoes { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+  .linha-acoes form { display: contents; }
+</style>

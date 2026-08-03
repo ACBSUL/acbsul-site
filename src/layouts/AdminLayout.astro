@@ -54,6 +54,13 @@ const ativo = (p: string) =>
               Produtos
             </a>
             <a
+              href="/admin/popup"
+              class={ativo('/admin/popup')}
+              aria-current={ativo('/admin/popup') ? 'page' : undefined}
+            >
+              Popup
+            </a>
+            <a
               href="/admin/configuracoes"
               class={ativo('/admin/configuracoes')}
               aria-current={ativo('/admin/configuracoes') ? 'page' : undefined}

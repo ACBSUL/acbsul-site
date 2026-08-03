@@ -1,7 +1,9 @@
 ---
 import '../styles/site-v2.css';
 import LocalBusinessSchema from '../components/LocalBusinessSchema.astro';
+import PopupBanner from '../components/PopupBanner.astro';
 import { carregarConfig } from '../lib/config';
+import { carregarPopupDaPagina } from '../lib/popups';
 
 interface Props {
   title: string;
@@ -30,6 +32,11 @@ const biz = {
   waNumber: cfg.whatsapp,
   email: cfg.email,
 };
+
+// Popup/banner ativo para esta URL (null = nenhum). Gerido em /admin/popup.
+// ?popup-preview=N força a exibição de um popup específico (botão "Ver como fica").
+const previewPopup = Number(Astro.url.searchParams.get('popup-preview') ?? 0) || undefined;
+const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
 ---
 
 <!doctype html>
@@ -68,6 +75,8 @@ const biz = {
   </head>
   <body data-page={page}>
     <slot />
+
+    {popup && <PopupBanner popup={popup} preview={Boolean(previewPopup)} />}
 
     <!-- expõe dados de negócio ao script de interações -->
     <script is:inline set:html={`window.ACB_BIZ=${JSON.stringify(biz)};`} />

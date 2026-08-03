@@ -1,0 +1,384 @@
+---
+// Admin → Popup → editar. Conteúdo (imagem, título, texto, botão), regra de
+// exibição (imediato / atraso / rolagem) e alcance (todo o site ou páginas
+// escolhidas). A imagem vai para o Supabase Storage já tratada em WebP.
+import { eq } from 'drizzle-orm';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, tabelas } from '../../../db';
+import { PAGINAS_DISPONIVEIS } from '../../../lib/popups';
+import { enviarImagemPopup, validarImagem } from '../../../lib/storage';
+
+export const prerender = false;
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id)) return Astro.redirect('/admin/popup');
+
+const t = tabelas.popups;
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+  const acao = texto('_acao');
+
+  if (acao === 'excluir') {
+    await db.delete(t).where(eq(t.id, id));
+    return Astro.redirect('/admin/popup?ok=excluido');
+  }
+
+  if (acao === 'remover-imagem') {
+    await db.update(t).set({ imagemSrc: null, atualizadoEm: new Date() }).where(eq(t.id, id));
+    return Astro.redirect(`/admin/popup/${id}?ok=img`);
+  }
+
+  if (acao === 'salvar') {
+    const titulo = texto('titulo');
+    if (!titulo) {
+      erro = 'O título não pode ficar em branco.';
+    } else {
+      // imagem (opcional): só troca se o admin enviou um arquivo novo
+      let imagemSrc: string | undefined;
+      const arquivo = f.get('arquivo');
+      if (arquivo instanceof File && arquivo.size > 0) {
+        const problema = validarImagem(arquivo);
+        if (problema) {
+          erro = problema;
+        } else {
+          // sufixo de tempo no nome: força o CDN a servir a imagem nova
+          imagemSrc = await enviarImagemPopup(
+            `popup-${id}-${Date.now().toString(36)}`,
+            await arquivo.arrayBuffer(),
+          );
+        }
+      }
+
+      if (!erro) {
+        const gatilho = ['imediato', 'atraso', 'rolagem'].includes(texto('gatilho'))
+          ? texto('gatilho')
+          : 'atraso';
+        const limite = (v: string, min: number, max: number, padrao: number) => {
+          const n = Number(v);
+          return Number.isFinite(n) ? Math.min(Math.max(Math.round(n), min), max) : padrao;
+        };
+
+        await db
+          .update(t)
+          .set({
+            nomeInterno: texto('nomeInterno') || 'Popup',
+            rotulo: texto('rotulo') || null,
+            titulo,
+            tituloDestaque: texto('tituloDestaque') || null,
+            texto: texto('texto') || null,
+            imagemAlt: texto('imagemAlt') || null,
+            ...(imagemSrc ? { imagemSrc } : {}),
+            botaoTexto: texto('botaoTexto') || 'SOLICITAR ORÇAMENTO',
+            botaoLink: texto('botaoLink') || '/#contato',
+            gatilho,
+            atrasoSegundos: limite(texto('atrasoSegundos'), 0, 300, 5),
+            rolagemPercentual: limite(texto('rolagemPercentual'), 1, 100, 40),
+            alcance: texto('alcance') === 'paginas' ? 'paginas' : 'todo-site',
+            paginas: f.getAll('paginas').map(String),
+            reexibirHoras: limite(texto('reexibirHoras'), 0, 720, 24),
+            ativo: f.get('ativo') === 'on',
+            atualizadoEm: new Date(),
+          })
+          .where(eq(t.id, id));
+
+        return Astro.redirect(`/admin/popup/${id}?ok=1`);
+      }
+    }
+  }
+}
+
+const [p] = await db.select().from(t).where(eq(t.id, id));
+if (!p) return Astro.redirect('/admin/popup');
+
+const ok = Astro.url.searchParams.get('ok');
+// preview abre na página escolhida (ou na home, se o alcance for todo o site)
+const paginaPreview =
+  p.alcance === 'paginas' && p.paginas[0] ? p.paginas[0].replace(/\*$/, '') : '/';
+---
+
+<AdminLayout titulo={`Popup · ${p.nomeInterno}`}>
+  <div class="acoes">
+    <a class="voltar" href="/admin/popup">← Voltar para os popups</a>
+    <h1>{p.nomeInterno}</h1>
+    <p class="sub">
+      {p.ativo
+        ? 'Este popup está ATIVO — já aparece no site conforme as regras abaixo.'
+        : 'Este popup está DESATIVADO — não aparece no site.'}
+    </p>
+  </div>
+
+  {ok === '1' && <p class="flash" role="status">Popup salvo. O site já reflete a mudança.</p>}
+  {ok === 'img' && <p class="flash" role="status">Imagem removida.</p>}
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
+
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_acao" value="salvar" />
+
+    <div class="editor-grid">
+      <div>
+        <div class="cartao-form">
+          <h2>1. Conteúdo do banner</h2>
+          <p class="nota">É o que o visitante vê. Siga o modelo aprovado (imagem à direita, texto à esquerda).</p>
+
+          <div class="campos">
+            <label class="campo largo">
+              Nome interno (só você vê, na lista de popups)
+              <input type="text" name="nomeInterno" value={p.nomeInterno} placeholder="Locação XAMS 900" />
+            </label>
+
+            <label class="campo largo">
+              Linha de cima (pequena, em azul)
+              <input type="text" name="rotulo" value={p.rotulo ?? ''} placeholder="Equipamento para locação" />
+            </label>
+
+            <label class="campo largo">
+              Título <span class="req">*</span>
+              <input type="text" name="titulo" value={p.titulo} required placeholder="Compressor à diesel disponível para locação –" />
+              <span class="dica">Parte principal, em branco.</span>
+            </label>
+
+            <label class="campo">
+              Destaque do título (aparece em azul, no fim)
+              <input type="text" name="tituloDestaque" value={p.tituloDestaque ?? ''} placeholder="XAMS 900" />
+              <span class="dica">Deixe vazio se não quiser destaque.</span>
+            </label>
+
+            <label class="campo largo">
+              Texto
+              <textarea name="texto" placeholder="Alta performance, confiabilidade e eficiência para sua obra ou operação...">{p.texto ?? ''}</textarea>
+              <span class="dica">Linha em branco separa parágrafos.</span>
+            </label>
+
+            <label class="campo">
+              Texto do botão
+              <input type="text" name="botaoTexto" value={p.botaoTexto} placeholder="SOLICITAR ORÇAMENTO" />
+            </label>
+
+            <label class="campo">
+              Link do botão
+              <input type="text" name="botaoLink" value={p.botaoLink} placeholder="/#contato" />
+              <span class="dica">Ex.: <b>/#contato</b> (formulário da home) ou um link do WhatsApp.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>2. Imagem do equipamento</h2>
+          <p class="nota">
+            JPG, PNG, WebP ou AVIF até 5 MB. É reduzida e convertida para WebP automaticamente.
+            Imagem com fundo escuro ou recortada (PNG transparente) fica melhor.
+          </p>
+
+          <div class="popup-img-atual">
+            {p.imagemSrc ? (
+              <img src={p.imagemSrc} alt="Imagem atual do popup" />
+            ) : (
+              <span class="secundario">Nenhuma imagem enviada ainda.</span>
+            )}
+          </div>
+
+          <div class="campos">
+            <label class="campo">
+              Enviar nova imagem
+              <input type="file" name="arquivo" accept="image/*" />
+              <span class="dica">Substitui a atual ao salvar.</span>
+            </label>
+            <label class="campo">
+              Descrição da imagem (acessibilidade)
+              <input type="text" name="imagemAlt" value={p.imagemAlt ?? ''} placeholder="Compressor Atlas Copco XAMS 900" />
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>3. Quando o popup aparece</h2>
+          <p class="nota">Escolha uma das três formas.</p>
+
+          <div class="opcoes">
+            <label class="opcao">
+              <input type="radio" name="gatilho" value="imediato" checked={p.gatilho === 'imediato'} />
+              <span>
+                <b>No carregamento do site</b>
+                <small>Abre assim que a página termina de carregar.</small>
+              </span>
+            </label>
+
+            <label class="opcao">
+              <input type="radio" name="gatilho" value="atraso" checked={p.gatilho === 'atraso'} />
+              <span>
+                <b>Com atraso de tempo</b>
+                <small>
+                  Abrir depois de
+                  <input class="mini-num" type="number" name="atrasoSegundos" min="0" max="300" value={p.atrasoSegundos} />
+                  segundos.
+                </small>
+              </span>
+            </label>
+
+            <label class="opcao">
+              <input type="radio" name="gatilho" value="rolagem" checked={p.gatilho === 'rolagem'} />
+              <span>
+                <b>Por rolagem da página</b>
+                <small>
+                  Abrir quando o visitante rolar
+                  <input class="mini-num" type="number" name="rolagemPercentual" min="1" max="100" value={p.rolagemPercentual} />
+                  % da página.
+                </small>
+              </span>
+            </label>
+          </div>
+
+          <div class="campos" style="margin-top:1rem">
+            <label class="campo">
+              Reaparecer depois de quantas horas?
+              <input type="number" name="reexibirHoras" min="0" max="720" value={p.reexibirHoras} />
+              <span class="dica">Quem fechou o popup só vê de novo após esse prazo. 0 = aparece em toda visita.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="cartao-form">
+          <h2>4. Onde o popup aparece</h2>
+
+          <div class="opcoes">
+            <label class="opcao">
+              <input type="radio" name="alcance" value="todo-site" checked={p.alcance !== 'paginas'} />
+              <span>
+                <b>Em todo o site</b>
+                <small>Aparece em qualquer página.</small>
+              </span>
+            </label>
+
+            <label class="opcao">
+              <input type="radio" name="alcance" value="paginas" checked={p.alcance === 'paginas'} />
+              <span>
+                <b>Só nas páginas escolhidas</b>
+                <small>Marque abaixo quais páginas.</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="paginas-lista">
+            {PAGINAS_DISPONIVEIS.map((pag) => (
+              <label class="check">
+                <input type="checkbox" name="paginas" value={pag.valor} checked={p.paginas.includes(pag.valor)} />
+                {pag.rotulo}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside class="editor-lateral">
+        <div class="cartao-form">
+          <h2>Publicação</h2>
+          <label class="check">
+            <input type="checkbox" name="ativo" checked={p.ativo} />
+            Popup ativo no site
+          </label>
+          <p class="nota" style="margin:0.8rem 0 0">
+            Desmarcado, o popup fica guardado aqui mas não aparece para ninguém.
+          </p>
+        </div>
+
+        <div class="cartao-form">
+          <h2>Ver como fica</h2>
+          <p class="nota">Abre o site com este popup na tela, mesmo desativado. Salve antes.</p>
+          <a
+            class="botao cinza"
+            href={`${paginaPreview}?popup-preview=${p.id}`}
+            target="_blank"
+            rel="noopener"
+          >
+            Abrir preview
+          </a>
+        </div>
+
+      </aside>
+    </div>
+
+    <div class="barra-salvar">
+      <button class="botao" type="submit">Salvar popup</button>
+      <span class="lembrete">Ao salvar, o site já mostra a versão nova.</span>
+    </div>
+  </form>
+
+  <div class="zona-perigo">
+    {p.imagemSrc && (
+      <form method="POST">
+        <input type="hidden" name="_acao" value="remover-imagem" />
+        <button class="botao cinza mini" type="submit">Remover imagem</button>
+      </form>
+    )}
+    <form method="POST" onsubmit="return confirm('Excluir este popup? Não dá para desfazer.')">
+      <input type="hidden" name="_acao" value="excluir" />
+      <button class="botao perigo mini" type="submit">Excluir popup</button>
+    </form>
+    <span class="nota">Excluir apaga o popup de vez — não dá para desfazer.</span>
+  </div>
+</AdminLayout>
+
+<style>
+  .opcoes { display: grid; gap: 0.6rem; }
+  .opcao {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    cursor: pointer;
+    transition: border-color 160ms, background 160ms;
+  }
+  .opcao:hover { border-color: var(--ink-3); }
+  .opcao:has(input:checked) {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, #fff);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .opcao input[type='radio'] { width: 19px; height: 19px; margin-top: 0.15rem; accent-color: var(--accent); }
+  .opcao b { display: block; font-size: 0.95rem; }
+  .opcao small { display: block; color: var(--ink-2); font-size: 0.86rem; margin-top: 0.15rem; }
+  .mini-num {
+    width: 82px;
+    padding: 0.25rem 0.45rem;
+    margin: 0 0.15rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+
+  .paginas-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.6rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--line);
+  }
+
+  .popup-img-atual {
+    background: var(--navy);
+    border-radius: var(--r);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .popup-img-atual img { max-height: 190px; margin: 0 auto; object-fit: contain; }
+  .popup-img-atual .secundario { color: #8fa1b8; font-size: 0.88rem; }
+
+  .zona-perigo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--line);
+  }
+  .zona-perigo .nota { color: var(--ink-2); font-size: 0.86rem; margin: 0; }
+</style>

@@ -1,0 +1,295 @@
+---
+// Popup/banner do site — conteúdo vem do banco (/admin/popup) e é renderizado
+// no HTML servido; o script só decide QUANDO mostrar (imediato, atraso ou
+// rolagem) e guarda o "fechei" no navegador pelo prazo configurado.
+//
+// O título não usa <h1>/<h2> de propósito: é um <p> com id referenciado por
+// aria-labelledby, para não bagunçar a hierarquia de headings da página (§4).
+import type { Popup } from '../lib/popups';
+
+interface Props {
+  popup: Popup;
+  /** modo "ver como fica" do admin: abre na hora e ignora o "já fechei" */
+  preview?: boolean;
+}
+const { popup, preview = false } = Astro.props;
+
+const gatilho = popup.gatilho === 'imediato' || popup.gatilho === 'rolagem'
+  ? popup.gatilho
+  : 'atraso';
+const paragrafos = (popup.texto ?? '')
+  .split(/\n{2,}|\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+
+<div
+  class="popup-tela"
+  id="popup-banner"
+  hidden
+  data-popup-id={String(popup.id)}
+  data-gatilho={gatilho}
+  data-atraso={String(popup.atrasoSegundos)}
+  data-rolagem={String(popup.rolagemPercentual)}
+  data-reexibir={String(popup.reexibirHoras)}
+  data-preview={preview ? '1' : undefined}
+>
+  <div class="popup-fundo" data-fechar></div>
+
+  <div class="popup-caixa" role="dialog" aria-modal="true" aria-labelledby="popup-titulo">
+    <button class="popup-x" type="button" data-fechar aria-label="Fechar aviso">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+
+    <div class="popup-texto">
+      {popup.rotulo && <span class="popup-rotulo">{popup.rotulo}</span>}
+
+      <p class="popup-titulo" id="popup-titulo">
+        {popup.titulo}{popup.tituloDestaque && <> <span class="hl">{popup.tituloDestaque}</span></>}
+      </p>
+
+      <span class="popup-risco" aria-hidden="true"></span>
+
+      {paragrafos.map((p) => <p class="popup-p">{p}</p>)}
+
+      <a class="popup-cta" href={popup.botaoLink}>
+        <span class="popup-cta-dot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+        </span>
+        {popup.botaoTexto}
+      </a>
+    </div>
+
+    {popup.imagemSrc && (
+      <div class="popup-foto">
+        <img src={popup.imagemSrc} alt={popup.imagemAlt || popup.titulo} loading="lazy" decoding="async" />
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .popup-tela {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(14px, 4vw, 32px);
+  }
+  .popup-tela[hidden] { display: none; }
+
+  .popup-fundo {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 13, 24, 0.72);
+    backdrop-filter: blur(3px);
+    animation: popup-fade 0.25s ease both;
+  }
+
+  .popup-caixa {
+    position: relative;
+    width: min(1000px, 100%);
+    max-height: calc(100dvh - 2 * clamp(14px, 4vw, 32px));
+    overflow: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: clamp(16px, 3vw, 32px);
+    padding: clamp(22px, 3.4vw, 48px);
+    border-radius: var(--r-lg, 22px);
+    border: 1px solid rgba(120, 180, 235, 0.22);
+    background:
+      radial-gradient(120% 120% at 78% 40%, rgba(23, 90, 150, 0.55) 0%, rgba(13, 26, 46, 0) 62%),
+      linear-gradient(140deg, #0b1930 0%, #0d1a2e 55%, #102542 100%);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    animation: popup-sobe 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  .popup-x {
+    position: absolute;
+    top: clamp(12px, 1.6vw, 20px);
+    right: clamp(12px, 1.6vw, 20px);
+    z-index: 2;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.16s, border-color 0.16s;
+  }
+  .popup-x svg { width: 18px; height: 18px; }
+  .popup-x:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.45); }
+
+  .popup-texto { min-width: 0; }
+
+  .popup-rotulo {
+    display: block;
+    font-family: var(--hd, 'Sora', sans-serif);
+    font-weight: 700;
+    font-size: clamp(14px, 1.5vw, 17px);
+    color: var(--blue-lt, #2ba8df);
+    margin-bottom: 12px;
+  }
+
+  .popup-titulo {
+    margin: 0;
+    font-family: var(--hd, 'Sora', sans-serif);
+    font-weight: 800;
+    font-size: clamp(26px, 3.5vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-wrap: balance;
+  }
+  .popup-titulo .hl { color: var(--blue-lt, #2ba8df); }
+
+  .popup-risco {
+    display: block;
+    width: 108px;
+    height: 2px;
+    margin: clamp(18px, 2.4vw, 28px) 0;
+    background: rgba(120, 180, 235, 0.5);
+  }
+
+  .popup-p {
+    margin: 0 0 10px;
+    color: #c8d4e2;
+    font-size: clamp(15px, 1.5vw, 17px);
+    line-height: 1.6;
+    max-width: 46ch;
+  }
+
+  .popup-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: clamp(18px, 2.4vw, 28px);
+    padding: 15px 30px 15px 15px;
+    border-radius: 999px;
+    background: var(--accent, #e2560f);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--hd, 'Sora', sans-serif);
+    font-weight: 700;
+    font-size: clamp(13.5px, 1.3vw, 15px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 12px 30px rgba(226, 86, 15, 0.35);
+    transition: background 0.16s, box-shadow 0.16s;
+  }
+  .popup-cta:hover { background: var(--accent-600, #c4480a); box-shadow: 0 16px 38px rgba(226, 86, 15, 0.45); }
+  .popup-cta-dot {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .popup-cta-dot svg { width: 17px; height: 17px; }
+
+  .popup-foto { min-width: 0; display: flex; justify-content: center; }
+  /* width:auto de propósito: a caixa acompanha a proporção real da foto, senão
+     o object-fit deixaria sobra transparente e o arredondamento não apareceria */
+  .popup-foto img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 46dvh;
+    border-radius: 12px;
+    filter: drop-shadow(0 26px 45px rgba(0, 0, 0, 0.5));
+  }
+
+  @media (max-width: 820px) {
+    .popup-caixa { grid-template-columns: 1fr; padding-top: 62px; }
+    .popup-foto { order: -1; }
+    .popup-foto img { max-height: 30dvh; }
+    .popup-p { max-width: none; }
+  }
+
+  @keyframes popup-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popup-sobe {
+    from { opacity: 0; transform: translateY(18px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .popup-fundo, .popup-caixa { animation: none; }
+  }
+</style>
+
+<script>
+  (() => {
+    const tela = document.getElementById('popup-banner');
+    if (!tela) return;
+
+    const d = tela.dataset;
+    const chave = `acb-popup-${d.popupId}`;
+    const ehPreview = d.preview === '1';
+    const horas = ehPreview ? 0 : Number(d.reexibir ?? 24);
+
+    // já fechou há pouco? não mostra de novo
+    if (horas > 0) {
+      const antes = Number(localStorage.getItem(chave) ?? 0);
+      if (antes && Date.now() - antes < horas * 3600_000) return;
+    }
+
+    let aberto = false;
+    let ultimoFoco: HTMLElement | null = null;
+
+    const abrir = () => {
+      if (aberto) return;
+      aberto = true;
+      ultimoFoco = document.activeElement as HTMLElement | null;
+      tela.hidden = false;
+      document.body.style.overflow = 'hidden';
+      tela.querySelector<HTMLButtonElement>('.popup-x')?.focus();
+    };
+
+    const fechar = () => {
+      if (!aberto) return;
+      aberto = false;
+      tela.hidden = true;
+      document.body.style.overflow = '';
+      if (horas > 0) localStorage.setItem(chave, String(Date.now()));
+      ultimoFoco?.focus();
+    };
+
+    tela.querySelectorAll('[data-fechar]').forEach((b) => b.addEventListener('click', fechar));
+    // clicar no CTA conta como "visto": não reabre na próxima página
+    tela.querySelector('.popup-cta')?.addEventListener('click', () => {
+      if (horas > 0) localStorage.setItem(chave, String(Date.now()));
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fechar();
+    });
+
+    if (ehPreview || d.gatilho === 'imediato') {
+      abrir();
+    } else if (d.gatilho === 'rolagem') {
+      const alvo = Math.min(Math.max(Number(d.rolagem ?? 40), 1), 100);
+      const olhar = () => {
+        const rolavel = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = rolavel > 0 ? (window.scrollY / rolavel) * 100 : 100;
+        if (pct >= alvo) {
+          abrir();
+          window.removeEventListener('scroll', olhar);
+        }
+      };
+      window.addEventListener('scroll', olhar, { passive: true });
+      olhar();
+    } else {
+      setTimeout(abrir, Math.max(Number(d.atraso ?? 5), 0) * 1000);
+    }
+  })();
+</script>

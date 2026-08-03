@@ -108,6 +108,47 @@ export const leads = pgTable('leads', {
   criadoEm: timestamp('criado_em').notNull().defaultNow(),
 });
 
+// Popup/banner exibido no site (ex.: divulgação de locação de equipamentos).
+// Gerenciado em /admin/popup: ativar, desativar, editar, escolher o gatilho de
+// exibição (imediato / atraso / rolagem) e em quais páginas aparece.
+// Regra do site: aparece o primeiro popup ATIVO cujo alcance casa com a URL.
+export const popups = pgTable('popups', {
+  id: serial('id').primaryKey(),
+  /** só para o admin se localizar na lista (não aparece no site) */
+  nomeInterno: text('nome_interno').notNull().default('Popup'),
+  /** linha pequena acima do título, ex.: "Equipamento para locação" */
+  rotulo: text('rotulo'),
+  titulo: text('titulo').notNull(),
+  /** final do título mostrado em azul, ex.: "XAMS 900" */
+  tituloDestaque: text('titulo_destaque'),
+  texto: text('texto'),
+  imagemSrc: text('imagem_src'),
+  imagemAlt: text('imagem_alt'),
+  botaoTexto: text('botao_texto').notNull().default('SOLICITAR ORÇAMENTO'),
+  botaoLink: text('botao_link').notNull().default('/#contato'),
+
+  // ---- quando aparece ----
+  /** 'imediato' | 'atraso' | 'rolagem' */
+  gatilho: text('gatilho').notNull().default('atraso'),
+  /** segundos de espera quando gatilho = 'atraso' */
+  atrasoSegundos: integer('atraso_segundos').notNull().default(5),
+  /** % da página rolada quando gatilho = 'rolagem' */
+  rolagemPercentual: integer('rolagem_percentual').notNull().default(40),
+
+  // ---- onde aparece ----
+  /** 'todo-site' | 'paginas' */
+  alcance: text('alcance').notNull().default('todo-site'),
+  /** caminhos escolhidos quando alcance = 'paginas'; '*' no fim = prefixo */
+  paginas: text('paginas').array().notNull().default([]),
+
+  /** horas até reaparecer para quem já fechou (0 = toda visita) */
+  reexibirHoras: integer('reexibir_horas').notNull().default(24),
+
+  ativo: boolean('ativo').notNull().default(false),
+  criadoEm: timestamp('criado_em').notNull().defaultNow(),
+  atualizadoEm: timestamp('atualizado_em').notNull().defaultNow(),
+});
+
 export const produtoSpecs = pgTable('produto_specs', {
   id: serial('id').primaryKey(),
   produtoId: integer('produto_id')
