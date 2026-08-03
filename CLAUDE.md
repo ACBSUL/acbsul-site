@@ -17,7 +17,7 @@ Este arquivo resume as regras operacionais e registra **um override de stack**.
 Sempre responda tudo em Portuguê simples de fácil entendimento.
 
 ## ⚠️ Override de stack (PRD desatualizado neste ponto)
-
+IP do DNS Principal do antigo site: 108.181.92.76
 O PRD (seção 4) recomenda **Next.js**. **Ignorar.** A decisão do cliente é construir em **Astro**.
 Tudo o mais no PRD permanece válido (princípios, conteúdo, arquitetura de informação, schema, QA).
 Onde o PRD disser "Next.js / App Router / NextAuth / ISR nativo", traduza para os equivalentes Astro abaixo.

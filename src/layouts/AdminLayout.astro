@@ -1,7 +1,11 @@
 ---
-// Shell do painel administrativo (redesign — registro product).
-// Tokens alinhados à marca real do site (site-v2.css): laranja #E2560F,
-// navy #0D1A2E, DM Sans. Sora só no wordmark. noindex obrigatório (PRD §8).
+// Shell do painel administrativo — padrão PROC Manager (Agência Procurada):
+// magenta #E0218A + teal #11B0A6, sobre a tipografia da ACB Sul (DM Sans).
+// Sora só no wordmark. Fontes locais (sem requisição ao Google). noindex (PRD §8).
+//
+// A navegação é uma barra LATERAL. Os nomes de classe dos componentes
+// (.botao, .campo, .cartao-form, .lista, .badge, .flash…) são os mesmos de
+// antes — as 12 páginas do painel não precisaram ser tocadas.
 // Estilos is:global: as classes de componente valem em todas as páginas.
 interface Props {
   titulo: string;
@@ -11,6 +15,38 @@ const usuario = Astro.locals.user;
 const caminho = Astro.url.pathname;
 const ativo = (p: string) =>
   caminho === p || (p !== '/admin' && caminho.startsWith(p + '/')) ? 'ativo' : '';
+
+// iniciais para o avatar do rodapé (ex.: "adm@acbsul..." -> "AD")
+const iniciais = (email: string) =>
+  ((email.split('@')[0] || 'AD').replace(/[^a-zA-Z]/g, '').slice(0, 2) || 'AD').toUpperCase();
+
+const secoes = [
+  {
+    href: '/admin/leads',
+    rotulo: 'Leads',
+    icone: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  },
+  {
+    href: '/admin/categorias',
+    rotulo: 'Categorias',
+    icone: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  },
+  {
+    href: '/admin/produtos',
+    rotulo: 'Produtos',
+    icone: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  },
+  {
+    href: '/admin/popup',
+    rotulo: 'Popup',
+    icone: '<rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M3 9h18"/><circle cx="6" cy="6" r=".6"/>',
+  },
+  {
+    href: '/admin/configuracoes',
+    rotulo: 'Configurações',
+    icone: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  },
+];
 ---
 
 <!doctype html>
@@ -23,58 +59,70 @@ const ativo = (p: string) =>
     <link rel="preload" href="/fonts/sora-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
-  <body>
+  <body class={usuario ? 'com-painel' : 'sem-painel'}>
     {
       usuario && (
-        <header class="topo">
-          <a class="marca" href="/admin">
+        <>
+          <div class="scrim" data-scrim />
+
+          <aside class="lateral" id="lateral" data-lateral>
+            <a class="marca" href="/admin">
+              <span class="marca-icone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 2 2 7l10 5 10-5-10-5z" />
+                  <path d="m2 17 10 5 10-5" />
+                  <path d="m2 12 10 5 10-5" />
+                </svg>
+              </span>
+              <span class="marca-texto">
+                <span class="logo">ACB Sul</span>
+                <span class="marca-sub">Painel do catálogo</span>
+              </span>
+            </a>
+
+            <nav aria-label="Seções do painel">
+              <span class="nav-secao">Gestão</span>
+              {secoes.map((s) => (
+                <a
+                  href={s.href}
+                  class={ativo(s.href)}
+                  aria-current={ativo(s.href) ? 'page' : undefined}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={s.icone} />
+                  {s.rotulo}
+                </a>
+              ))}
+            </nav>
+
+            <a class="ver-site" href="/" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+              Ver o site
+            </a>
+
+            <div class="rodape-usuario">
+              <span class="avatar" aria-hidden="true">{iniciais(usuario.email)}</span>
+              <span class="quem" title={usuario.email}>{usuario.email}</span>
+              <button class="sair" id="btn-sair" type="button" aria-label="Sair do painel" title="Sair">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              </button>
+            </div>
+          </aside>
+
+          <div class="topo-mobile">
+            <button
+              class="menu-btn"
+              type="button"
+              data-menu
+              aria-label="Abrir menu"
+              aria-expanded="false"
+              aria-controls="lateral"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <span class="logo">ACB Sul</span>
             <span class="tag-admin">Admin</span>
-          </a>
-          <nav aria-label="Seções do painel">
-            <a
-              href="/admin/leads"
-              class={ativo('/admin/leads')}
-              aria-current={ativo('/admin/leads') ? 'page' : undefined}
-            >
-              Leads
-            </a>
-            <a
-              href="/admin/categorias"
-              class={ativo('/admin/categorias')}
-              aria-current={ativo('/admin/categorias') ? 'page' : undefined}
-            >
-              Categorias
-            </a>
-            <a
-              href="/admin/produtos"
-              class={ativo('/admin/produtos')}
-              aria-current={ativo('/admin/produtos') ? 'page' : undefined}
-            >
-              Produtos
-            </a>
-            <a
-              href="/admin/popup"
-              class={ativo('/admin/popup')}
-              aria-current={ativo('/admin/popup') ? 'page' : undefined}
-            >
-              Popup
-            </a>
-            <a
-              href="/admin/configuracoes"
-              class={ativo('/admin/configuracoes')}
-              aria-current={ativo('/admin/configuracoes') ? 'page' : undefined}
-            >
-              Configurações
-            </a>
-          </nav>
-          <a class="ver-site" href="/" target="_blank" rel="noopener">
-            Ver site
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-          </a>
-          <span class="quem" title={usuario.email}>{usuario.email}</span>
-          <button class="sair" id="btn-sair" type="button">Sair</button>
-        </header>
+          </div>
+        </>
       )
     }
     <main>
@@ -90,6 +138,22 @@ const ativo = (p: string) =>
           body: '{}',
         });
         location.href = '/admin/login';
+      });
+
+      // menu lateral no mobile
+      const lateral = document.querySelector('[data-lateral]');
+      const scrim = document.querySelector('[data-scrim]');
+      const menuBtn = document.querySelector('[data-menu]');
+      const abrir = (aberto: boolean) => {
+        lateral?.classList.toggle('aberta', aberto);
+        scrim?.classList.toggle('aberta', aberto);
+        menuBtn?.setAttribute('aria-expanded', String(aberto));
+      };
+      menuBtn?.addEventListener('click', () => abrir(!lateral?.classList.contains('aberta')));
+      scrim?.addEventListener('click', () => abrir(false));
+      lateral?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => abrir(false)));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') abrir(false);
       });
 
       // proteção contra duplo envio (sem desabilitar o botão antes do POST —
@@ -156,15 +220,28 @@ const ativo = (p: string) =>
     unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
   }
 
-  /* ============ tokens (marca real: site-v2.css) ============ */
+  /* ============ tokens ============ */
+  /* Marca do painel: magenta do padrão PROC Manager (mesmos valores do
+     proc-manger/src/styles/admin.css). O laranja da ACB segue valendo no
+     site público (site-v2.css) — aqui é o padrão do painel. */
   :root {
-    --accent: #e2560f;
-    --accent-strong: #c4480a;
-    --accent-soft: #fcebe2;
+    --accent: #e0218a;
+    --accent-strong: #bc1c74;
+    --accent-soft: rgba(224, 33, 138, 0.07);
+    --accent-tint: rgba(224, 33, 138, 0.12);
+    --accent-borda: rgba(224, 33, 138, 0.3);
+    --accent-ring: rgba(224, 33, 138, 0.16);
+    --accent-sombra: rgba(224, 33, 138, 0.32);
+    --accent-grad: linear-gradient(135deg, #e0218a 0%, #bc1c74 100%);
+    /* teal — acento de ação do padrão PROC */
+    --teal: #11b0a6;
+    --teal-deep: #0a7c74;
+    --teal-tint: rgba(17, 176, 166, 0.14);
+    /* navy segue definido: a prévia do popup usa como fundo escuro */
     --navy: #0d1a2e;
     --navy-2: #15263e;
     --navy-3: #1c3151;
-    --bg: #f3f5f8;
+    --bg: #f5f9fa;
     --surface: #ffffff;
     --surface-2: #f8fafc;
     --ink: #16202f;
@@ -187,6 +264,8 @@ const ativo = (p: string) =>
     --z-topo: 40;
     --t: 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
     --fonte: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    --lateral-w: 250px;
   }
 
   * { box-sizing: border-box; margin: 0; }
@@ -218,86 +297,224 @@ const ativo = (p: string) =>
     *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 
-  /* ============ topo ============ */
-  .topo {
-    position: sticky;
-    top: 0;
+  /* ============ barra lateral ============ */
+  .lateral {
+    position: fixed;
+    inset: 0 auto 0 0;
     z-index: var(--z-topo);
-    background: var(--navy);
-    color: #fff;
+    width: var(--lateral-w);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+  .marca {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    padding: 0.65rem clamp(1rem, 3vw, 1.5rem);
+    gap: 0.7rem;
+    padding: 1.15rem 1.1rem 1rem;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
   }
-  .marca { display: flex; align-items: baseline; gap: 0.5rem; text-decoration: none; }
+  .marca-icone {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--accent-grad);
+    color: #fff;
+    box-shadow: 0 6px 16px var(--accent-sombra);
+  }
+  /* pastilha teal do padrão PROC */
+  .marca-icone::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--teal);
+    box-shadow: 0 0 0 2.5px var(--surface);
+  }
+  .marca-icone svg { width: 20px; height: 20px; }
+  .marca-texto { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
   .marca .logo {
     font-family: 'Sora', var(--fonte);
     font-weight: 800;
-    font-size: 1.05rem;
-    color: #fff;
-    letter-spacing: -0.01em;
+    font-size: 1rem;
+    color: var(--ink);
+    letter-spacing: -0.02em;
   }
-  .marca .tag-admin {
+  .marca-sub { font-size: 0.66rem; color: var(--ink-3); letter-spacing: 0.02em; margin-top: 0.18rem; }
+
+  .tag-admin {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--navy);
+    color: #fff;
     background: var(--accent);
     border-radius: 5px;
     padding: 0.1rem 0.4rem;
-    color: #fff;
   }
-  .topo nav { display: flex; gap: 0.25rem; flex: 1; }
-  .topo nav a {
-    color: #b9c6d6;
+
+  .lateral nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    padding: 0.85rem 0.75rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .nav-secao {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0.35rem 0.75rem 0.3rem;
+  }
+  .lateral nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--ink-2);
     text-decoration: none;
-    font-size: 0.92rem;
-    font-weight: 500;
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--r);
     transition: color var(--t), background var(--t);
   }
-  .topo nav a:hover { color: #fff; background: var(--navy-2); }
-  .topo nav a.ativo { color: #fff; background: var(--navy-3); font-weight: 600; }
+  .lateral nav a svg { width: 17px; height: 17px; flex: none; }
+  .lateral nav a:hover { background: var(--surface-2); color: var(--ink); }
+  .lateral nav a.ativo { background: var(--accent-tint); color: var(--accent-strong); }
+
   .ver-site {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.3rem;
-    color: #b9c6d6;
+    gap: 0.45rem;
+    margin: 0 0.75rem 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    color: var(--ink-2);
     text-decoration: none;
     font-size: 0.85rem;
-    transition: color var(--t);
+    font-weight: 600;
+    transition: border-color var(--t), color var(--t), background var(--t);
   }
-  .ver-site svg { width: 14px; height: 14px; }
-  .ver-site:hover { color: #fff; }
-  .topo .quem {
-    font-size: 0.82rem;
-    color: #8fa1b8;
-    max-width: 220px;
+  .ver-site svg { width: 14px; height: 14px; flex: none; }
+  .ver-site:hover { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
+
+  .rodape-usuario {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border-top: 1px solid var(--line);
+  }
+  .rodape-usuario .avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent-tint);
+    color: var(--accent-strong);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .rodape-usuario .quem {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.78rem;
+    color: var(--ink-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .topo .sair {
+  .rodape-usuario .sair {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
     background: none;
-    border: 1px solid #3a4d68;
-    color: #cfd9e6;
+    border: 1px solid var(--line-strong);
+    color: var(--ink-2);
     border-radius: 8px;
-    padding: 0.35rem 0.9rem;
     cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: border-color var(--t), color var(--t);
+    transition: border-color var(--t), color var(--t), background var(--t);
   }
-  .topo .sair:hover { border-color: var(--accent); color: #fff; }
-  @media (max-width: 640px) {
-    .topo .quem, .topo .ver-site { display: none; }
-  }
+  .rodape-usuario .sair svg { width: 15px; height: 15px; }
+  .rodape-usuario .sair:hover { border-color: var(--erro-ink); color: var(--erro-ink); background: var(--erro-bg); }
+
+  /* topo só no mobile: abre a lateral */
+  .topo-mobile { display: none; }
+  .scrim { display: none; }
 
   main { max-width: 1140px; margin: clamp(1.25rem, 3vw, 2rem) auto 5rem; padding: 0 clamp(1rem, 3vw, 1.5rem); }
+  /* o padding no body abre espaço para a lateral e deixa o main centralizar
+     sozinho no que sobra (em tela larga não fica colado na barra) */
+  body.com-painel { padding-left: var(--lateral-w); }
+  /* sem sessão só existe a tela de login: ela ocupa a janela inteira */
+  body.sem-painel main { max-width: none; margin: 0; padding: 0; }
+
+  @media (max-width: 900px) {
+    .lateral {
+      transform: translateX(-100%);
+      transition: transform var(--t);
+      box-shadow: 0 0 40px rgba(13, 26, 46, 0.18);
+    }
+    .lateral.aberta { transform: none; }
+    body.com-painel { padding-left: 0; }
+    /* barra superior clara, como no padrão PROC */
+    .topo-mobile {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--surface);
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+      padding: 0.6rem clamp(1rem, 3vw, 1.5rem);
+    }
+    .topo-mobile .logo { font-family: 'Sora', var(--fonte); font-weight: 800; font-size: 0.98rem; }
+    .menu-btn {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      transition: border-color var(--t), color var(--t);
+    }
+    .menu-btn:hover { border-color: var(--accent-borda); color: var(--accent-strong); }
+    .menu-btn svg { width: 20px; height: 20px; }
+    .scrim {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      background: rgba(13, 26, 46, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--t);
+    }
+    .scrim.aberta { opacity: 1; pointer-events: auto; }
+  }
 
   /* ============ cabeçalho de página ============ */
   .acoes { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -330,24 +547,30 @@ const ativo = (p: string) =>
     font-weight: 700;
     cursor: pointer;
     text-decoration: none;
-    transition: background var(--t), border-color var(--t), color var(--t);
+    box-shadow: 0 4px 12px var(--accent-sombra);
+    transition: background var(--t), border-color var(--t), color var(--t), box-shadow var(--t);
   }
-  .botao:hover { background: var(--accent-strong); }
+  .botao:hover { background: var(--accent-strong); box-shadow: 0 6px 16px var(--accent-sombra); }
   .botao.cinza {
     background: var(--surface);
     color: var(--ink);
     border-color: var(--line-strong);
+    box-shadow: none;
   }
-  .botao.cinza:hover { border-color: var(--ink-3); background: var(--surface-2); }
-  .botao.perigo { background: transparent; color: var(--erro-ink); border-color: currentColor; }
-  .botao.perigo:hover { background: var(--erro-bg); }
-  .botao.mini { padding: 0.35rem 0.8rem; min-height: 34px; font-size: 0.85rem; }
+  .botao.cinza:hover { border-color: var(--ink-3); background: var(--surface-2); box-shadow: none; }
+  .botao.perigo { background: transparent; color: var(--erro-ink); border-color: currentColor; box-shadow: none; }
+  .botao.perigo:hover { background: var(--erro-bg); box-shadow: none; }
+  .botao.mini { padding: 0.35rem 0.8rem; min-height: 34px; font-size: 0.85rem; box-shadow: none; }
   form.enviando .botao { opacity: 0.55; pointer-events: none; }
 
   /* ============ tabelas ============ */
   .tabela-rolagem {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Sem isto a tabela larga faz a PÁGINA rolar de lado no celular, mesmo
+       com overflow-x:auto — algo dentro dela escapa do container de rolagem.
+       O contain:paint prende a pintura na caixa e mantém a rolagem interna. */
+    contain: paint;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
@@ -427,7 +650,7 @@ const ativo = (p: string) =>
     font-weight: 400;
     color: var(--ink);
     background: var(--surface);
-    transition: border-color var(--t);
+    transition: border-color var(--t), box-shadow var(--t);
   }
   .campo input:hover, .campo select:hover, .campo textarea:hover { border-color: var(--ink-3); }
   .campo input:focus, .campo select:focus, .campo textarea:focus {
@@ -444,8 +667,9 @@ const ativo = (p: string) =>
     position: absolute;
     top: 0;
     right: 0;
+    font-family: var(--mono);
     font-weight: 600;
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     color: var(--ink-2);
   }
   .campo .contador.cheio { color: var(--erro-ink); }
@@ -488,7 +712,7 @@ const ativo = (p: string) =>
   .icon-opt:hover .icon-box { border-color: var(--ink-3); color: var(--ink); }
   .icon-opt input:checked + .icon-box {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    background: var(--accent-soft);
     color: var(--accent-strong);
     box-shadow: 0 0 0 1px var(--accent);
   }
@@ -497,7 +721,7 @@ const ativo = (p: string) =>
 
   /* ============ layout de edição (form + painel lateral) ============ */
   .editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.25rem; align-items: start; }
-  .editor-lateral { position: sticky; top: 76px; display: grid; gap: 1.25rem; }
+  .editor-lateral { position: sticky; top: 1.25rem; display: grid; gap: 1.25rem; }
   @media (max-width: 900px) {
     .editor-grid { grid-template-columns: 1fr; }
     .editor-lateral { position: static; }

@@ -1,5 +1,7 @@
 ---
 // Tela de login do admin. Se já houver sessão, o middleware redireciona p/ /admin.
+// Layout em duas colunas no estilo PROC Manager: painel de apresentação à
+// esquerda (gradiente magenta do padrão PROC) e o formulário à direita.
 import AdminLayout from '../../layouts/AdminLayout.astro';
 
 export const prerender = false;
@@ -7,36 +9,160 @@ export const prerender = false;
 
 <AdminLayout titulo="Entrar">
   <div class="palco">
-    <div class="caixa">
+    <!-- ===== apresentação ===== -->
+    <div class="vitrine">
+      <span class="brilho brilho-1"></span>
+      <span class="brilho brilho-2"></span>
+
       <p class="marca-login">
-        <span class="logo">ACB Sul</span>
-        <span class="tag-admin">Admin</span>
+        <span class="marca-icone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
+          </svg>
+        </span>
+        <span>
+          <span class="logo">ACB Sul</span>
+          <span class="marca-sub">Compressores · Atlas Copco</span>
+        </span>
       </p>
-      <h1>Painel do catálogo</h1>
-      <p class="sub">Acesso restrito — somente administradores.</p>
-      <form id="form-login" novalidate>
-        <label class="campo">
-          E-mail
-          <input type="email" name="email" required autocomplete="username" autofocus />
-        </label>
-        <label class="campo">
-          Senha
-          <input type="password" name="senha" required autocomplete="current-password" />
-        </label>
-        <p id="erro" role="alert" tabindex="-1" hidden>
-          E-mail ou senha incorretos. Confira e tente de novo.
+
+      <div class="chamada">
+        <p class="etiqueta"><span></span>Painel do catálogo</p>
+        <h2>Todo o catálogo e os leads, num só lugar.</h2>
+        <p class="linha">Cadastre produtos, organize categorias e acompanhe as solicitações de orçamento que chegam pelo site.</p>
+      </div>
+    </div>
+
+    <!-- ===== formulário ===== -->
+    <div class="area-form">
+      <div class="caixa">
+        <p class="marca-mobile">
+          <span class="logo">ACB Sul</span>
+          <span class="tag-admin">Admin</span>
         </p>
-        <button class="botao entrar" type="submit">Entrar</button>
-        <noscript>
-          <p class="aviso-js">O login precisa de JavaScript habilitado no navegador.</p>
-        </noscript>
-      </form>
+
+        <h1>Bem-vindo de volta</h1>
+        <p class="sub">Acesso restrito — somente administradores.</p>
+
+        <form id="form-login" novalidate>
+          <label class="campo">
+            E-mail
+            <input type="email" name="email" required autocomplete="username" autofocus />
+          </label>
+          <label class="campo">
+            Senha
+            <input type="password" name="senha" required autocomplete="current-password" />
+          </label>
+          <p id="erro" role="alert" tabindex="-1" hidden>
+            E-mail ou senha incorretos. Confira e tente de novo.
+          </p>
+          <button class="botao entrar" type="submit">Entrar</button>
+          <noscript>
+            <p class="aviso-js">O login precisa de JavaScript habilitado no navegador.</p>
+          </noscript>
+        </form>
+      </div>
     </div>
   </div>
 </AdminLayout>
 
 <style>
-  .palco { min-height: calc(100vh - 12rem); display: grid; place-items: center; }
+  /* o <main> já vem sem limite de largura quando não há sessão
+     (regra body.sem-painel no AdminLayout) */
+  .palco {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* ===== apresentação ===== */
+  .vitrine {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 3rem;
+    background: var(--accent-grad);
+    color: #fff;
+    padding: clamp(2rem, 4vw, 3.25rem);
+  }
+  /* escurece o pé do painel p/ o texto ganhar contraste sobre o magenta */
+  .vitrine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.42) 100%);
+    pointer-events: none;
+  }
+  .brilho {
+    position: absolute;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    filter: blur(8px);
+    pointer-events: none;
+  }
+  .brilho-1 { width: 320px; height: 320px; top: -90px; right: -70px; animation: flutua 7s ease-in-out infinite; }
+  .brilho-2 { width: 200px; height: 200px; bottom: 80px; left: -60px; animation: flutua 9s ease-in-out infinite; }
+  @keyframes flutua {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+  }
+
+  .marca-login { position: relative; z-index: 2; display: flex; align-items: center; gap: 0.75rem; }
+  /* sobre o magenta o selo é translúcido, não outro bloco de cor */
+  .marca-icone {
+    width: 42px;
+    height: 42px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    backdrop-filter: blur(6px);
+    color: #fff;
+  }
+  .marca-icone svg { width: 22px; height: 22px; }
+  .marca-login .logo {
+    display: block;
+    font-family: 'Sora', var(--fonte);
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+  .marca-sub { display: block; font-size: 0.75rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.15rem; }
+
+  .chamada { position: relative; z-index: 2; }
+  .etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(4px);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.1rem;
+  }
+  .etiqueta span { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+  .chamada h2 {
+    font-family: 'Sora', var(--fonte);
+    font-size: clamp(1.6rem, 3vw, 2.15rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.9rem;
+  }
+  .chamada .linha { color: rgba(255, 255, 255, 0.86); font-size: 0.98rem; max-width: 44ch; }
+
+  /* ===== formulário ===== */
+  .area-form { display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 3rem); }
   .caixa {
     width: min(400px, 100%);
     background: var(--surface);
@@ -45,23 +171,9 @@ export const prerender = false;
     box-shadow: var(--sombra);
     padding: clamp(1.5rem, 4vw, 2.25rem);
   }
-  .marca-login { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1.5rem; }
-  .marca-login .logo {
-    font-family: 'Sora', var(--fonte);
-    font-weight: 800;
-    font-size: 1.15rem;
-    color: var(--navy);
-  }
-  .marca-login .tag-admin {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #fff;
-    background: var(--accent);
-    border-radius: 5px;
-    padding: 0.1rem 0.4rem;
-  }
+  .marca-mobile { display: none; align-items: baseline; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .marca-mobile .logo { font-family: 'Sora', var(--fonte); font-weight: 800; font-size: 1.15rem; color: var(--ink); }
+
   h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
   .sub { color: var(--ink-2); font-size: 0.9rem; margin: 0.25rem 0 1.5rem; }
   .campo { display: block; margin-bottom: 1rem; }
@@ -77,6 +189,13 @@ export const prerender = false;
   .entrar { width: 100%; }
   .entrar:disabled { opacity: 0.6; cursor: wait; }
   .aviso-js { margin-top: 0.75rem; color: var(--erro-ink); font-size: 0.85rem; }
+
+  /* no celular a apresentação sai e sobra só o formulário */
+  @media (max-width: 860px) {
+    .palco { grid-template-columns: 1fr; }
+    .vitrine { display: none; }
+    .marca-mobile { display: flex; }
+  }
 </style>
 
 <script>
