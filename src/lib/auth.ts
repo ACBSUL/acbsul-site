@@ -18,6 +18,17 @@ export const auth = betterAuth({
   },
   secret: env('BETTER_AUTH_SECRET'),
   baseURL: env('BETTER_AUTH_URL'),
+  // Origens aceitas nos POSTs de login. Sem isto o Better-Auth só confia no
+  // baseURL: em produção o navegador manda Origin=https://www.acbsul... e a
+  // resposta virava 403 "Invalid origin" (o formulário mostrava "senha
+  // incorreta" sem a senha estar errada). O curl passava porque não manda Origin.
+  trustedOrigins: [
+    'https://www.acbsulcompressores.com.br',
+    'https://acbsulcompressores.com.br',
+    // deploys de preview da Vercel
+    'https://*.vercel.app',
+    'http://localhost:5030',
+  ],
   session: {
     // sessão de 7 dias, renovada a cada dia de uso
     expiresIn: 60 * 60 * 24 * 7,
