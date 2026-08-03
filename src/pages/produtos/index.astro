@@ -35,6 +35,14 @@ const itens = [...publicados].sort(
   (a, b) => (ordem.get(a.categoria) ?? 99) - (ordem.get(b.categoria) ?? 99),
 );
 const nomeCategoria = new Map(categorias.map((c) => [c.slug, c.nome]));
+
+// Texto usado pela busca por nome (campo acima da grade). Fica pronto no HTML
+// (data-busca) sem acento e em minúsculas: digitar "parafuso" ou "GA 11" acha
+// o mesmo item, com ou sem acentuação.
+const semAcento = (s: string) =>
+  s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+const textoBusca = (p: (typeof itens)[number]) =>
+  semAcento(`${nomeProduto(p)} ${nomeCategoria.get(p.categoria) ?? ''}`);
 // roteamento de WhatsApp por categoria (config do admin; vazio = número geral)
 const waNumCategoria = new Map(categorias.map((c) => [c.slug, c.whatsappNumero]));
 
@@ -214,6 +222,24 @@ const itemListSchema = {
 
           <!-- grade -->
           <div class="catalog-main">
+            <!-- busca por nome (todo o catálogo já está no HTML; o filtro é instantâneo) -->
+            <div class="catalog-search">
+              <label class="sr-only" for="pbusca">Pesquisar produto pelo nome</label>
+              <span class="si" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+              </span>
+              <input
+                type="search"
+                id="pbusca"
+                placeholder="Pesquisar produto pelo nome…"
+                autocomplete="off"
+                enterkeyhint="search"
+              />
+              <button class="sx" id="pbuscaLimpar" type="button" aria-label="Limpar pesquisa" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+            </div>
+
             <div class="catalog-toolbar">
               <h2 id="ftitle">Todas as linhas</h2>
               <span class="count"><b id="fcount">{total}</b> itens</span>
@@ -225,7 +251,7 @@ const itemListSchema = {
                   const urlPagina = temPaginaPropria(p) ? urlProduto(p) : null;
                   const img = imagemPrincipal(p);
                   return (
-                    <article class="prod-card" data-cat={p.categoria}>
+                    <article class="prod-card" data-cat={p.categoria} data-busca={textoBusca(p)}>
                       {img ? (
                         urlPagina ? (
                           <a class="pmedia" href={urlPagina}>
@@ -289,6 +315,24 @@ const itemListSchema = {
                   );
                 })
               }
+            </div>
+
+            <!-- nenhum resultado para a pesquisa (só aparece via JS) -->
+            <div class="cat-empty" id="pvazio" hidden>
+              <p class="ce-titulo">Nenhum produto encontrado para <b id="pvazioTermo"></b>.</p>
+              <p class="ce-sub">
+                Tente outro termo — ou fale com um especialista da ACB Sul: temos o portfólio
+                Atlas Copco completo para o Rio Grande do Sul e Santa Catarina.
+              </p>
+              <div class="ce-acts">
+                <button class="btn btn-outline" id="pvazioLimpar" type="button">Limpar pesquisa</button>
+                <button class="btn btn-outline" id="pvazioTodas" type="button" hidden>
+                  Pesquisar em todas as linhas
+                </button>
+                <a class="btn btn-accent" data-wa-msg="Olá! Procuro um equipamento Atlas Copco que não encontrei no catálogo do site.">
+                  Falar com Especialista
+                </a>
+              </div>
             </div>
 
             <!-- parágrafos de SEO por linha (fim da listagem) — todos no HTML servido; o filtro alterna -->
@@ -386,6 +430,13 @@ const itemListSchema = {
       var fpillCount = document.getElementById('fpillCount');
       var fbtnSel = document.getElementById('fbtnSel');
       var intros = document.querySelectorAll('.fintro');
+      var busca = document.getElementById('pbusca');
+      var buscaLimpar = document.getElementById('pbuscaLimpar');
+      var vazio = document.getElementById('pvazio');
+      var vazioTermo = document.getElementById('pvazioTermo');
+      var vazioLimpar = document.getElementById('pvazioLimpar');
+      var vazioTodas = document.getElementById('pvazioTodas');
+      var slugAtual = '';
 
       /* ---- menu sobreposto de filtros (mobile) ---- */
       var aside = document.getElementById('fside');
@@ -425,11 +476,32 @@ const itemListSchema = {
         if (e.matches) closeSheet();
       });
 
+      /* ---- pesquisa por nome (combina com a linha selecionada) ---- */
+      function semAcento(s) {
+        return (s || '')
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .toLowerCase()
+          .trim();
+      }
+      // "ga 11 vsd" acha "Compressor GA 11 VSD": todo pedaço precisa estar no nome
+      function casa(texto, termo) {
+        var partes = termo.split(/\s+/);
+        for (var i = 0; i < partes.length; i++) {
+          if (texto.indexOf(partes[i]) === -1) return false;
+        }
+        return true;
+      }
+
       /* ---- filtro ---- */
       function apply(slug) {
+        slugAtual = slug || '';
+        var termo = semAcento(busca ? busca.value : '');
         var visiveis = 0;
         cards.forEach(function (c) {
-          var mostra = !slug || c.getAttribute('data-cat') === slug;
+          var mostra =
+            (!slug || c.getAttribute('data-cat') === slug) &&
+            (!termo || casa(c.getAttribute('data-busca') || '', termo));
           c.style.display = mostra ? '' : 'none';
           if (mostra) visiveis++;
         });
@@ -440,15 +512,26 @@ const itemListSchema = {
           l.setAttribute('aria-pressed', ativo ? 'true' : 'false');
           if (ativo) nomeAtivo = l.getAttribute('data-nome') || nomeAtivo;
         });
+        // pesquisando: o parágrafo de SEO da linha atrapalharia a leitura do resultado
         intros.forEach(function (el) {
-          el.hidden = (el.getAttribute('data-intro') || '') !== (slug || '');
+          el.hidden = !!termo || (el.getAttribute('data-intro') || '') !== (slug || '');
         });
-        if (titulo) titulo.textContent = nomeAtivo;
+        if (titulo)
+          titulo.textContent = termo ? 'Resultados para “' + busca.value.trim() + '”' : nomeAtivo;
         if (fpillLabel) fpillLabel.textContent = nomeAtivo;
         if (count) count.textContent = visiveis;
         if (fpillCount) fpillCount.textContent = visiveis;
         if (fbtnSel)
           fbtnSel.textContent = nomeAtivo + ' · ' + visiveis + (visiveis === 1 ? ' item' : ' itens');
+        if (buscaLimpar) buscaLimpar.hidden = !termo;
+        if (vazio) {
+          vazio.hidden = !(termo && visiveis === 0);
+          if (!vazio.hidden) {
+            vazioTermo.textContent = '“' + busca.value.trim() + '”';
+            // com uma linha filtrada, o produto pode estar em outra: oferece ampliar
+            vazioTodas.hidden = !slugAtual;
+          }
+        }
       }
       // rola até o topo do catálogo (compensa o navbar fixo / botão sticky mobile)
       function scrollCatalogo(suave) {
@@ -475,6 +558,35 @@ const itemListSchema = {
           scrollCatalogo(true);
         });
       });
+      /* ---- eventos da pesquisa ---- */
+      if (busca) {
+        busca.addEventListener('input', function () {
+          apply(slugAtual);
+        });
+        // Enter não deve recarregar a página (input type=search dentro do form nativo)
+        busca.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') e.preventDefault();
+          if (e.key === 'Escape' && busca.value) {
+            busca.value = '';
+            apply(slugAtual);
+          }
+        });
+      }
+      function limparBusca(focar) {
+        if (!busca) return;
+        busca.value = '';
+        apply(slugAtual);
+        if (focar) busca.focus();
+      }
+      if (buscaLimpar) buscaLimpar.addEventListener('click', function () { limparBusca(true); });
+      if (vazioLimpar) vazioLimpar.addEventListener('click', function () { limparBusca(true); });
+      if (vazioTodas)
+        vazioTodas.addEventListener('click', function () {
+          history.replaceState(null, '', location.pathname);
+          apply('');
+          scrollCatalogo(true);
+        });
+
       // megamenu/rodapé desta própria página mudam só o hash
       window.addEventListener('hashchange', function () {
         if (fromHash()) scrollCatalogo(true);

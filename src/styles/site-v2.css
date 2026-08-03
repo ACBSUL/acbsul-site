@@ -732,6 +732,39 @@ p{margin:0;text-wrap:pretty;}
 .side-help>*{position:relative;z-index:2;}
 .side-help h3{font-size:16.5px;color:#fff;margin-bottom:8px;}
 .side-help p{font-size:13px;color:#aab6c6;margin-bottom:14px;}
+/* só para leitor de tela (rótulos de campo sem texto visível) */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;}
+
+/* busca por nome do produto (acima da grade) */
+.catalog-search{position:relative;display:flex;align-items:center;margin-bottom:18px;}
+.catalog-search .si{position:absolute;left:16px;display:flex;color:var(--ink-3);pointer-events:none;}
+.catalog-search .si svg{width:19px;height:19px;}
+.catalog-search input{width:100%;font-family:var(--bd);font-size:15.5px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:50px;
+  padding:14px 46px 14px 46px;transition:border-color .16s,box-shadow .16s;appearance:none;}
+.catalog-search input::placeholder{color:var(--ink-3);}
+.catalog-search input:hover{border-color:var(--line-dark,#d5dbe3);}
+.catalog-search input:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(226,86,15,.16);}
+.catalog-search input::-webkit-search-cancel-button{display:none;}
+.catalog-search .sx{position:absolute;right:12px;width:28px;height:28px;display:flex;
+  align-items:center;justify-content:center;border:0;border-radius:50%;cursor:pointer;
+  background:var(--bg-2);color:var(--ink-2);transition:background .14s,color .14s;}
+.catalog-search .sx svg{width:15px;height:15px;}
+.catalog-search .sx:hover{background:var(--ink-dark);color:#fff;}
+.catalog-search .sx[hidden]{display:none;}
+
+/* nenhum resultado para a pesquisa */
+.cat-empty{border:1px dashed var(--line);border-radius:var(--r);padding:clamp(22px,4vw,34px);
+  text-align:center;background:var(--bg-2);}
+.cat-empty[hidden]{display:none;}
+.cat-empty .ce-titulo{font-family:var(--hd);font-weight:700;font-size:clamp(17px,2vw,20px);color:var(--ink);}
+.cat-empty .ce-sub{margin-top:10px;font-size:14.5px;color:var(--ink-2);max-width:56ch;
+  margin-inline:auto;line-height:1.6;}
+.cat-empty .ce-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px;}
+.cat-empty .ce-acts .btn[hidden]{display:none;}
+
 /* toolbar da grade (título dinâmico + contagem) */
 .catalog-toolbar{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;
   padding-bottom:16px;margin-bottom:24px;border-bottom:1px solid var(--line);}
