@@ -44,6 +44,17 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Google tag (gtag.js) — Google Analytics 4. Só no site público:
+         o /admin usa o AdminLayout, que não carrega esta tag. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3LTV3XYEP2" is:inline></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3LTV3XYEP2');
+    </script>
+
     <link rel="icon" type="image/svg+xml" href="/logo-acbsul-atlas-copco.svg" />
 
     <!-- Pré-carrega as fontes locais críticas (subset latin) para reduzir o LCP -->
