@@ -12,7 +12,19 @@ interface Props {
   noindex?: boolean;
   /** atributo data-page do <body> (usado pelo site-v2.js em páginas de catálogo) */
   page?: string;
+  /** conteúdo da página para o rastreio (ViewContent etc.). Sem = título da página. */
+  rastreio?: { name: string; category: string; id: string };
 }
+
+// Rastreio de campanhas (public/assets/tracking.js — Framework FOP adaptado a leads)
+const META_PIXEL = '1167185732664219';
+const GOOGLE_ADS = {
+  id: 'AW-18569368689',
+  /** conversão PRINCIPAL: formulário enviado e salvo */
+  lead: 'AW-18569368689/aOe_CKGYzrYdEPGoyJZF',
+  /** conversão secundária: clique no WhatsApp */
+  contato: 'AW-18569368689/6VzzCKSYzrYdEPGoyJZF',
+};
 
 const {
   title,
@@ -20,7 +32,14 @@ const {
   ogImage = '/assets/hero-obra-qas.jpg',
   noindex = false,
   page,
+  rastreio,
 } = Astro.props;
+
+const trackCfg = {
+  pixel: META_PIXEL,
+  ads: { lead: GOOGLE_ADS.lead, contato: GOOGLE_ADS.contato },
+  content: rastreio,
+};
 
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogUrl = new URL(ogImage, Astro.site).href;
@@ -53,7 +72,13 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-3LTV3XYEP2');
+      gtag('config', 'AW-18569368689', { allow_enhanced_conversions: true });
     </script>
+
+    <!-- Meta Pixel + CAPI + eventos do funil (Framework FOP, adaptado a leads).
+         SEM defer: o PageView precisa sair na carga. -->
+    <script is:inline set:html={`window.ACB_TRACK=${JSON.stringify(trackCfg)};`} />
+    <script src="/assets/tracking.js" is:inline></script>
 
     <link rel="icon" type="image/svg+xml" href="/logo-acbsul-atlas-copco.svg" />
 
@@ -85,6 +110,8 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
     <slot name="head" />
   </head>
   <body data-page={page}>
+    <noscript><img height="1" width="1" style="display:none" alt=""
+      src={`https://www.facebook.com/tr?id=${META_PIXEL}&ev=PageView&noscript=1`} /></noscript>
     <slot />
 
     {popup && <PopupBanner popup={popup} preview={Boolean(previewPopup)} />}

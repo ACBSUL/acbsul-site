@@ -177,10 +177,14 @@
       const win=window.open("","_blank");
       const dados={};
       new FormData(form).forEach((v,k)=>{dados[k]=v;});
+      // rastreio (tracking.js): origem da campanha + event_id do Lead
+      const T=window.acbTrack;
+      if(T&&T.dadosLead){try{Object.assign(dados,T.dadosLead());}catch(e){}}
       fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(dados)})
         .then(r=>r.json())
         .then(res=>{
           if(res&&res.ok&&res.whatsapp){
+            if(T&&T.leadEnviado){try{T.leadEnviado(dados);}catch(e){}}
             mostrarSucesso(form);
             if(win&&!win.closed){win.location.href=res.whatsapp;}
             else{window.open(res.whatsapp,"_blank","noopener");}

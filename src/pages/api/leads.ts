@@ -6,6 +6,7 @@ import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
 import { db, tabelas } from '../../db';
 import { carregarConfig } from '../../lib/config';
+import { enviarEventoMeta } from '../../lib/capi';
 
 export const prerender = false;
 
@@ -47,6 +48,23 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResp({ ok: false, erro: 'dados-invalidos' }, 400);
   }
 
+  // rastreio de campanha (preenchido pelo tracking.js; tudo opcional)
+  const r = (k: string, max = 300) => limpar(dados[k], max) || null;
+  const rastreio = {
+    fonte: r('fonte', 60),
+    utmSource: r('utm_source'),
+    utmMedium: r('utm_medium'),
+    utmCampaign: r('utm_campaign'),
+    utmContent: r('utm_content'),
+    utmTerm: r('utm_term'),
+    gclid: r('gclid', 500),
+    gbraid: r('gbraid', 500),
+    wbraid: r('wbraid', 500),
+    fbclid: r('fbclid', 500),
+    pagina: r('pagina', 1000),
+    visitanteId: r('visitante_id', 80),
+  };
+
   // 1) salva o lead
   await db.insert(tabelas.leads).values({
     origem,
@@ -56,7 +74,36 @@ export const POST: APIRoute = async ({ request }) => {
     telefone,
     email,
     interesse,
+    ...rastreio,
   });
+
+  // 1b) Lead na Meta pelo servidor (CAPI), com o MESMO event_id que o Pixel
+  // usa no navegador. Leva e-mail/telefone/nome (hasheados no envio). Falha da
+  // Meta não impede o lead: já está salvo e o WhatsApp abre do mesmo jeito.
+  const eventId = r('event_id', 80);
+  if (eventId) {
+    await enviarEventoMeta(
+      {
+        event_name: 'Lead',
+        event_id: eventId,
+        event_source_url: rastreio.pagina ?? undefined,
+        external_id: rastreio.visitanteId ?? undefined,
+        fbp: r('fbp', 200) ?? undefined,
+        fbc: r('fbc', 500) ?? undefined,
+        em: email,
+        ph: telefone,
+        nome,
+        custom_data: {
+          content_name: produto || (origem === 'contato-direto' ? 'Contato direto (home)' : 'Formulário'),
+          content_category: categoriaSlug || origem,
+          fonte: rastreio.fonte || undefined,
+          interesse: interesse || undefined,
+        },
+        utm: { utm_campaign: rastreio.utmCampaign, utm_content: rastreio.utmContent },
+      },
+      request,
+    );
+  }
 
   // 2) descobre o WhatsApp de destino: número da categoria → senão número geral
   let numero = '';

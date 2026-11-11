@@ -79,6 +79,18 @@ const waLead = (tel: string) => {
 };
 
 const campoVista = vista === 'lista' ? 'lista' : '';
+
+// de onde veio o lead (tracking.js): "Google Ads · campanha · anúncio"
+const NOMES_FONTE: Record<string, string> = {
+  meta: 'Meta Ads', facebook: 'Meta Ads', fb: 'Meta Ads', ig: 'Instagram', instagram: 'Instagram',
+  google: 'Google', direto: 'Direto',
+};
+const campanhaDe = (l: (typeof linhas)[number]): string | null => {
+  const pago = l.gclid || l.gbraid || l.wbraid ? 'Google Ads' : l.fbclid ? 'Meta Ads' : null;
+  const fonte = pago ?? (l.fonte ? (NOMES_FONTE[l.fonte.toLowerCase()] ?? l.fonte) : null);
+  if (!fonte) return null;
+  return [fonte, l.utmCampaign, l.utmContent].filter(Boolean).join(' · ');
+};
 ---
 
 <AdminLayout titulo="Leads">
@@ -154,6 +166,7 @@ const campoVista = vista === 'lista' ? 'lista' : '';
                       )}
 
                       {l.interesse && <p class="card-interesse">{l.interesse}</p>}
+                      {campanhaDe(l) && <p class="card-interesse secundario" title="Origem da visita">Origem: {campanhaDe(l)}</p>}
 
                       <div class="card-contato">
                         <a class="link-contato" href={waLead(l.telefone)} target="_blank" rel="noopener">
@@ -272,6 +285,12 @@ const campoVista = vista === 'lista' ? 'lista' : '';
                           <span class="secundario">{nomeCategoria.get(l.categoriaSlug) ?? l.categoriaSlug}</span>
                         </>
                       )}
+                    </>
+                  )}
+                  {campanhaDe(l) && (
+                    <>
+                      <br />
+                      <span class="secundario">{campanhaDe(l)}</span>
                     </>
                   )}
                 </td>

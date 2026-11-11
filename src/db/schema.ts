@@ -106,6 +106,25 @@ export const leads = pgTable('leads', {
   /** etapa no funil/Kanban: 'aberto' | 'respondido' | 'crm' */
   etapa: text('etapa').notNull().default('aberto'),
   criadoEm: timestamp('criado_em').notNull().defaultNow(),
+
+  // ---- rastreio de campanha (scripts/migrate-leads-rastreio.ts) ----
+  /** meta | google | instagram | direto ... (calculada pelo tracking.js) */
+  fonte: text('fonte'),
+  utmSource: text('utm_source'),
+  utmMedium: text('utm_medium'),
+  utmCampaign: text('utm_campaign'),
+  utmContent: text('utm_content'),
+  utmTerm: text('utm_term'),
+  /** identificadores de clique do Google Ads */
+  gclid: text('gclid'),
+  gbraid: text('gbraid'),
+  wbraid: text('wbraid'),
+  /** identificador de clique da Meta */
+  fbclid: text('fbclid'),
+  /** URL onde o formulário foi enviado */
+  pagina: text('pagina'),
+  /** id anônimo do visitante (external_id do Pixel) */
+  visitanteId: text('visitante_id'),
 });
 
 // Popup/banner exibido no site (ex.: divulgação de locação de equipamentos).

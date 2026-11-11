@@ -75,6 +75,7 @@ const breadcrumbSchema = {
   description={seoDescriptionProduto(p)}
   ogImage={img?.src}
   page="produtos"
+  rastreio={{ name: nomeProduto(p), category: categoria.slug, id: p.slug ?? String(p.id) }}
 >
   <script
     type="application/ld+json"
