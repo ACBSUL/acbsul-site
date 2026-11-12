@@ -296,6 +296,7 @@ const breadcrumbSchema = {
         <p class="sub">Retornamos em horário comercial.</p>
         <input type="hidden" name="produto" value={nomeProduto(p)} />
         <input type="hidden" name="categoria" value={categoria.slug} />
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Site <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
         <div class="frow">
           <div class="field">
             <label>Nome <span class="req">*</span></label><input
@@ -311,7 +312,7 @@ const breadcrumbSchema = {
               name="telefone"
               required
               placeholder="(51) 9 0000-0000"
-            /><span class="err">Informe um telefone.</span>
+            /><span class="err">Informe um telefone válido com DDD.</span>
           </div>
         </div>
         <div class="frow">

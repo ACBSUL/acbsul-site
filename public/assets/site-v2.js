@@ -163,6 +163,18 @@
     }
 
     /* lead forms */
+    const T0=Date.now();
+    // telefone BR com DDD: fixo (10 dígitos) ou celular (11, começando com 9)
+    const DDDS="11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99".split(" ");
+    function telValido(t){
+      let n=String(t).replace(/\D/g,"");
+      if((n.length===12||n.length===13)&&n.startsWith("55"))n=n.slice(2);
+      if(n.length===11&&n.startsWith("0"))n=n.slice(1);
+      if(n.length!==10&&n.length!==11)return false;
+      if(DDDS.indexOf(n.slice(0,2))<0)return false;
+      if(n.length===11&&n[2]!=="9")return false;
+      return true;
+    }
     function mostrarSucesso(form){
       const ok2=form.parentElement.querySelector(".form-ok");
       if(ok2){form.style.display="none";ok2.classList.add("show");}
@@ -177,6 +189,7 @@
       const win=window.open("","_blank");
       const dados={};
       new FormData(form).forEach((v,k)=>{dados[k]=v;});
+      dados._t=Date.now()-T0; // anti-robô: tempo desde que a página abriu
       // rastreio (tracking.js): origem da campanha + event_id do Lead
       const T=window.acbTrack;
       if(T&&T.dadosLead){try{Object.assign(dados,T.dadosLead());}catch(e){}}
@@ -191,6 +204,11 @@
           }else{
             if(win&&!win.closed)win.close();
             if(btn)btn.disabled=false;
+            if(res&&res.erro==="telefone-invalido"){
+              const tf=form.querySelector("[name=telefone]");
+              if(tf){tf.closest(".field")?.classList.add("error");tf.focus();}
+              return;
+            }
             alert("Não foi possível enviar agora. Confira os dados e tente novamente.");
           }
         })
@@ -206,6 +224,7 @@
         form.querySelectorAll("[required]").forEach(inp=>{
           const f=inp.closest(".field");let valid=inp.value.trim()!=="";
           if(valid&&inp.type==="email")valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inp.value);
+          if(valid&&inp.type==="tel")valid=telValido(inp.value);
           f&&f.classList.toggle("error",!valid);if(!valid)ok=false;
         });
         if(!ok){form.querySelector(".field.error input,.field.error select,.field.error textarea")?.focus();return;}

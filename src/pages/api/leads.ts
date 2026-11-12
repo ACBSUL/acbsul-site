@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { db, tabelas } from '../../db';
 import { carregarConfig } from '../../lib/config';
 import { enviarEventoMeta } from '../../lib/capi';
+import { motivoSpam, telefoneValido } from '../../lib/antispam';
 
 export const prerender = false;
 
@@ -46,6 +47,16 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (!nome || !telefone || !email || !emailValido(email)) {
     return jsonResp({ ok: false, erro: 'dados-invalidos' }, 400);
+  }
+
+  // robô: não salva, não manda conversão (e não diz o motivo a quem enviou)
+  const spam = motivoSpam(dados, nome);
+  if (spam) {
+    console.warn(`[leads] bloqueado como spam: ${spam}`);
+    return jsonResp({ ok: false, erro: 'dados-invalidos' }, 400);
+  }
+  if (!telefoneValido(telefone)) {
+    return jsonResp({ ok: false, erro: 'telefone-invalido' }, 400);
   }
 
   // rastreio de campanha (preenchido pelo tracking.js; tudo opcional)

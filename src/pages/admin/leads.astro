@@ -91,6 +91,56 @@ const campanhaDe = (l: (typeof linhas)[number]): string | null => {
   if (!fonte) return null;
   return [fonte, l.utmCampaign, l.utmContent].filter(Boolean).join(' · ');
 };
+
+// detalhes do lead (janela aberta ao clicar no card / na linha)
+type Item = { r: string; v: string | null | undefined; href?: string };
+const encurta = (s: string | null, n = 28) => (s && s.length > n ? s.slice(0, n) + '…' : s);
+const detalhe = (l: (typeof linhas)[number]) => {
+  const temCampanha = !!(l.fonte || l.utmSource || l.utmCampaign || l.gclid || l.gbraid || l.wbraid || l.fbclid);
+  const secoes: { titulo: string; itens: Item[]; vazio?: string }[] = [
+    {
+      titulo: 'Contato',
+      itens: [
+        { r: 'Nome', v: l.nome },
+        { r: 'Telefone', v: l.telefone, href: waLead(l.telefone) },
+        { r: 'E-mail', v: l.email, href: `mailto:${l.email}` },
+      ],
+    },
+    {
+      titulo: 'Solicitação',
+      itens: [
+        { r: 'Recebido em', v: fmtData(l.criadoEm) },
+        { r: 'Formulário', v: l.origem === 'contato-direto' ? 'Contato direto (home)' : 'Página de produto' },
+        { r: 'Produto', v: l.produto },
+        { r: 'Categoria', v: l.categoriaSlug ? (nomeCategoria.get(l.categoriaSlug) ?? l.categoriaSlug) : null },
+        { r: 'Interesse', v: l.interesse },
+        { r: 'Etapa', v: COLUNAS.find((c) => c.id === normEtapa(l.etapa))?.nome },
+        { r: 'Status', v: l.atendido ? 'Atendido' : 'Novo' },
+      ],
+    },
+    {
+      titulo: 'Campanha',
+      vazio: temCampanha ? undefined : 'Sem dados de campanha: visita direta ou lead anterior ao rastreio (12/11/2026).',
+      itens: temCampanha
+        ? [
+            { r: 'Origem', v: campanhaDe(l) },
+            { r: 'utm_source', v: l.utmSource },
+            { r: 'utm_medium', v: l.utmMedium },
+            { r: 'utm_campaign', v: l.utmCampaign },
+            { r: 'utm_content', v: l.utmContent },
+            { r: 'utm_term', v: l.utmTerm },
+            { r: 'Clique Google (gclid)', v: encurta(l.gclid || l.gbraid || l.wbraid) },
+            { r: 'Clique Meta (fbclid)', v: encurta(l.fbclid) },
+          ]
+        : [],
+    },
+    {
+      titulo: 'Página',
+      itens: [{ r: 'Enviado em', v: l.pagina ? l.pagina.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '') || '/' : null, href: l.pagina ?? undefined }],
+    },
+  ];
+  return secoes.map((s) => ({ ...s, itens: s.itens.filter((i) => i.v) })).filter((s) => s.itens.length || s.vazio);
+};
 ---
 
 <AdminLayout titulo="Leads">
@@ -141,6 +191,9 @@ const campanhaDe = (l: (typeof linhas)[number]): string | null => {
                       class={`card ${l.atendido ? 'atendido' : ''}`}
                       draggable="true"
                       data-card
+                      data-abrir={l.id}
+                      tabindex="0"
+                      title="Clique para ver os detalhes"
                       data-id={l.id}
                       data-etapa={col.id}
                     >
@@ -295,7 +348,7 @@ const campanhaDe = (l: (typeof linhas)[number]): string | null => {
                   )}
                 </td>
                 <td>
-                  <b>{l.nome}</b>
+                  <button type="button" class="nome-btn" data-abrir={l.id} title="Ver detalhes">{l.nome}</button>
                   <br />
                   <a class="link-contato" href={waLead(l.telefone)} target="_blank" rel="noopener">
                     {l.telefone}
@@ -348,10 +401,70 @@ const campanhaDe = (l: (typeof linhas)[number]): string | null => {
       </>
     )
   }
+
+  {linhas.map((l) => (
+    <div hidden data-tpl={l.id}>
+      <h2 class="det-titulo">{l.nome}</h2>
+      {detalhe(l).map((s) => (
+        <section class="det-secao">
+          <h3>{s.titulo}</h3>
+          {s.vazio && <p class="det-vazio">{s.vazio}</p>}
+          {s.itens.length > 0 && (
+            <dl>
+              {s.itens.map((i) => (
+                <Fragment>
+                  <dt>{i.r}</dt>
+                  <dd>
+                    {i.href ? (
+                      <a href={i.href} target={i.href.startsWith('mailto:') ? undefined : '_blank'} rel="noopener">{i.v}</a>
+                    ) : (
+                      i.v
+                    )}
+                  </dd>
+                </Fragment>
+              ))}
+            </dl>
+          )}
+        </section>
+      ))}
+    </div>
+  ))}
+
+  <dialog class="detalhe" data-detalhe aria-label="Detalhes do lead">
+    <button type="button" class="det-fechar" data-fechar aria-label="Fechar">&times;</button>
+    <div data-det-corpo></div>
+  </dialog>
 </AdminLayout>
 
 <script is:inline>
   (function () {
+    // ---- Detalhes do lead (clique no card ou no nome) ----
+    var dlg = document.querySelector('[data-detalhe]');
+    if (dlg) {
+      var corpo = dlg.querySelector('[data-det-corpo]');
+      var abrir = function (id) {
+        var tpl = document.querySelector('[data-tpl="' + id + '"]');
+        if (!tpl) return;
+        corpo.innerHTML = tpl.innerHTML;
+        dlg.showModal();
+      };
+      document.addEventListener('click', function (e) {
+        var alvo = e.target;
+        // cliques em botões, links e formulários do card mantêm a ação deles
+        if (alvo.closest('a, form, input, select') || (alvo.closest('button') && !alvo.closest('.nome-btn'))) return;
+        var el = alvo.closest('[data-abrir]');
+        if (el) abrir(el.getAttribute('data-abrir'));
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        var el = e.target.closest && e.target.closest('article[data-abrir]');
+        if (el && e.target === el) abrir(el.getAttribute('data-abrir'));
+      });
+      dlg.querySelector('[data-fechar]').addEventListener('click', function () { dlg.close(); });
+      // clique fora da caixa fecha
+      dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+    }
+
     // ---- Seleção em massa (visão lista) ----
     var form = document.getElementById('leads-bulk');
     if (form) {
@@ -576,4 +689,39 @@ const campanhaDe = (l: (typeof linhas)[number]): string | null => {
   .botao-icone svg { width: 17px; height: 17px; }
   .botao-icone.perigo { color: var(--erro-ink); }
   .botao-icone.perigo:hover { background: var(--erro-bg); border-color: currentColor; }
+
+  /* card clicável */
+  .card { cursor: pointer; transition: border-color var(--t), box-shadow var(--t); }
+  .card:hover { border-color: var(--accent); }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nome-btn {
+    background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--ink);
+    cursor: pointer; text-align: left; text-decoration: underline dotted; text-underline-offset: 3px;
+  }
+  .nome-btn:hover { color: var(--accent); }
+
+  /* janela de detalhes */
+  .detalhe {
+    margin: auto; inset: 0; position: fixed;
+    width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+    border: 1px solid var(--line-strong); border-radius: var(--r); padding: 1.3rem 1.4rem 1.1rem;
+    background: var(--surface); color: var(--ink); box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .detalhe::backdrop { background: rgba(15, 20, 30, 0.45); }
+  .det-fechar {
+    position: absolute; top: 0.6rem; right: 0.7rem; width: 34px; height: 34px;
+    border: 0; background: none; font-size: 1.6rem; line-height: 1; color: var(--ink-2); cursor: pointer;
+  }
+  .det-fechar:hover { color: var(--ink); }
+  .det-titulo { margin: 0 2rem 0.9rem 0; font-size: 1.15rem; }
+  .det-secao { border-top: 1px solid var(--line); padding: 0.75rem 0 0.4rem; }
+  .det-secao h3 {
+    margin: 0 0 0.5rem; font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2);
+  }
+  .det-secao dl { display: grid; grid-template-columns: 150px 1fr; gap: 0.35rem 0.8rem; margin: 0; font-size: 0.88rem; }
+  .det-secao dt { color: var(--ink-2); }
+  .det-secao dd { margin: 0; word-break: break-word; }
+  .det-secao dd a { color: var(--accent); }
+  .det-vazio { margin: 0; font-size: 0.85rem; color: var(--ink-2); }
+  @media (max-width: 520px) { .det-secao dl { grid-template-columns: 1fr; gap: 0.1rem; } .det-secao dd { margin-bottom: 0.4rem; } }
 </style>

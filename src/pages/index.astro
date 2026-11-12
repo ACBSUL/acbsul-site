@@ -905,6 +905,7 @@ const faqSchema = {
         <div class="contact-right">
           <form data-leadform data-lead-wa novalidate>
             <input type="hidden" name="origem" value="contato-direto" />
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Site <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
             <h3>Solicite uma análise</h3>
             <p class="sub">Preencha os dados técnicos da sua operação.</p>
             <div class="frow">
@@ -935,7 +936,7 @@ const faqSchema = {
                   name="telefone"
                   required
                   placeholder="(51) 9 0000-0000"
-                /><span class="err">Informe um telefone.</span>
+                /><span class="err">Informe um telefone válido com DDD.</span>
               </div>
             </div>
             <div class="field">
