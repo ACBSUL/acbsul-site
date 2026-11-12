@@ -21,7 +21,13 @@ const json = (corpo: unknown, status = 200) =>
 export const POST: APIRoute = async ({ request, url }) => {
   // só aceita chamadas do próprio site
   const origem = request.headers.get('origin');
-  if (origem && new URL(origem).host !== url.host) return json({ ok: false, erro: 'origem' }, 403);
+  // na Vercel url.host é o host interno; o domínio que o visitante acessou vem em x-forwarded-host/host
+  const hostSite = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host;
+  if (origem) {
+    let hostOrigem = '';
+    try { hostOrigem = new URL(origem).host; } catch {}
+    if (hostOrigem !== hostSite && hostOrigem !== url.host) return json({ ok: false, erro: 'origem' }, 403);
+  }
 
   let corpo: any;
   try {
