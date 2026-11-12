@@ -85,6 +85,7 @@ export const POST: APIRoute = async ({ request }) => {
     telefone,
     email,
     interesse,
+    empresa,
     ...rastreio,
   });
 

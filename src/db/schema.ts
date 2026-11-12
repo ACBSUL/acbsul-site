@@ -125,6 +125,8 @@ export const leads = pgTable('leads', {
   pagina: text('pagina'),
   /** id anônimo do visitante (external_id do Pixel) */
   visitanteId: text('visitante_id'),
+  /** campo "Empresa" do formulário (opcional) */
+  empresa: text('empresa'),
 });
 
 // Popup/banner exibido no site (ex.: divulgação de locação de equipamentos).

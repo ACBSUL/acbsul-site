@@ -102,6 +102,7 @@ const detalhe = (l: (typeof linhas)[number]) => {
       titulo: 'Contato',
       itens: [
         { r: 'Nome', v: l.nome },
+        { r: 'Empresa', v: l.empresa },
         { r: 'Telefone', v: l.telefone, href: waLead(l.telefone) },
         { r: 'E-mail', v: l.email, href: `mailto:${l.email}` },
       ],
@@ -208,6 +209,7 @@ const detalhe = (l: (typeof linhas)[number]) => {
                       </div>
 
                       <b class="card-nome">{l.nome}</b>
+                      {l.empresa && <p class="card-interesse">{l.empresa}</p>}
 
                       {l.origem !== 'contato-direto' && (l.produto || l.categoriaSlug) && (
                         <p class="card-prod">
