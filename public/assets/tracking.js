@@ -9,11 +9,8 @@
    Funil (Meta)                       Google (GA4 / Ads)
      1 PageView        carga            page_view (automático do gtag)
      2 ViewContent     25% ou 10s       view_item
-     3 AddToWishlist   50% ou 30s       —
-     4 InitiateCheckout começou a       inicio_formulario
-                        preencher form
-     5 Contact         clique WhatsApp  contato_whatsapp + conversão Ads (secundária)
-     6 Lead            form salvo       generate_lead + conversão Ads (PRINCIPAL)
+     3 Contact         clique WhatsApp  contato_whatsapp + conversão Ads (secundária)
+     4 Lead            form salvo       generate_lead + conversão Ads (PRINCIPAL)
      - Rolagem         20..100%         —   (evento personalizado, só navegador)
 
    Todo evento Meta leva event_id único, espelhado no servidor (/api/capi;
@@ -255,8 +252,7 @@
     });
   }
   var DEGRAUS = [
-    { nome: 'ViewContent', scroll: 25, tempo: 10000, fn: viewContent },
-    { nome: 'AddToWishlist', scroll: 50, tempo: 30000, fn: function () { dispara('AddToWishlist', conteudo()); } }
+    { nome: 'ViewContent', scroll: 25, tempo: 10000, fn: viewContent }
   ];
   DEGRAUS.forEach(function (d) {
     setTimeout(function () { umaVez(d.nome, d.fn); }, d.tempo);
@@ -304,22 +300,6 @@
   } else {
     setTimeout(verificaScroll, 1200);
   }
-
-  /* ---------- 9. formulário: começou a preencher -------------------------- */
-
-  document.addEventListener('focusin', function (ev) {
-    var form = ev.target && ev.target.closest && ev.target.closest('form[data-leadform]');
-    if (!form) return;
-    umaVez('InitiateCheckout', function () {
-      var p = conteudo();
-      var prod = form.querySelector('[name=produto]');
-      if (prod && prod.value) p.content_name = prod.value;
-      dispara('InitiateCheckout', p);
-      /* nome próprio: o GA4 já manda um "form_start" automático (medição
-         otimizada) — usar o mesmo nome contaria em dobro */
-      gtagSeguro('event', 'inicio_formulario', { form_name: prod && prod.value ? 'produto' : 'contato-direto' });
-    });
-  });
 
   /* ---------- 10. clique no WhatsApp = Contact --------------------------- */
 

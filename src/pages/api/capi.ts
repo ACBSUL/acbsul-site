@@ -10,7 +10,7 @@ import { enviarEventoMeta } from '../../lib/capi';
 
 export const prerender = false;
 
-const PERMITIDOS = new Set(['PageView', 'ViewContent', 'AddToWishlist', 'InitiateCheckout', 'Contact']);
+const PERMITIDOS = new Set(['PageView', 'ViewContent', 'Contact']);
 
 const json = (corpo: unknown, status = 200) =>
   new Response(JSON.stringify(corpo), {
