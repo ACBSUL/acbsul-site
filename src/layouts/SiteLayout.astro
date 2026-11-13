@@ -80,6 +80,15 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
     <script is:inline set:html={`window.ACB_TRACK=${JSON.stringify(trackCfg)};`} />
     <script src="/assets/tracking.js" is:inline></script>
 
+    <!-- Microsoft Clarity (gravações e mapas de calor). Só no site público. -->
+    <script is:inline>
+      (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "zczyinbj33");
+    </script>
+
     <link rel="icon" type="image/svg+xml" href="/logo-acbsul-atlas-copco.svg" />
 
     <!-- Pré-carrega as fontes locais críticas (subset latin) para reduzir o LCP -->
