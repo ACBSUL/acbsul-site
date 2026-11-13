@@ -28,6 +28,10 @@ export const empresa = {
   horario: 'Seg–Sex, 8h–12h e 13h–17h',
   atuacao: 'Rio Grande do Sul e Santa Catarina',
   url: 'https://acbsulcompressores.com.br',
+  redes: {
+    instagram: 'https://www.instagram.com/acbsul_compressores',
+    facebook: 'https://www.facebook.com/1404342932767041',
+  },
 } as const;
 
 // EntityBlock — texto institucional citável (frase-âncora de GEO). Enquadramento
