@@ -19,11 +19,11 @@ interface Props {
 // Rastreio de campanhas (public/assets/tracking.js — Framework FOP adaptado a leads)
 const META_PIXEL = '1167185732664219';
 const GOOGLE_ADS = {
-  id: 'AW-18569368689',
+  id: 'AW-18578432214', // conta ACBSul - PRE PAGO (900-370-1852)
   /** conversão PRINCIPAL: formulário enviado e salvo */
-  lead: 'AW-18569368689/aOe_CKGYzrYdEPGoyJZF',
+  lead: 'AW-18578432214/H_b_CLOewLkdENbB8ZpF',
   /** conversão secundária: clique no WhatsApp */
-  contato: 'AW-18569368689/6VzzCKSYzrYdEPGoyJZF',
+  contato: 'AW-18578432214/_eYKCOzZwLkdENbB8ZpF',
 };
 
 const {
@@ -72,7 +72,7 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-3LTV3XYEP2');
-      gtag('config', 'AW-18569368689', { allow_enhanced_conversions: true });
+      gtag('config', 'AW-18578432214', { allow_enhanced_conversions: true });
     </script>
 
     <!-- Meta Pixel + CAPI + eventos do funil (Framework FOP, adaptado a leads).
