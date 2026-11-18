@@ -270,6 +270,13 @@ const paragrafos = (popup.texto ?? '')
     tela.querySelector('.popup-cta')?.addEventListener('click', () => {
       if (horas > 0) localStorage.setItem(chave, String(Date.now()));
     });
+    // ao voltar pelo "voltar" do navegador a página sai do cache com o popup
+    // ainda aberto: se já foi visto, esconde
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted || !aberto || horas <= 0) return;
+      const antes = Number(localStorage.getItem(chave) ?? 0);
+      if (antes && Date.now() - antes < horas * 3600_000) fechar();
+    });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') fechar();
     });

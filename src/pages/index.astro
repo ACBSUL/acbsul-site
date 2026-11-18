@@ -875,7 +875,7 @@ const faqSchema = {
                 ></path></svg
               ></span
             >
-            <span><span class="lab">Telefone</span><b>{cfg.telefone}</b></span>
+            <span><span class="lab">Telefone</span><a class="cc-link" href={`tel:${cfg.telefoneTel}`}><b>{cfg.telefone}</b></a></span>
           </div>
           <div class="contact-channel">
             <span class="ico"
@@ -884,8 +884,8 @@ const faqSchema = {
               ></span
             >
             <span class="cc-mail"
-              ><span class="lab">E-mail</span><b set:html={cfg.email.replace('@', '@<wbr>')}
-              /></span
+              ><span class="lab">E-mail</span><a class="cc-link" href={`mailto:${cfg.email}`}><b set:html={cfg.email.replace('@', '@<wbr>')}
+              /></a></span
             >
           </div>
           <div class="contact-channel">
