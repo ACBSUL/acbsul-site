@@ -1,0 +1,236 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { empresa } from '../data/empresa';
+import { imagemPrincipal, altImagem, temPaginaPropria, urlProduto } from '../data/produtos';
+import { carregarCategorias, carregarProdutos } from '../lib/catalogo';
+import { carregarConfig } from '../lib/config';
+
+// Página de destino do anúncio "Compressor parafuso eletrico" (Google Ads).
+// Objetivo único: levar quem buscou compressor de parafuso ao WhatsApp ou ao formulário,
+// sem passar pelo catálogo geral. Produtos lidos do banco (admin).
+// PRÉ-RENDERIZADA (estática): é a página de destino do anúncio e precisa abrir
+// rápido no celular. Montada na hora do deploy e servida pelo CDN — sem ida ao
+// banco a cada clique (que custava 1–4,5 s). Mudanças no /admin (produtos,
+// telefone, WhatsApp) só aparecem aqui no próximo deploy.
+export const prerender = true;
+
+const cfg = await carregarConfig();
+const CAT = 'compressores-eletricos';
+const categoria = (await carregarCategorias()).find((c) => c.slug === CAT);
+const waNum = categoria?.whatsappNumero || undefined;
+const modelos = (await carregarProdutos()).filter(
+  (p) => p.categoria === CAT && p.publicado !== false,
+);
+
+// 4 linhas que cobrem a faixa do anúncio (5 a 50 hp; fixa e com inversor VSD)
+const DESTAQUES: { slug: string; titulo: string; uso: string }[] = [
+  { slug: 'linha-g-fixa-g4-g7', titulo: 'Linha G — G4 a G7', uso: '5 a 10 hp · oficinas e pequenas indústrias' },
+  { slug: 'linha-g-fixa-g15-g22', titulo: 'Linha G — G15 a G22', uso: '20 a 30 hp · indústria de médio porte' },
+  { slug: 'linha-ga-plus-fixa-ga11-ga30', titulo: 'GA⁺ — GA 11⁺ a GA 30', uso: '15 a 40 hp · uso contínuo, 24 horas' },
+  { slug: 'linha-ga-vsd-ga7-ga15', titulo: 'GA VSD⁺ — GA 7 a GA 15', uso: '7 a 15 kW · com inversor, gasta menos energia' },
+];
+const destaques = DESTAQUES.map((d) => {
+  const p = modelos.find((g) => g.slug === d.slug);
+  return p ? { p, titulo: d.titulo, uso: d.uso } : null;
+}).filter((x): x is NonNullable<typeof x> => x !== null);
+
+const waGeral = 'Olá! Vim pelo anúncio e quero um orçamento de compressor de parafuso.';
+const waModelo = (nome: string) => `Olá! Quero um orçamento do ${nome}.`;
+
+const title = 'Compressor de Ar Parafuso 5 a 50 hp no RS | ACB Sul';
+const description =
+  'Compressores de parafuso Atlas Copco das linhas G e GA, de 5 a 50 hp, com velocidade fixa ou inversor VSD. Distribuidor no RS com assistência técnica própria em Porto Alegre. Orçamento pelo WhatsApp.';
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: empresa.url },
+    { '@type': 'ListItem', position: 2, name: 'Compressor de parafuso', item: `${empresa.url}/compressor-de-parafuso` },
+  ],
+};
+
+const SVG_WA =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.978-1.605z"></path></svg>';
+---
+
+<SiteLayout
+  title={title}
+  description={description}
+  ogImage="/assets/products/compressores-eletricos/compressores-parafuso-linha-g.webp"
+  page="produtos"
+  rastreio={{ name: 'Landing compressor de parafuso', category: CAT, id: 'lp-compressor-parafuso' }}
+>
+  <script type="application/ld+json" is:inline slot="head" set:html={JSON.stringify(breadcrumbSchema)} />
+
+  <SiteNav />
+
+  <main>
+    <!-- ============ TOPO: resposta direta à busca + WhatsApp ============ -->
+    <section class="page-hero lp-hero">
+      <div class="container">
+        <span class="eyebrow">Distribuidor Atlas Copco no RS</span>
+        <h1>Compressor de ar parafuso de <span class="hl">5 a 50 hp</span></h1>
+        <p class="lead">
+          Linhas G e GA da Atlas Copco, com velocidade fixa ou inversor VSD para economizar
+          energia. Instalação e assistência técnica própria em Porto Alegre.
+        </p>
+        <div class="lp-ctas">
+          <a class="btn btn-wa btn-lg" data-wa-msg={waGeral} data-wa-num={waNum}
+            ><Fragment set:html={SVG_WA} />Pedir orçamento no WhatsApp</a
+          >
+          <a class="btn btn-ghost-dark btn-lg" href="#orcamento">Prefiro preencher um formulário</a>
+        </div>
+        <ul class="lp-trust">
+          <li>Distribuidor autorizado Atlas Copco</li>
+          <li>Peças originais em estoque</li>
+          <li>Atendimento em todo o RS</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ MODELOS EM DESTAQUE ============ -->
+    <section class="section lp-modelos">
+      <div class="container">
+        <div class="sec-head">
+          <h2>Qual tamanho você precisa?</h2>
+          <p class="lead">Algumas linhas. Não sabe a vazão ou a potência? Chame no WhatsApp que dimensionamos com você.</p>
+        </div>
+        <div class="grid cols-4">
+          {
+            destaques.map(({ p, titulo, uso }, i) => {
+              const img = imagemPrincipal(p);
+              return (
+                <article class="prod-card lp-card">
+                  {img && (
+                    <div class="pmedia">
+                      <img src={img.src} alt={altImagem(p, img)} loading={i < 2 ? 'eager' : 'lazy'} decoding="async" />
+                    </div>
+                  )}
+                  <div class="pbody">
+                    <span class="code">{p.specsChips[0]}</span>
+                    <h3>{titulo}</h3>
+                    <p class="lp-uso">{uso}</p>
+                    <a class="btn btn-wa lp-card-wa" data-wa-msg={waModelo(`compressor ${titulo}`)} data-wa-num={waNum}
+                      ><Fragment set:html={SVG_WA} />Orçamento</a
+                    >
+                    {temPaginaPropria(p) && (
+                      <a class="lp-detalhe" href={urlProduto(p)}>Ver ficha técnica</a>
+                    )}
+                  </div>
+                </article>
+              );
+            })
+          }
+        </div>
+        <p class="lp-todos">
+          Temos {modelos.length} linhas de compressor elétrico. <a href="/produtos#compressores-eletricos">Ver todas →</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ FORMULÁRIO ============ -->
+    <section class="section" id="orcamento" style="background:var(--bg-2)">
+      <div class="container">
+        <div class="contact-card">
+          <div class="contact-left">
+            <span class="eyebrow">Orçamento</span>
+            <h2>Receba uma proposta para o <span class="hl">seu compressor</span></h2>
+            <p class="lead">
+              Conte a potência (hp), a vazão ou o uso. Um especialista retorna em horário comercial
+              com a opção certa para a sua fábrica.
+            </p>
+            <div class="contact-channel">
+              <span class="ico"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  ><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13 1 .37 1.96.72 2.88a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.11-.45c.92.35 1.88.59 2.88.72A2 2 0 0 1 22 16.92z"
+                  ></path></svg
+                ></span
+              >
+              <span><span class="lab">Telefone</span><a class="cc-link" href={`tel:${cfg.telefoneTel}`}><b>{cfg.telefone}</b></a></span>
+            </div>
+          </div>
+          <div class="contact-right">
+            <form data-leadform data-lead-wa novalidate>
+              <input type="hidden" name="categoria" value={CAT} />
+              <input type="hidden" name="interesse" value="Compressores Elétricos" />
+              <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Site <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+              <h3>Solicite seu orçamento</h3>
+              <a class="form-wa" data-wa-msg={waGeral} data-wa-num={waNum}><Fragment set:html={SVG_WA} /><span>Prefere falar agora? <b>Chame no WhatsApp</b></span></a>
+              <div class="frow">
+                <div class="field">
+                  <label>Nome <span class="req">*</span></label><input type="text" name="nome" required placeholder="Seu nome" /><span class="err">Informe seu nome.</span>
+                </div>
+                <div class="field">
+                  <label>Empresa</label><input type="text" name="empresa" placeholder="Sua empresa" />
+                </div>
+              </div>
+              <div class="frow">
+                <div class="field">
+                  <label>E-mail <span class="req">*</span></label><input type="email" name="email" required placeholder="voce@empresa.com.br" /><span class="err">E-mail inválido.</span>
+                </div>
+                <div class="field">
+                  <label>WhatsApp <span class="req">*</span></label><input type="tel" name="telefone" required placeholder="(51) 9 0000-0000" /><span class="err">Informe um telefone válido com DDD.</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Potência aproximada</label>
+                <select name="produto">
+                  <option value="Compressor parafuso - potência a definir">Não sei / quero ajuda</option>
+                  <option value="Compressor parafuso até 10 hp">Até 10 hp</option>
+                  <option value="Compressor parafuso 10 a 20 hp">10 a 20 hp</option>
+                  <option value="Compressor parafuso 20 a 30 hp">20 a 30 hp</option>
+                  <option value="Compressor parafuso acima de 30 hp">Acima de 30 hp</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block btn-lg"
+                ><span class="ai"
+                  ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                    ><path d="M5 12h14M13 6l6 6-6 6"></path></svg
+                  ></span
+                >Solicitar Orçamento</button
+              >
+              <p class="form-note">Ao enviar, você concorda em ser contatado pela ACB Sul. Não compartilhamos seus dados.</p>
+            </form>
+            <div class="form-ok">
+              <div class="ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+              </div>
+              <h3>Solicitação enviada!</h3>
+              <p style="color:var(--ink-2)">Recebemos seus dados. Um especialista da ACB Sul retornará em breve no horário comercial.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</SiteLayout>
+
+<style>
+  .lp-hero { padding-bottom: clamp(36px, 6vw, 64px); }
+  .lp-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+  .lp-ctas .btn-wa :global(svg) { width: 22px; height: 22px; }
+  .lp-trust { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 22px 0 0; padding: 0; list-style: none; color: #bcc8d6; font-size: 14.5px; }
+  .lp-trust li::before { content: '✓'; color: #3ad07a; font-weight: 700; margin-right: 7px; }
+  .lp-modelos .sec-head { margin-bottom: 26px; }
+  .lp-card .pbody { gap: 6px; }
+  .lp-uso { color: var(--ink-2); font-size: 14.5px; margin: 0 0 8px; }
+  .lp-card-wa { justify-content: center; padding: 12px 16px; font-size: 13.5px; margin-top: auto; }
+  .lp-card-wa :global(svg) { width: 18px; height: 18px; }
+  .lp-detalhe { text-align: center; font-size: 13.5px; font-weight: 600; color: var(--blue-lt); margin-top: 4px; }
+  .lp-todos { margin-top: 22px; text-align: center; color: var(--ink-2); }
+  .lp-todos a { font-weight: 700; color: var(--accent); }
+  @media (max-width: 600px) {
+    .lp-ctas .btn { width: 100%; justify-content: center; white-space: normal; }
+    .lp-modelos .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .lp-card :global(.pmedia img) { padding: 8px; }
+    .lp-card .pbody { padding: 12px 10px 14px; }
+    .lp-card h3 { font-size: 15.5px; }
+    .lp-uso { font-size: 13px; line-height: 1.35; }
+    .lp-card-wa { padding: 10px 8px; font-size: 12.5px; gap: 6px; letter-spacing: .02em; }
+  }
+</style>

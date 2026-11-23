@@ -36,6 +36,12 @@ if (!p || !categoria || !temPaginaPropria(p)) {
   });
 }
 
+// Atalho direto: o Clarity mostrou interessados saindo sem achar como falar rápido.
+const SVG_WA =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.978-1.605z"></path></svg>';
+const waMsg = waMsgProduto(p, categoria.nome);
+const waNum = categoria.whatsappNumero || undefined;
+
 const urlAbs = `${empresa.url}${urlProduto(p)}`;
 const img = imagemPrincipal(p);
 
@@ -123,6 +129,9 @@ const breadcrumbSchema = {
             <p class="pitch" set:html={p.pitch} />
 
             <div class="pdp-cta">
+              <a class="btn btn-wa btn-lg" data-wa-msg={waMsg} data-wa-num={waNum}
+                ><Fragment set:html={SVG_WA} />Orçamento no WhatsApp</a
+              >
               <button class="btn btn-accent btn-lg" id="abrirLead" type="button"
                 ><span class="ai"
                   ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
@@ -182,6 +191,9 @@ const breadcrumbSchema = {
             </p>
           </div>
           <div class="acts">
+            <a class="btn btn-wa btn-lg" data-wa-msg={waMsg} data-wa-num={waNum}
+              ><Fragment set:html={SVG_WA} />Orçamento no WhatsApp</a
+            >
             <button class="btn btn-accent btn-lg" type="button" data-abrir-lead
               ><span class="ai"
                 ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"

@@ -2,6 +2,7 @@
 // Admin → Popup → editar. Conteúdo (imagem, título, texto, botão), regra de
 // exibição (imediato / atraso / rolagem) e alcance (todo o site ou páginas
 // escolhidas). A imagem vai para o Supabase Storage já tratada em WebP.
+import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { db, tabelas } from '../../../db';
@@ -12,6 +13,19 @@ export const prerender = false;
 
 const id = Number(Astro.params.id);
 if (!Number.isInteger(id)) return Astro.redirect('/admin/popup');
+
+// Páginas públicas ficam em cache (ISR, ver astro.config.mjs). Este cookie faz a
+// Vercel pular o cache para quem está logado aqui, senão o preview do popup não
+// apareceria (o ?popup-preview=N seria ignorado pelo cache).
+const segredo = process.env.BETTER_AUTH_SECRET;
+const tokenCache = segredo
+  ? createHash('sha256').update(`isr-bypass:${segredo}`).digest('hex')
+  : undefined;
+if (tokenCache) {
+  Astro.cookies.set('__prerender_bypass', tokenCache, {
+    path: '/', httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60 * 60 * 8,
+  });
+}
 
 const t = tabelas.popups;
 let erro = '';
