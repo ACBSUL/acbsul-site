@@ -10,7 +10,11 @@ import { carregarConfig } from '../lib/config';
 // Página de destino do anúncio "Gerador diesel 40-1100 kVA" (Google Ads).
 // Objetivo único: levar quem buscou gerador ao WhatsApp ou ao formulário,
 // sem passar pelo catálogo geral. Produtos lidos do banco (admin).
-export const prerender = false;
+// PRÉ-RENDERIZADA (estática): é a página de destino do anúncio e precisa abrir
+// rápido no celular. Montada na hora do deploy e servida pelo CDN — sem ida ao
+// banco a cada clique (que custava 1–4,5 s). Mudanças no /admin (produtos,
+// telefone, WhatsApp) só aparecem aqui no próximo deploy.
+export const prerender = true;
 
 const cfg = await carregarConfig();
 const CAT = 'geradores-de-energia';
