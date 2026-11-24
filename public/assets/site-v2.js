@@ -80,7 +80,7 @@
   }
 
   function buildWaFloat(){
-    return `<a class="wa-float wa-oculto" data-wa-msg="Olá! Vim pelo site e gostaria de falar com a ACB Sul." aria-label="WhatsApp"><span class="wi">${SVG.wa}</span><span class="wt">Fale conosco</span></a>`;
+    return `<a class="wa-float" data-wa-msg="Olá! Vim pelo site e gostaria de falar com a ACB Sul." aria-label="WhatsApp"><span class="wi">${SVG.wa}</span><span class="wt">Fale conosco</span></a>`;
   }
 
   function ready(fn){document.readyState==="loading"?document.addEventListener("DOMContentLoaded",fn):fn();}
@@ -92,18 +92,6 @@
     const fSlot=document.getElementById("v2-footer");
     if(fSlot) fSlot.innerHTML=buildFooter();
     if(!document.querySelector(".wa-float")) document.body.insertAdjacentHTML("beforeend",buildWaFloat());
-
-    /* botão flutuante do WhatsApp: aparece após 30% de rolagem OU 10s na página */
-    const waF=document.querySelector(".wa-float");
-    if(waF){
-      waF.classList.add("wa-oculto");
-      let waT=null;
-      const waMostra=()=>{waF.classList.remove("wa-oculto");window.removeEventListener("scroll",waRol);clearTimeout(waT);};
-      const waRol=()=>{const r=document.documentElement.scrollHeight-window.innerHeight;if(r<=0||window.scrollY/r>=0.3)waMostra();};
-      waT=setTimeout(waMostra,10000);
-      window.addEventListener("scroll",waRol,{passive:true});
-      waRol();
-    }
 
     /* nav scroll state */
     const navWrap=document.querySelector(".nav-wrap");

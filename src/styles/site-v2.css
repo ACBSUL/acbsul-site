@@ -532,7 +532,6 @@ p{margin:0;text-wrap:pretty;}
 .wa-float .wt{font-family:var(--hd);font-weight:700;font-size:15px;white-space:nowrap;max-width:0;opacity:0;transition:max-width .25s,opacity .2s,padding .2s;}
 .wa-float:hover .wt{max-width:220px;opacity:1;padding-right:22px;}
 .wa-float{transition:opacity .35s,transform .35s;}
-.wa-float.wa-oculto{opacity:0;transform:translateY(16px);pointer-events:none;}
 @media(max-width:600px){
   .wa-float{height:54px;right:14px;bottom:14px;}
   .wa-float .wi{width:54px;height:54px;}

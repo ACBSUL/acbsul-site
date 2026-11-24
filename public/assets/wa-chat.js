@@ -106,7 +106,7 @@
     if (iniciado) { if (!input.disabled) input.focus(); return; }
     iniciado = true;
     travar(true);
-    fala('Olá! Sou o atendimento da ACB Sul, distribuidor Atlas Copco no RS. Vou te encaminhar para o nosso WhatsApp. 😊', 600)
+    fala('Olá! Sou o atendimento da ACB Sul e vou iniciar o seu atendimento por aqui!', 600)
       .then(function () { return fala('Para começar, qual é o seu nome?', 800); })
       .then(function () { travar(false, 'Escreva seu nome...'); });
   }
