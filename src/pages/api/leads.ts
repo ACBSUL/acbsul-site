@@ -3,13 +3,16 @@
 // dados informados. Rota pública (não passa pela proteção de /admin).
 
 import type { APIRoute } from 'astro';
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { db, tabelas } from '../../db';
 import { carregarConfig } from '../../lib/config';
 import { enviarEventoMeta } from '../../lib/capi';
 import { motivoSpam, telefoneValido } from '../../lib/antispam';
 
 export const prerender = false;
+
+/** nome provisório de quem informou só o telefone no chat (a coluna é NOT NULL) */
+const SEM_NOME = 'Não informado';
 
 const limpar = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 const emailValido = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -35,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResp({ ok: false, erro: 'corpo-invalido' }, 400);
   }
 
-  const nome = limpar(dados.nome, 120);
+  const nomeInformado = limpar(dados.nome, 120);
   const telefone = limpar(dados.telefone, 40);
   const email = limpar(dados.email, 160);
   const interesse = limpar(dados.interesse, 60) || null;
@@ -46,10 +49,12 @@ export const POST: APIRoute = async ({ request }) => {
   const origemBruta = limpar(dados.origem, 30);
   const origem =
     origemBruta === 'contato-direto' || origemBruta === 'chat-whatsapp' ? origemBruta : 'produto';
-  // o chat de WhatsApp (wa-chat.js) pede só nome e telefone; e-mail fica vazio
-  const emailObrigatorio = origem !== 'chat-whatsapp';
+  // o chat de WhatsApp (wa-chat.js) grava o telefone assim que é informado: nome
+  // vem depois e não há e-mail
+  const ehChat = origem === 'chat-whatsapp';
+  const nome = nomeInformado || (ehChat ? SEM_NOME : '');
 
-  if (!nome || !telefone || (emailObrigatorio && (!email || !emailValido(email)))) {
+  if (!nome || !telefone || (!ehChat && (!email || !emailValido(email)))) {
     return jsonResp({ ok: false, erro: 'dados-invalidos' }, 400);
   }
 
@@ -80,7 +85,44 @@ export const POST: APIRoute = async ({ request }) => {
     visitanteId: r('visitante_id', 80),
   };
 
-  // 1) salva o lead
+  // 1) chat: telefone → nome → assunto chegam em envios separados e completam o
+  // MESMO lead (mesmo visitante + telefone, nas últimas 2 h, ainda não concluído).
+  if (ehChat && rastreio.visitanteId) {
+    const t = tabelas.leads;
+    const [anterior] = await db
+      .select({ id: t.id, nome: t.nome, produto: t.produto, interesse: t.interesse })
+      .from(t)
+      .where(
+        and(
+          eq(t.origem, 'chat-whatsapp'),
+          eq(t.visitanteId, rastreio.visitanteId),
+          eq(t.telefone, telefone),
+          sql`${t.criadoEm} > now() - interval '2 hours'`,
+        ),
+      )
+      .orderBy(desc(t.id))
+      .limit(1);
+
+    if (anterior) {
+      const aberto = anterior.interesse === 'Chat não concluído';
+      const parcial = dados.etapa_chat === 'parcial';
+      const repetido = anterior.produto === produto && anterior.interesse === interesse;
+      if (aberto) {
+        await db
+          .update(t)
+          .set({
+            nome: nomeInformado || anterior.nome,
+            produto: produto ?? anterior.produto,
+            interesse,
+          })
+          .where(eq(t.id, anterior.id));
+      }
+      // telefone já registrado (parcial) ou reenvio do mesmo pedido: nada a criar
+      if (aberto || parcial || repetido) return jsonResp({ ok: true });
+    }
+  }
+
+  // 1a) salva o lead
   await db.insert(tabelas.leads).values({
     origem,
     produto,
