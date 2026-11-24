@@ -104,14 +104,14 @@ const detalhe = (l: (typeof linhas)[number]) => {
         { r: 'Nome', v: l.nome },
         { r: 'Empresa', v: l.empresa },
         { r: 'Telefone', v: l.telefone, href: waLead(l.telefone) },
-        { r: 'E-mail', v: l.email, href: `mailto:${l.email}` },
+        { r: 'E-mail', v: l.email || null, href: l.email ? `mailto:${l.email}` : undefined },
       ],
     },
     {
       titulo: 'Solicitação',
       itens: [
         { r: 'Recebido em', v: fmtData(l.criadoEm) },
-        { r: 'Formulário', v: l.origem === 'contato-direto' ? 'Contato direto (home)' : 'Página de produto' },
+        { r: 'Formulário', v: l.origem === 'contato-direto' ? 'Contato direto (home)' : l.origem === 'chat-whatsapp' ? 'Chat do WhatsApp' : 'Página de produto' },
         { r: 'Produto', v: l.produto },
         { r: 'Categoria', v: l.categoriaSlug ? (nomeCategoria.get(l.categoriaSlug) ?? l.categoriaSlug) : null },
         { r: 'Interesse', v: l.interesse },
@@ -201,6 +201,8 @@ const detalhe = (l: (typeof linhas)[number]) => {
                       <div class="card-topo">
                         {l.origem === 'contato-direto' ? (
                           <span class="badge dir">Contato direto</span>
+                        ) : l.origem === 'chat-whatsapp' ? (
+                          <span class="badge dir">Chat WhatsApp</span>
                         ) : (
                           <span class="badge prod">Produto</span>
                         )}
@@ -227,7 +229,7 @@ const detalhe = (l: (typeof linhas)[number]) => {
                         <a class="link-contato" href={waLead(l.telefone)} target="_blank" rel="noopener">
                           {l.telefone}
                         </a>
-                        <a class="link-contato secundario" href={`mailto:${l.email}`}>{l.email}</a>
+                        {l.email && <a class="link-contato secundario" href={`mailto:${l.email}`}>{l.email}</a>}
                       </div>
 
                       <div class="card-acoes">
@@ -329,6 +331,12 @@ const detalhe = (l: (typeof linhas)[number]) => {
                 <td>
                   {l.origem === 'contato-direto' ? (
                     <span class="badge dir">Contato direto</span>
+                  ) : l.origem === 'chat-whatsapp' ? (
+                    <>
+                      <span class="badge dir">Chat WhatsApp</span>
+                      <br />
+                      <b>{l.produto ?? '—'}</b>
+                    </>
                   ) : (
                     <>
                       <span class="badge prod">Produto</span>
@@ -356,7 +364,7 @@ const detalhe = (l: (typeof linhas)[number]) => {
                     {l.telefone}
                   </a>
                   <br />
-                  <a class="link-contato secundario" href={`mailto:${l.email}`}>{l.email}</a>
+                  {l.email && <a class="link-contato secundario" href={`mailto:${l.email}`}>{l.email}</a>}
                 </td>
                 <td>{l.interesse ?? '—'}</td>
                 <td>

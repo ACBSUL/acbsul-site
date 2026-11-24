@@ -43,9 +43,13 @@ export const POST: APIRoute = async ({ request }) => {
   const categoriaSlug = limpar(dados.categoria, 80) || null;
   const empresa = limpar(dados.empresa, 120) || null;
   // só 'contato-direto' é aceito como override; qualquer outro valor = 'produto'
-  const origem = limpar(dados.origem, 30) === 'contato-direto' ? 'contato-direto' : 'produto';
+  const origemBruta = limpar(dados.origem, 30);
+  const origem =
+    origemBruta === 'contato-direto' || origemBruta === 'chat-whatsapp' ? origemBruta : 'produto';
+  // o chat de WhatsApp (wa-chat.js) pede só nome e telefone; e-mail fica vazio
+  const emailObrigatorio = origem !== 'chat-whatsapp';
 
-  if (!nome || !telefone || !email || !emailValido(email)) {
+  if (!nome || !telefone || (emailObrigatorio && (!email || !emailValido(email)))) {
     return jsonResp({ ok: false, erro: 'dados-invalidos' }, 400);
   }
 
@@ -144,8 +148,8 @@ export const POST: APIRoute = async ({ request }) => {
     '',
     `Nome: ${nome}`,
     `Telefone: ${telefone}`,
-    `E-mail: ${email}`,
   ];
+  if (email) linhas.push(`E-mail: ${email}`);
   if (empresa) linhas.push(`Empresa: ${empresa}`);
   if (interesse) linhas.push(`Interesse: ${interesse}`);
 

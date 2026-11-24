@@ -308,6 +308,13 @@
     if (!alvo || !alvo.closest) return;
     var link = alvo.closest('a[href*="wa.me"], a[data-wa-msg]');
     if (!link) return;
+    /* com o chat de pré-atendimento (wa-chat.js) o clique só abre o chat; o
+       Contato é disparado pelo chat quando a pessoa conclui (acbTrack.contato) */
+    if (window.acbChat) return;
+    contato(link.classList.contains('wa-float') ? 'flutuante' : 'pagina');
+  }, true);
+
+  function contato(posicao) {
     /* no máximo 1 Contact a cada 5 min por visitante (evita inflar com
        cliques repetidos) */
     var agora = Date.now(), ult = 0;
@@ -319,11 +326,11 @@
     p.content_name = C.name || document.title;
     p.content_category = C.category || location.pathname.split('/')[1] || 'home';
     p.canal = 'whatsapp';
-    p.posicao_botao = link.classList.contains('wa-float') ? 'flutuante' : 'pagina';
+    p.posicao_botao = posicao || 'pagina';
     dispara('Contact', p);
     gtagSeguro('event', 'contato_whatsapp', { posicao_botao: p.posicao_botao, pagina: location.pathname });
     if (ADS.contato) gtagSeguro('event', 'conversion', { send_to: ADS.contato });
-  }, true);
+  }
 
   /* ---------- 11. Lead (chamado pelo site-v2.js) -------------------------- */
 
@@ -366,6 +373,6 @@
 
   /* ---------- 12. api pública -------------------------------------------- */
 
-  window.acbTrack = { dispara: dispara, dadosLead: dadosLead, leadEnviado: leadEnviado };
+  window.acbTrack = { dispara: dispara, dadosLead: dadosLead, leadEnviado: leadEnviado, contato: contato };
 
 })();

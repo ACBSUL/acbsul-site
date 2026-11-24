@@ -80,7 +80,7 @@
   }
 
   function buildWaFloat(){
-    return `<a class="wa-float wa-oculto" data-wa-msg="Olá! Vim pelo site e gostaria de falar com a ACB Sul." aria-label="WhatsApp"><span class="wi">${SVG.wa}</span><span class="wt">Falar no WhatsApp</span></a>`;
+    return `<a class="wa-float wa-oculto" data-wa-msg="Olá! Vim pelo site e gostaria de falar com a ACB Sul." aria-label="WhatsApp"><span class="wi">${SVG.wa}</span><span class="wt">Fale conosco</span></a>`;
   }
 
   function ready(fn){document.readyState==="loading"?document.addEventListener("DOMContentLoaded",fn):fn();}

@@ -128,5 +128,7 @@ const popup = await carregarPopupDaPagina(Astro.url.pathname, previewPopup);
     <!-- expõe dados de negócio ao script de interações -->
     <script is:inline set:html={`window.ACB_BIZ=${JSON.stringify(biz)};`} />
     <script src="/assets/site-v2.js" is:inline></script>
+    <!-- chat de pré-atendimento: todo botão de WhatsApp abre o chat (nome, WhatsApp, assunto) -->
+    <script src="/assets/wa-chat.js" is:inline defer></script>
   </body>
 </html>
