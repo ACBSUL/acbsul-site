@@ -8,6 +8,7 @@ import { db, tabelas } from '../../db';
 import { carregarConfig } from '../../lib/config';
 import { enviarEventoMeta } from '../../lib/capi';
 import { motivoSpam, telefoneValido } from '../../lib/antispam';
+import { avisarWhatsapp, type DadosAviso } from '../../lib/aviso-whatsapp';
 
 export const prerender = false;
 
@@ -85,6 +86,17 @@ export const POST: APIRoute = async ({ request }) => {
     visitanteId: r('visitante_id', 80),
   };
 
+  // aviso no WhatsApp da empresa: formulários sempre; no chat, uma vez só, quando
+  // o wa-chat.js pede (no fim, ou quando a pessoa sai antes de terminar)
+  const desistiu = ehChat && dados.etapa_chat === 'desistiu';
+  const querAviso = !ehChat || Boolean(dados.avisar);
+  const aviso = (extra: Partial<DadosAviso> = {}) =>
+    avisarWhatsapp({
+      origem, nome, telefone, email, empresa, produto, interesse,
+      utmSource: rastreio.utmSource, gclid: rastreio.gclid, fbclid: rastreio.fbclid,
+      desistiu, ...extra,
+    });
+
   // 1) chat: telefone → nome → assunto chegam em envios separados e completam o
   // MESMO lead (mesmo visitante + telefone, nas últimas 2 h, ainda não concluído).
   if (ehChat && rastreio.visitanteId) {
@@ -105,6 +117,11 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (anterior) {
       const aberto = anterior.interesse === 'Chat não concluído';
+      // saiu antes de terminar: avisa com o que já foi informado, sem mexer no lead
+      if (desistiu) {
+        if (aberto && querAviso) await aviso({ nome: anterior.nome, produto: anterior.produto ?? produto });
+        return jsonResp({ ok: true });
+      }
       const parcial = dados.etapa_chat === 'parcial';
       const repetido = anterior.produto === produto && anterior.interesse === interesse;
       if (aberto) {
@@ -116,6 +133,7 @@ export const POST: APIRoute = async ({ request }) => {
             interesse,
           })
           .where(eq(t.id, anterior.id));
+        if (!parcial && querAviso) await aviso({ nome: nomeInformado || anterior.nome, produto: produto ?? anterior.produto });
       }
       // telefone já registrado (parcial) ou reenvio do mesmo pedido: nada a criar
       if (aberto || parcial || repetido) return jsonResp({ ok: true });
@@ -134,6 +152,9 @@ export const POST: APIRoute = async ({ request }) => {
     empresa,
     ...rastreio,
   });
+
+  // aviso em paralelo (não atrasa o resto); esperado antes de responder
+  const avisoEnviado = querAviso && !(ehChat && dados.etapa_chat === 'parcial') ? aviso() : Promise.resolve();
 
   // 1b) Lead na Meta pelo servidor (CAPI), com o MESMO event_id que o Pixel
   // usa no navegador. Leva e-mail/telefone/nome (hasheados no envio). Falha da
@@ -197,5 +218,6 @@ export const POST: APIRoute = async ({ request }) => {
 
   const whatsapp = `https://wa.me/${numero}?text=${encodeURIComponent(linhas.join('\n'))}`;
 
+  await avisoEnviado;
   return jsonResp({ ok: true, whatsapp });
 };

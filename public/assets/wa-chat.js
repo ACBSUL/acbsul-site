@@ -8,7 +8,10 @@
    e-mail): quem desiste depois fica no painel como "Chat não concluído". Nome
    e assunto completam o mesmo lead (o servidor casa por visitante + telefone).
    No fim: dispara o Contato (Pixel + Google Ads) e abre o WhatsApp com a
-   mensagem "Olá, eu me chamo NOME ...". O WhatsApp abre na hora do clique
+   mensagem "Olá, eu me chamo NOME ...".
+   AVISO À EMPRESA (WhatsApp, pelo servidor): uma vez por chat — no fim, ou,
+   se a pessoa sair antes (fechar o chat, sair da página ou ficar 3 min parada
+   depois de dar o telefone), só com o que ela informou. O WhatsApp abre na hora do clique
    (senão o celular bloqueia a nova aba); o lead segue em segundo plano.
    Se este arquivo não carregar, os botões continuam indo direto ao WhatsApp. */
 (function () {
@@ -29,6 +32,7 @@
   var SVG_SEND = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
 
   var painel, corpo, form, input, enviar;
+  var avisado = false, timerDesiste = null;
   var etapa = 'whatsapp', nome = '', whats = '', iniciado = false;
   var ctx = { msg: '', num: '', assunto: null, posicao: 'pagina' };
 
@@ -102,6 +106,7 @@
     iniciar();
   }
   function fechar() {
+    desistir();
     painel.hidden = true;
     painel.classList.remove('is-in');
     document.documentElement.classList.remove('wz-aberto');
@@ -126,6 +131,7 @@
       if (!telOk(txt)) { fala('Esse número não parece válido. Envie com DDD, ex.: (51) 99999-9999.', 500); return; }
       whats = txt; etapa = 'nome'; travar(true, 'Aguarde...');
       salvarLead(null); /* grava o telefone já, antes de pedir o resto */
+      vigiar();
       fala('Anotado! E qual é o seu nome?', 800)
         .then(function () { input.type = 'text'; travar(false, 'Escreva seu nome...'); });
       return;
@@ -138,6 +144,7 @@
       if (ctx.assunto) { concluir(ctx.assunto); return; } /* clique do envio = gesto do usuário */
       etapa = 'assunto';
       salvarLead(null); /* completa o nome */
+      vigiar();
       fala('Prazer, ' + nome.split(' ')[0] + '! Por último: qual é o objetivo do seu contato?', 800).then(mostrarOpcoes);
       return;
     }
@@ -174,7 +181,9 @@
     var url = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(texto);
 
     window.open(url, '_blank', 'noopener');
-    salvarLead(assunto);
+    clearTimeout(timerDesiste);
+    salvarLead(assunto, !avisado);
+    avisado = true;
     try { if (window.acbTrack && window.acbTrack.contato) window.acbTrack.contato(ctx.posicao); } catch (e) { }
 
     bolha('Perfeito! Abrindo o WhatsApp com a sua mensagem. 👍', 'bot');
@@ -203,7 +212,22 @@
   }
 
   /* assunto null = chat ainda em andamento (só telefone, ou telefone + nome) */
-  function salvarLead(assunto) {
+  /* parada 3 min depois do telefone = desistiu */
+  function vigiar() {
+    clearTimeout(timerDesiste);
+    timerDesiste = setTimeout(desistir, 180000);
+  }
+  /* saiu antes de terminar: avisa a empresa só com o que já informou */
+  function desistir() {
+    if (avisado || !whats || etapa === 'fim') return;
+    avisado = true;
+    clearTimeout(timerDesiste);
+    salvarLead(null, true, true);
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') desistir(); });
+  window.addEventListener('pagehide', desistir);
+
+  function salvarLead(assunto, avisar, saiu) {
     var dados = {};
     try { if (window.acbTrack && window.acbTrack.dadosLead) dados = window.acbTrack.dadosLead(); } catch (e) { }
     delete dados.event_id; /* sem Lead na Meta: o chat conta como Contato, como antes */
@@ -211,13 +235,19 @@
     dados.nome = nome;
     dados.telefone = whats;
     dados.origem = 'chat-whatsapp';
-    dados.etapa_chat = assunto ? 'fim' : 'parcial';
+    dados.etapa_chat = saiu ? 'desistiu' : assunto ? 'fim' : 'parcial';
+    if (avisar) dados.avisar = true;
     dados.produto = tema ? String(tema).replace(/^Olá!?\s*/i, '').slice(0, 200) : '';
     dados.interesse = !assunto ? 'Chat não concluído' : ctx.assunto ? 'Chat WhatsApp (botão da página)' : assunto;
     dados.visitante_id = dados.visitante_id || chatId;
     dados.pagina = dados.pagina || location.href;
     /* anti-robô do servidor: exige 3 s desde que a página abriu */
     var falta = Math.max(0, 3100 - performance.now());
+    if (saiu) { /* a página pode estar fechando: envia já, fora da fila */
+      dados._t = Math.round(performance.now());
+      enviarLead(dados, 1);
+      return;
+    }
     fila = fila.then(function () {
       return new Promise(function (ok) { setTimeout(ok, falta); });
     }).then(function () {
