@@ -1,0 +1,271 @@
+---
+// Admin → Usuários: lista de quem entra no painel e cadastro de novos acessos
+// (PRD §8 — sem cadastro público; usuários nascem aqui, pelo admin logado).
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import {
+  criarUsuario,
+  listarUsuarios,
+  ErroUsuario,
+  PERMS_EDITOR,
+  type PermKey,
+  type Papel,
+} from '../../../lib/usuarios';
+
+export const prerender = false;
+
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+  const papel = (texto('papel') === 'admin' ? 'admin' : 'editor') as Papel;
+
+  try {
+    const novo = await criarUsuario({
+      nome: texto('nome'),
+      email: texto('email'),
+      senha: String(f.get('senha') ?? ''),
+      papel,
+      permissoes: f.getAll('permissoes').map(String) as PermKey[],
+    });
+    return Astro.redirect(`/admin/usuarios/${novo.id}?ok=criado`);
+  } catch (e) {
+    erro = e instanceof ErroUsuario ? e.message : 'Não foi possível criar o usuário.';
+  }
+}
+
+const usuarios = await listarUsuarios();
+const eu = Astro.locals.user;
+const ok = Astro.url.searchParams.get('ok');
+const rotuloPerm = new Map(PERMS_EDITOR.map((s) => [s.chave, s.rotulo]));
+
+const acessosDe = (u: (typeof usuarios)[number]) => {
+  if (u.papel === 'admin') return 'Acesso total';
+  if (!u.permissoes.length) return 'Sem acessos';
+  return u.permissoes.map((p) => rotuloPerm.get(p) ?? p).join(', ');
+};
+---
+
+<AdminLayout titulo="Usuários">
+  <div class="acoes">
+    <h1>Usuários</h1>
+    <a class="botao" href="#novo-usuario" data-abrir>+ Novo usuário</a>
+    <p class="sub">
+      Quem tem acesso ao painel. Quem é <b>admin</b> vê tudo; quem é
+      <b>editor</b> só vê as seções marcadas.
+    </p>
+  </div>
+
+  {ok === 'removido' && <p class="flash" role="status">Usuário removido.</p>}
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
+
+  <div class="tabela-rolagem">
+    <table class="lista">
+      <thead>
+        <tr>
+          <th scope="col">Pessoa</th>
+          <th scope="col">Papel</th>
+          <th scope="col">Acessos</th>
+          <th scope="col">Status</th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          usuarios.map((u) => (
+            <tr>
+              <td>
+                <b>{u.nome}</b>
+                {u.id === eu?.id && <span class="badge info voce">você</span>}
+                <br />
+                <span class="secundario">{u.email}</span>
+              </td>
+              <td>
+                {u.papel === 'admin' ? (
+                  <span class="badge ok">Admin</span>
+                ) : (
+                  <span class="badge off">Editor</span>
+                )}
+              </td>
+              <td class="secundario">{acessosDe(u)}</td>
+              <td>
+                {u.ativo ? <span class="badge ok">Ativo</span> : <span class="badge off">Inativo</span>}
+              </td>
+              <td>
+                <div class="acoes-linha">
+                  <a class="botao mini cinza" href={`/admin/usuarios/${u.id}`}>Editar</a>
+                </div>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- O cadastro fica recolhido: a tela é a lista. `open` quando o POST falhou,
+       para a pessoa não perder o que digitou de vista. Em <details> funciona
+       mesmo sem JavaScript. -->
+  <details class="dobra" id="novo-usuario" open={!!erro}>
+    <!-- Com JavaScript o gatilho é o botão do topo e este resumo some (senão
+         ficariam dois "+ Novo usuário" na tela). Sem JavaScript ele aparece e
+         é o que abre a dobra. -->
+    <summary class="dobra-titulo" data-resumo>
+      <span class="dobra-mais" aria-hidden="true">+</span>
+      Novo usuário
+    </summary>
+
+    <form class="cartao-form" method="POST" novalidate>
+      <!-- só aparece quando o resumo do <details> some (ver script abaixo) -->
+      <h2 data-titulo hidden>Novo usuário</h2>
+      <p class="nota">A pessoa entra em <b>/admin/login</b> com o e-mail e a senha definidos aqui.</p>
+
+      <div class="campos">
+        <label class="campo">
+          Nome
+          <input type="text" name="nome" placeholder="Ex.: Ana Souza" autocomplete="off" />
+        </label>
+        <label class="campo">
+          E-mail <span class="req">*</span>
+          <input type="email" name="email" required placeholder="pessoa@acbsulcompressores.com.br" autocomplete="off" />
+        </label>
+        <label class="campo">
+          Senha <span class="req">*</span>
+          <input type="text" name="senha" required minlength="8" placeholder="mínimo 8 caracteres" autocomplete="new-password" />
+        </label>
+        <label class="campo">
+          Papel
+          <select name="papel" data-papel>
+            <option value="editor">Editor — só as seções marcadas</option>
+            <option value="admin">Admin — acesso total</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="bloco-perms" data-perms>
+        <span class="rotulo-campo">Seções liberadas para o editor</span>
+        <div class="grade-perms">
+          {
+            PERMS_EDITOR.map((s) => (
+              <label class="check">
+                <input type="checkbox" name="permissoes" value={s.chave} />
+                {s.rotulo}
+              </label>
+            ))
+          }
+        </div>
+        <p class="nota-perms">Sem nenhuma marcada, a pessoa entra mas não vê nenhuma seção.</p>
+      </div>
+
+      <p class="nota-admin" data-nota-admin hidden>
+        Admin tem acesso total, inclusive a esta tela de usuários — não precisa marcar nada.
+      </p>
+
+      <div class="pe-form">
+        <button class="botao" type="submit">Criar usuário</button>
+        <button class="botao cinza" type="button" data-fechar hidden>Cancelar</button>
+      </div>
+    </form>
+  </details>
+</AdminLayout>
+
+<style>
+  .voce { margin-left: 0.4rem; }
+
+  /* ===== cadastro recolhido ===== */
+  .dobra { margin-top: 1.25rem; }
+  .dobra-titulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    padding: 0.5rem 0;
+    user-select: none;
+  }
+  .dobra-titulo::-webkit-details-marker { display: none; }
+  .dobra-titulo:hover { color: var(--accent-strong); }
+  .dobra-titulo:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: var(--r); }
+  .dobra-mais {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--accent-strong);
+    background: var(--surface);
+    transition: transform var(--t), border-color var(--t);
+  }
+  .dobra[open] .dobra-mais { transform: rotate(45deg); border-color: var(--accent); }
+  /* aberto, o cartão do formulário já dá o respiro — o título só rotula */
+  .dobra[open] .dobra-titulo { margin-bottom: 0.35rem; }
+  .dobra-titulo[hidden] { display: none; }
+  .pe-form { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .bloco-perms { margin-top: 1.1rem; }
+  .grade-perms {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.6rem 1rem;
+  }
+  .nota-perms,
+  .nota-admin {
+    color: var(--ink-2);
+    font-size: 0.86rem;
+    margin-top: 0.7rem;
+  }
+  .cartao-form .botao { margin-top: 1.25rem; }
+</style>
+
+<script>
+  // "+ Novo usuário" do topo abre a dobra e leva o foco pro primeiro campo.
+  // Sem JS o link ainda funciona: o alvo #novo-usuario é um <details>, que os
+  // navegadores abrem sozinhos ao receber o link.
+  const abrir = document.querySelector('[data-abrir]') as HTMLAnchorElement | null;
+  const dobra = document.getElementById('novo-usuario') as HTMLDetailsElement | null;
+  const resumo = dobra?.querySelector('[data-resumo]') as HTMLElement | null;
+  const fechar = dobra?.querySelector('[data-fechar]') as HTMLButtonElement | null;
+
+  // há JavaScript: o botão do topo comanda, o resumo duplicado sai de cena e o
+  // título passa para dentro do cartão
+  const titulo = dobra?.querySelector('[data-titulo]') as HTMLElement | null;
+  if (resumo) resumo.hidden = true;
+  if (titulo) titulo.hidden = false;
+  if (fechar) fechar.hidden = false;
+
+  abrir?.addEventListener('click', (e) => {
+    if (!dobra) return;
+    e.preventDefault();
+    dobra.open = true;
+    dobra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    (dobra.querySelector('input[name=nome]') as HTMLInputElement | null)?.focus();
+  });
+
+  fechar?.addEventListener('click', () => {
+    if (!dobra) return;
+    (dobra.querySelector('form') as HTMLFormElement | null)?.reset();
+    dobra.open = false;
+    abrir?.focus();
+  });
+
+  // Admin não escolhe seções: já tem tudo. Esconde as caixinhas nesse caso.
+  const papel = document.querySelector('[data-papel]') as HTMLSelectElement | null;
+  const perms = document.querySelector('[data-perms]') as HTMLElement | null;
+  const nota = document.querySelector('[data-nota-admin]') as HTMLElement | null;
+
+  if (papel && perms && nota) {
+    const sincroniza = () => {
+      const ehAdmin = papel.value === 'admin';
+      perms.hidden = ehAdmin;
+      nota.hidden = !ehAdmin;
+    };
+    papel.addEventListener('change', sincroniza);
+    sincroniza();
+  }
+</script>

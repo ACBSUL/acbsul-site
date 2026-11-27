@@ -2,11 +2,8 @@
 
 declare namespace App {
   interface Locals {
-    /** usuário logado no admin (preenchido pelo middleware em /admin/*) */
-    user?: {
-      id: string;
-      name: string;
-      email: string;
-    } | null;
+    /** usuário logado no admin (preenchido pelo middleware em /admin/*),
+     *  já com papel, permissões e status — ver src/lib/usuarios.ts */
+    user?: import('./lib/usuarios').Usuario | null;
   }
 }

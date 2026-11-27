@@ -5,6 +5,14 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 
 export const prerender = false;
+
+// avisos vindos do middleware (acesso desativado, sem seções) e da troca de senha
+const motivos: Record<string, string> = {
+  inativo: 'Seu acesso foi desativado. Fale com o administrador do painel.',
+  'sem-acesso': 'Seu usuário não tem nenhuma seção liberada. Fale com o administrador.',
+  'senha-trocada': 'Senha alterada. Entre de novo com a nova senha.',
+};
+const aviso = motivos[Astro.url.searchParams.get('erro') ?? ''] ?? '';
 ---
 
 <AdminLayout titulo="Entrar">
@@ -43,6 +51,8 @@ export const prerender = false;
 
         <h1>Bem-vindo de volta</h1>
         <p class="sub">Acesso restrito — somente administradores.</p>
+
+        {aviso && <p class="aviso" role="status">{aviso}</p>}
 
         <form id="form-login" novalidate>
           <label class="campo">
@@ -220,6 +230,16 @@ export const prerender = false;
     font-size: 0.88rem;
     font-weight: 600;
     margin-bottom: 1rem;
+  }
+  /* aviso do middleware (acesso desativado, senha trocada…) — informa, não é erro do formulário */
+  .aviso {
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    padding: 0.6rem 0.85rem;
+    font-size: 0.88rem;
+    color: var(--ink-2);
+    margin-bottom: 1.25rem;
   }
   .entrar { width: 100%; }
   .entrar:disabled { opacity: 0.6; cursor: wait; }

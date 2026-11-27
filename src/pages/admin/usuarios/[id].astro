@@ -1,0 +1,188 @@
+---
+// Admin → Editar usuário: nome, papel, seções liberadas, ativar/desativar,
+// definir nova senha e remover. As travas de "não fique sem admin" e
+// "não remova a si mesmo" ficam em src/lib/usuarios.ts.
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import {
+  atualizarUsuario,
+  buscarUsuario,
+  definirSenha,
+  removerUsuario,
+  ErroUsuario,
+  PERMS_EDITOR,
+  type PermKey,
+  type Papel,
+} from '../../../lib/usuarios';
+
+export const prerender = false;
+
+const id = Astro.params.id!;
+const eu = Astro.locals.user!;
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const texto = (k: string) => String(f.get(k) ?? '').trim();
+  const acao = texto('_acao');
+
+  try {
+    if (acao === 'remover') {
+      await removerUsuario(id, eu.id);
+      return Astro.redirect('/admin/usuarios?ok=removido');
+    }
+
+    if (acao === 'senha') {
+      await definirSenha(id, String(f.get('senha') ?? ''));
+      // trocar a própria senha derruba a própria sessão: manda para o login
+      if (id === eu.id) return Astro.redirect('/admin/login?erro=senha-trocada');
+      return Astro.redirect(`/admin/usuarios/${id}?ok=senha`);
+    }
+
+    await atualizarUsuario(id, {
+      nome: texto('nome'),
+      papel: (texto('papel') === 'admin' ? 'admin' : 'editor') as Papel,
+      permissoes: f.getAll('permissoes').map(String) as PermKey[],
+      ativo: f.get('ativo') === 'on',
+    });
+    return Astro.redirect(`/admin/usuarios/${id}?ok=1`);
+  } catch (e) {
+    erro = e instanceof ErroUsuario ? e.message : 'Não foi possível salvar.';
+  }
+}
+
+const usuario = await buscarUsuario(id);
+if (!usuario) return Astro.redirect('/admin/usuarios');
+
+const souEu = usuario.id === eu.id;
+const ok = Astro.url.searchParams.get('ok');
+---
+
+<AdminLayout titulo={`Usuário · ${usuario.nome}`}>
+  <div class="acoes">
+    <h1>{usuario.nome}</h1>
+    <a class="botao mini cinza" href="/admin/usuarios">← Voltar</a>
+    <p class="sub">{usuario.email}{souEu && ' · este é o seu usuário'}</p>
+  </div>
+
+  {ok === 'criado' && <p class="flash" role="status">Usuário criado. Já pode entrar com o e-mail e a senha.</p>}
+  {ok === '1' && <p class="flash" role="status">Alterações salvas.</p>}
+  {ok === 'senha' && <p class="flash" role="status">Senha definida. As sessões abertas dessa pessoa foram encerradas.</p>}
+  {erro && <p class="flash erro" role="alert">{erro}</p>}
+
+  <form class="cartao-form" method="POST" novalidate>
+    <h2>Dados e acesso</h2>
+
+    <div class="campos">
+      <label class="campo">
+        Nome
+        <input type="text" name="nome" value={usuario.nome} />
+      </label>
+      <label class="campo">
+        Papel
+        <select name="papel" data-papel>
+          <option value="editor" selected={usuario.papel === 'editor'}>Editor — só as seções marcadas</option>
+          <option value="admin" selected={usuario.papel === 'admin'}>Admin — acesso total</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="bloco-perms" data-perms hidden={usuario.papel === 'admin'}>
+      <span class="rotulo-campo">Seções liberadas para o editor</span>
+      <div class="grade-perms">
+        {
+          PERMS_EDITOR.map((s) => (
+            <label class="check">
+              <input
+                type="checkbox"
+                name="permissoes"
+                value={s.chave}
+                checked={usuario.permissoes.includes(s.chave)}
+              />
+              {s.rotulo}
+            </label>
+          ))
+        }
+      </div>
+    </div>
+
+    <p class="nota-admin" data-nota-admin hidden={usuario.papel !== 'admin'}>
+      Admin tem acesso total, inclusive a esta tela de usuários — não precisa marcar nada.
+    </p>
+
+    <label class="check bloco-ativo">
+      <input type="checkbox" name="ativo" checked={usuario.ativo} />
+      Acesso ativo
+    </label>
+    <p class="nota-perms">Desmarcado, a pessoa continua cadastrada mas não consegue entrar.</p>
+
+    <button class="botao" type="submit">Salvar</button>
+  </form>
+
+  <form class="cartao-form" method="POST" novalidate>
+    <h2>Definir nova senha</h2>
+    <p class="nota">
+      Use quando a pessoa esquecer a senha. Ela não recebe aviso automático — combine por fora.
+      As sessões abertas dela são encerradas.
+    </p>
+    <input type="hidden" name="_acao" value="senha" />
+    <div class="campos">
+      <label class="campo">
+        Nova senha <span class="req">*</span>
+        <input type="text" name="senha" required minlength="8" placeholder="mínimo 8 caracteres" autocomplete="new-password" />
+      </label>
+    </div>
+    {souEu && <p class="nota-perms">Como é a sua própria senha, você vai precisar entrar de novo.</p>}
+    <button class="botao cinza" type="submit">Definir senha</button>
+  </form>
+
+  {
+    !souEu && (
+      <form
+        class="cartao-form perigo"
+        method="POST"
+        onsubmit={`return confirm('Remover ${usuario.nome} de vez? O acesso será apagado e não dá para desfazer.')`}
+      >
+        <h2>Remover usuário</h2>
+        <p class="nota">
+          Apaga o acesso para sempre. Para bloquear temporariamente, prefira desmarcar
+          “Acesso ativo” acima.
+        </p>
+        <input type="hidden" name="_acao" value="remover" />
+        <button class="botao perigo" type="submit">Remover de vez</button>
+      </form>
+    )
+  }
+</AdminLayout>
+
+<style>
+  .bloco-perms { margin-top: 1.1rem; }
+  .grade-perms {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.6rem 1rem;
+  }
+  .bloco-ativo { margin-top: 1.25rem; }
+  .nota-perms,
+  .nota-admin {
+    color: var(--ink-2);
+    font-size: 0.86rem;
+    margin-top: 0.5rem;
+  }
+  .cartao-form .botao { margin-top: 1.25rem; }
+  .cartao-form.perigo { border-color: var(--erro-ink); }
+</style>
+
+<script>
+  const papel = document.querySelector('[data-papel]') as HTMLSelectElement | null;
+  const perms = document.querySelector('[data-perms]') as HTMLElement | null;
+  const nota = document.querySelector('[data-nota-admin]') as HTMLElement | null;
+
+  if (papel && perms && nota) {
+    const sincroniza = () => {
+      const ehAdmin = papel.value === 'admin';
+      perms.hidden = ehAdmin;
+      nota.hidden = !ehAdmin;
+    };
+    papel.addEventListener('change', sincroniza);
+  }
+</script>

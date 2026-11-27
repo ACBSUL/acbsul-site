@@ -10,6 +10,13 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  // ↓ colunas do painel (scripts/migrate-usuarios-papeis.ts), não do Better-Auth
+  /** 'admin' = acesso total · 'editor' = só as seções em `permissoes` */
+  papel: text('papel').notNull().default('editor'),
+  /** seções liberadas ao editor — chaves de SECOES em src/lib/usuarios.ts */
+  permissoes: text('permissoes').array().notNull().default([]),
+  /** false bloqueia o acesso sem apagar o usuário */
+  ativo: boolean('ativo').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

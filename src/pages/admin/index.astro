@@ -1,6 +1,9 @@
 ---
 // A tela inicial do painel é a gestão de Leads.
-// /admin redireciona direto para /admin/leads (sem dashboard).
+// /admin redireciona direto para /admin/leads (sem dashboard) — ou, se a
+// pessoa não tiver acesso a Leads, para a primeira seção liberada a ela.
+import { primeiraSecao } from '../../lib/usuarios';
+
 export const prerender = false;
-return Astro.redirect('/admin/leads');
+return Astro.redirect(primeiraSecao(Astro.locals.user ?? null) ?? '/admin/leads');
 ---
